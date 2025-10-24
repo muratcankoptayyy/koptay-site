@@ -28,12 +28,16 @@ from database_pooling_config import DATABASE_CONFIG
 # Load environment variables
 load_dotenv()
 
+# ⚡ FEATURE FLAGS
+WHATSAPP_ENABLED = os.getenv('WHATSAPP_ENABLED', 'false').lower() == 'true'
+
 # Initialize Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///tevkil.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['DEV_MODE'] = os.getenv('FLASK_ENV', 'production') == 'development'
+app.config['WHATSAPP_ENABLED'] = WHATSAPP_ENABLED  # Template'lerde kullanmak için
 
 # ⚡ DATABASE POOLING - High concurrency support
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = DATABASE_CONFIG
@@ -681,12 +685,16 @@ def create_post():
 @login_required
 def whatsapp_ilan():
     """WhatsApp ile ilan oluşturma bilgilendirmesi"""
+    if not WHATSAPP_ENABLED:
+        abort(404)
     return render_template('whatsapp_ilan.html')
 
 @app.route('/whatsapp/setup')
 @login_required
 def whatsapp_setup():
     """WhatsApp entegrasyon kurulum ve test sayfası"""
+    if not WHATSAPP_ENABLED:
+        abort(404)
     return render_template('whatsapp_setup.html')
 
 @app.route('/posts/<int:post_id>')
@@ -2143,6 +2151,9 @@ def whatsapp_webhook():
     Merkezi WhatsApp Cloud API Webhook
     Tek numara - Tüm avukatlar için
     """
+    if not WHATSAPP_ENABLED:
+        abort(404)
+    
     from whatsapp_central_bot import central_bot
     from whatsapp_meta_api import MetaWhatsAppAPI
     
@@ -2273,6 +2284,9 @@ def whatsapp_test():
     WhatsApp bot test endpoint - Manuel test için
     Merkezi bot sistemini kullanır
     """
+    if not WHATSAPP_ENABLED:
+        return jsonify({'success': False, 'error': 'WhatsApp özelliği şu anda devre dışı'}), 404
+    
     from whatsapp_central_bot import central_bot
     
     message_text = request.form.get('message')
