@@ -2799,6 +2799,25 @@ def handle_online_status_request(data):
     
     emit('online_status_response', online_status)
 
+# ==================== HEALTH CHECK ====================
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Fly.io monitoring"""
+    try:
+        # Test database connection
+        db.session.execute(text('SELECT 1'))
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }), 500
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
