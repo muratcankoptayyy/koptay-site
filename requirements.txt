@@ -19,6 +19,5 @@ bleach==6.1.0
 Pillow>=10.3.0
 redis==5.0.1
 Flask-Caching==2.1.0
-hiredis==2.3.2
-gevent==24.2.1
+eventlet==0.36.1
 

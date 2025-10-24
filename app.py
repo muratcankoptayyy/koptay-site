@@ -34,7 +34,12 @@ WHATSAPP_ENABLED = os.getenv('WHATSAPP_ENABLED', 'false').lower() == 'true'
 # Initialize Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///tevkil.db')
+
+# ⚡ FIX PostgreSQL URL - SQLAlchemy 1.4+ requires 'postgresql://' not 'postgres://'
+database_url = os.getenv('DATABASE_URL', 'sqlite:///tevkil.db')
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['DEV_MODE'] = os.getenv('FLASK_ENV', 'production') == 'development'
 app.config['WHATSAPP_ENABLED'] = WHATSAPP_ENABLED  # Template'lerde kullanmak için
@@ -53,11 +58,11 @@ cache = init_cache(app)
 # Initialize CSRF Protection
 csrf = CSRFProtect(app)
 
-# Initialize Rate Limiter
+# Initialize Rate Limiter - Production-friendly limits
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=["10000 per day", "500 per hour"],  # 🔥 Daha yüksek limitler
     storage_uri="memory://",
     strategy="fixed-window"
 )
@@ -2801,6 +2806,7 @@ def handle_online_status_request(data):
 
 # ==================== HEALTH CHECK ====================
 @app.route('/health')
+@limiter.exempt  # 🔥 Health check'i rate limiting'den muaf tut
 def health_check():
     """Health check endpoint for Fly.io monitoring"""
     try:
