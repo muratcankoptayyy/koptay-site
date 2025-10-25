@@ -7,10 +7,10 @@ from sqlalchemy import text
 
 with app.app_context():
     try:
-        # Create device_tokens table
+        # Create device_tokens table (PostgreSQL syntax)
         db.session.execute(text("""
             CREATE TABLE IF NOT EXISTS device_tokens (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 token VARCHAR(500) UNIQUE NOT NULL,
                 platform VARCHAR(20) NOT NULL,
