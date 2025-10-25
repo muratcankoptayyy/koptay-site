@@ -1201,6 +1201,12 @@ def settings():
     """Ayarlar sayfası"""
     return render_template('settings.html')
 
+@app.route('/profile/edit')
+@login_required
+def edit_profile():
+    """Profil düzenleme sayfası"""
+    return render_template('edit_profile.html')
+
 @app.route('/settings/profile', methods=['POST'])
 @login_required
 def update_profile():
@@ -1222,7 +1228,7 @@ def update_profile():
     
     db.session.commit()
     flash('Profil bilgileriniz başarıyla güncellendi!', 'success')
-    return redirect(url_for('settings'))
+    return redirect(url_for('edit_profile'))
 
 @app.route('/settings/avatar', methods=['POST'])
 @login_required

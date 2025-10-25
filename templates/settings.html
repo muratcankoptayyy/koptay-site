@@ -49,65 +49,7 @@
 
         <!-- Profile Tab -->
         <div id="content-profile" class="settings-content">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
-                <!-- Avatar Section - YUKARIYA TAŞINDI -->
-                <div class="lg:col-span-3">
-                    <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-3 md:p-6 border border-gray-200 dark:border-gray-700 shadow-lg">
-                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary">account_circle</span>
-                            Profil Fotoğrafı
-                        </h3>
-                        
-                        <div class="flex flex-col md:flex-row items-center gap-6">
-                            <div class="relative cursor-pointer" onclick="document.getElementById('avatarInput').click()" title="Fotoğraf değiştirmek için tıklayın">
-                                <img id="avatarPreview" src="{{ current_user.avatar_url if current_user.avatar_url else 'https://ui-avatars.com/api/?name=' + current_user.full_name + '&background=1661da&color=fff&size=200' }}" 
-                                     alt="Avatar" 
-                                     class="w-32 h-32 rounded-full border-4 border-primary/20 object-cover hover:opacity-80 transition-opacity">
-                                <div class="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg">
-                                    <span class="material-symbols-outlined">photo_camera</span>
-                                </div>
-                            </div>
-                            
-                            <div class="flex-1 w-full">
-                                <form id="avatarForm" method="POST" action="{{ url_for('update_avatar') }}" enctype="multipart/form-data" class="space-y-3">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                    <!-- Dosya seçici - image/jpeg, image/jpg, image/png, image/gif formatları -->
-                                    <input type="file" 
-                                           id="avatarInput" 
-                                           name="avatar" 
-                                           accept="image/jpeg,image/jpg,image/png,image/gif,.jpeg,.jpg,.png,.gif" 
-                                           class="hidden" 
-                                           onchange="previewAvatar(event)"
-                                           capture="environment">
-                                    
-                                    <div class="flex flex-col sm:flex-row gap-3">
-                                        <button type="button" onclick="document.getElementById('avatarInput').click()" class="flex items-center justify-center gap-2 px-6 py-3 border-2 border-primary text-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-colors w-full sm:w-auto">
-                                            <span class="material-symbols-outlined">upload_file</span>
-                                            Fotoğraf Seç
-                                        </button>
-                                        <button type="submit" id="uploadAvatarBtn" class="hidden flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors w-full sm:w-auto">
-                                            <span class="material-symbols-outlined">cloud_upload</span>
-                                            Yükle
-                                        </button>
-                                    </div>
-                                    
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        <span class="material-symbols-outlined text-sm align-middle">info</span>
-                                        JPEG, JPG, PNG veya GIF • Maksimum 2MB
-                                    </p>
-                                </form>
-                                
-                                {% if current_user.avatar_url %}
-                                <button onclick="removeAvatar()" class="mt-3 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-semibold flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-sm">delete</span>
-                                    Fotoğrafı Kaldır
-                                </button>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6">
                 <!-- Profile Info -->
                 <div class="lg:col-span-2">
                     <form method="POST" action="{{ url_for('update_profile') }}" class="space-y-6">
@@ -556,53 +498,6 @@ function showTab(tabName) {
     const activeTab = document.getElementById('tab-' + tabName);
     activeTab.classList.add('active', 'text-primary', 'border-b-2', 'border-primary');
     activeTab.classList.remove('text-gray-600', 'dark:text-gray-400');
-}
-
-// Avatar preview
-function previewAvatar(event) {
-    const file = event.target.files[0];
-    if (file) {
-        // Check file size (max 2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            alert('Dosya boyutu 2MB\'dan küçük olmalıdır');
-            event.target.value = '';
-            return;
-        }
-        
-        // Check file type
-        if (!file.type.startsWith('image/')) {
-            alert('Lütfen bir resim dosyası seçin');
-            event.target.value = '';
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('avatarPreview').src = e.target.result;
-            document.getElementById('uploadAvatarBtn').classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-// Remove avatar
-function removeAvatar() {
-    if (confirm('Profil fotoğrafınızı kaldırmak istediğinizden emin misiniz?')) {
-        fetch('{{ url_for("remove_avatar") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Bir hata oluştu: ' + data.error);
-            }
-        });
-    }
 }
 
 // Notification permission
