@@ -6,8 +6,21 @@
 @media (max-width: 768px) {
     /* Prevent horizontal scroll */
     html, body {
-        overflow-x: hidden;
-        max-width: 100vw;
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+        width: 100% !important;
+    }
+
+    /* Fix container widths */
+    * {
+        max-width: 100vw !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Ensure all containers respect viewport */
+    .container, .layout-content-container, [class*="col-"], .grid {
+        max-width: 100% !important;
+        overflow-x: hidden !important;
     }
 
     /* Touch-friendly targets (minimum 44x44px) */
@@ -520,8 +533,13 @@
     }
 
     /* Add bottom padding to main content to avoid bottom nav overlap */
-    main, .main-content {
-        padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    main, .main-content, #content, .layout-content-container {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+    }
+
+    /* Specific dashboard fixes */
+    .dashboard-content {
+        padding-bottom: calc(90px + env(safe-area-inset-bottom)) !important;
     }
 }
 
