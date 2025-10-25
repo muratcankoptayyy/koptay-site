@@ -87,6 +87,10 @@
         }
     </style>
     
+    <!-- Mobile Optimizations CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-optimizations.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loading-states.css') }}">
+    
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-background-light dark:bg-background-dark font-display">
@@ -316,6 +320,31 @@
         </div>
     </div>
     
+    <!-- Mobile Bottom Navigation -->
+    {% if current_user and current_user.is_authenticated %}
+    <nav class="bottom-nav">
+        <a href="{{ url_for('dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <span class="material-symbols-outlined">home</span>
+            <span>Ana Sayfa</span>
+        </a>
+        <a href="{{ url_for('list_posts') }}" class="bottom-nav-item {% if request.endpoint == 'list_posts' %}active{% endif %}">
+            <span class="material-symbols-outlined">work</span>
+            <span>İlanlar</span>
+        </a>
+        <a href="{{ url_for('chat') }}" class="bottom-nav-item {% if request.endpoint == 'chat' or request.endpoint == 'chat_conversation' %}active{% endif %}">
+            <span class="material-symbols-outlined">chat</span>
+            <span>Mesajlar</span>
+            {% if unread_count > 0 %}
+            <span class="badge">{{ unread_count if unread_count < 10 else '9+' }}</span>
+            {% endif %}
+        </a>
+        <a href="{{ url_for('profile', user_id=current_user.id) }}" class="bottom-nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
+            <span class="material-symbols-outlined">person</span>
+            <span>Profil</span>
+        </a>
+    </nav>
+    {% endif %}
+    
     <!-- Scripts -->
     <script>
         // Auto-hide flash messages after 5 seconds
@@ -353,6 +382,9 @@
             });
         }
     </script>
+    
+    <!-- Mobile Helpers JS -->
+    <script src="{{ url_for('static', filename='js/mobile-helpers.js') }}"></script>
     
     <!-- PWA Script -->
     <script src="{{ url_for('static', filename='pwa.js') }}"></script>

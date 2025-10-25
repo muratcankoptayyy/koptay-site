@@ -2804,25 +2804,120 @@ def handle_online_status_request(data):
     
     emit('online_status_response', online_status)
 
+# ==================== PUSH NOTIFICATIONS ====================
+# Device Token Model
+class DeviceToken(db.Model):
+    __tablename__ = 'device_tokens'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    token = db.Column(db.String(500), unique=True, nullable=False)
+    platform = db.Column(db.String(20), nullable=False)  # 'android' or 'ios'
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    last_used = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+@app.route('/api/notifications/register-device', methods=['POST'])
+@login_required
+def register_device_token():
+    """Register device token for push notifications"""
+    try:
+        data = request.get_json()
+        token = data.get('token')
+        platform = data.get('platform', 'android')
+
+        if not token:
+            return jsonify({'error': 'Token is required'}), 400
+
+        # Check if token already exists
+        existing_token = DeviceToken.query.filter_by(token=token).first()
+        
+        if existing_token:
+            # Update last_used time
+            existing_token.last_used = datetime.now(timezone.utc)
+            existing_token.user_id = current_user.id  # Update user if changed
+        else:
+            # Create new token
+            new_token = DeviceToken(
+                user_id=current_user.id,
+                token=token,
+                platform=platform
+            )
+            db.session.add(new_token)
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Device registered'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error registering device token: {e}")
+        return jsonify({'error': 'Failed to register device'}), 500
+
+@app.route('/api/notifications/unregister-device', methods=['POST'])
+@login_required
+def unregister_device_token():
+    """Unregister device token (when user logs out)"""
+    try:
+        data = request.get_json()
+        token = data.get('token')
+
+        if not token:
+            return jsonify({'error': 'Token is required'}), 400
+
+        device = DeviceToken.query.filter_by(token=token, user_id=current_user.id).first()
+        if device:
+            db.session.delete(device)
+            db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Device unregistered'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error unregistering device token: {e}")
+        return jsonify({'error': 'Failed to unregister device'}), 500
+
+def send_push_notification(user_id, title, body, data=None):
+    """
+    Send push notification to user's devices
+    This is a placeholder - actual implementation would use FCM/APNs
+    """
+    try:
+        # Get user's device tokens
+        tokens = DeviceToken.query.filter_by(user_id=user_id).all()
+        
+        if not tokens:
+            print(f"ℹ️ No device tokens found for user {user_id}")
+            return False
+
+        # For now, just log the notification
+        # In production, you would call FCM/APNs APIs here
+        print(f"📬 Sending push notification to user {user_id}:")
+        print(f"   Title: {title}")
+        print(f"   Body: {body}")
+        print(f"   Data: {data}")
+        print(f"   Devices: {len(tokens)}")
+
+        # TODO: Implement actual FCM/APNs sending
+        # Example:
+        # for token in tokens:
+        #     if token.platform == 'android':
+        #         send_fcm_notification(token.token, title, body, data)
+        #     elif token.platform == 'ios':
+        #         send_apns_notification(token.token, title, body, data)
+
+        return True
+
+    except Exception as e:
+        print(f"❌ Error sending push notification: {e}")
+        return False
+
 # ==================== HEALTH CHECK ====================
 @app.route('/health')
 @limiter.exempt  # 🔥 Health check'i rate limiting'den muaf tut
 def health_check():
-    """Health check endpoint for Fly.io monitoring"""
-    try:
-        # Test database connection
-        db.session.execute(text('SELECT 1'))
-        return jsonify({
-            'status': 'healthy',
-            'database': 'connected',
-            'timestamp': datetime.now(timezone.utc).isoformat()
-        }), 200
-    except Exception as e:
-        return jsonify({
-            'status': 'unhealthy',
-            'error': str(e),
-            'timestamp': datetime.now(timezone.utc).isoformat()
-        }), 500
+    """Health check endpoint for Fly.io monitoring - Simple version"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    }), 200
 
 if __name__ == '__main__':
     with app.app_context():

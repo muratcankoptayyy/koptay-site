@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/app": "^7.1.0",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/ios": "^7.4.4",
+    "@capacitor/keyboard": "^7.0.3",
+    "@capacitor/push-notifications": "^7.0.3",
+    "@capacitor/splash-screen": "^7.0.3"
+  },
+  "scripts": {
+    "android:build": "npx cap sync && npx cap open android",
+    "ios:build": "npx cap sync && npx cap open ios",
+    "sync": "npx cap sync",
+    "android:run": "npx cap run android",
+    "ios:run": "npx cap run ios"
+  }
+}

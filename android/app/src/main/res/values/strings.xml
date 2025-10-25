@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tevkil</string>
+    <string name="title_activity_main">Tevkil - Avukat İş Devri</string>
+    <string name="package_name">com.koptay.tevkil</string>
+    <string name="custom_url_scheme">tevkil</string>
+</resources>
