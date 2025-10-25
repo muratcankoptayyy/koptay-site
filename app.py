@@ -50,7 +50,7 @@ app.config['GOOGLE_MAPS_API_KEY'] = os.getenv('GOOGLE_MAPS_API_KEY', '')  # Goog
 app.config['SESSION_COOKIE_SECURE'] = not app.config['DEV_MODE']  # HTTPS only in production
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # 24 hour session timeout
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # 30 days - "Remember Me" effect
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True  # Extend session on activity
 
 # 🔒 SECURITY HEADERS
@@ -373,6 +373,9 @@ def login():
         
         # 6. LOGIN BAŞARILI
         print(f"✅ Login successful: {email}")
+        
+        # Session'ı kalıcı yap (30 gün boyunca açık kalacak)
+        session.permanent = True
         
         # Login yap
         login_user(user, remember=remember)
@@ -2605,6 +2608,10 @@ def verify_2fa():
         if verified:
             # 2FA başarılı
             remember = session.get('pending_2fa_remember', False)
+            
+            # Session'ı kalıcı yap (30 gün boyunca açık kalacak)
+            session.permanent = True
+            
             login_user(user, remember=remember)
             
             # Session işaretle
