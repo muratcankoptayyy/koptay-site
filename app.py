@@ -22,6 +22,7 @@ from sms_service import NetgsmSMSService
 from geocoding_service import get_coordinates
 from functools import wraps
 import security_utils
+import input_validation  # 🔒 Input validation & sanitization
 from cache_config import init_cache
 from database_pooling_config import DATABASE_CONFIG
 
@@ -45,13 +46,45 @@ app.config['DEV_MODE'] = os.getenv('FLASK_ENV', 'production') == 'development'
 app.config['WHATSAPP_ENABLED'] = WHATSAPP_ENABLED  # Template'lerde kullanmak için
 app.config['GOOGLE_MAPS_API_KEY'] = os.getenv('GOOGLE_MAPS_API_KEY', '')  # Google Maps API Key
 
+# 🔒 SESSION SECURITY - Production-ready session configuration
+app.config['SESSION_COOKIE_SECURE'] = not app.config['DEV_MODE']  # HTTPS only in production
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # 24 hour session timeout
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True  # Extend session on activity
+
+# 🔒 SECURITY HEADERS
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # Cache static files for 1 year
+
 # ⚡ DATABASE POOLING - High concurrency support
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = DATABASE_CONFIG
 
 # Initialize extensions
 db.init_app(app)
-CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+
+# 🔒 CORS Configuration - Restrict origins in production
+if app.config['DEV_MODE']:
+    # Development: Allow all origins for testing
+    CORS(app, resources={r"/*": {"origins": "*"}})
+else:
+    # Production: Only allow specific domains
+    allowed_origins = [
+        "https://tevkil.fly.dev",
+        "https://www.tevkil.fly.dev",
+        os.getenv('FRONTEND_URL', 'https://tevkil.fly.dev')
+    ]
+    CORS(app, resources={r"/*": {
+        "origins": allowed_origins,
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-CSRFToken"],
+        "supports_credentials": True
+    }})
+
+# SocketIO with CORS
+if app.config['DEV_MODE']:
+    socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+else:
+    socketio = SocketIO(app, cors_allowed_origins=["https://tevkil.fly.dev"], async_mode='threading')
 
 # ⚡ REDIS CACHE - 70% faster response times
 cache = init_cache(app)
@@ -125,6 +158,49 @@ def inject_global_vars():
     )
 
 # ============================================
+# 🔒 SECURITY HEADERS - Prevent common attacks
+# ============================================
+
+@app.after_request
+def set_security_headers(response):
+    """Add security headers to every response"""
+    # Prevent clickjacking attacks
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    
+    # Prevent MIME sniffing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # XSS Protection (legacy browsers)
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # Referrer policy
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # Permissions policy (restrict browser features)
+    response.headers['Permissions-Policy'] = 'geolocation=(self), microphone=(), camera=()'
+    
+    # Content Security Policy (CSP)
+    if not app.config['DEV_MODE']:
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://maps.googleapis.com https://fonts.googleapis.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: https: blob:; "
+            "connect-src 'self' https://maps.googleapis.com; "
+            "frame-src 'self'; "
+            "object-src 'none'; "
+            "base-uri 'self';"
+        )
+        response.headers['Content-Security-Policy'] = csp
+    
+    # HSTS (HTTP Strict Transport Security) - Only in production with HTTPS
+    if not app.config['DEV_MODE']:
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    return response
+
+# ============================================
 # AUTHENTICATION ROUTES
 # ============================================
 
@@ -134,15 +210,44 @@ def register():
     if request.method == 'POST':
         data = request.form
         
+        # 🔒 INPUT VALIDATION & SANITIZATION
+        email = data.get('email', '').strip()
+        full_name = input_validation.sanitize_plain_text(data.get('full_name', ''))
+        phone = data.get('phone', '').strip()
+        
+        # Email validation
+        is_valid_email, email = input_validation.validate_email(email)
+        if not is_valid_email:
+            flash('Geçerli bir e-posta adresi girin', 'error')
+            return redirect(url_for('register'))
+        
+        # Phone validation
+        is_valid_phone, phone = input_validation.validate_phone(phone)
+        if not is_valid_phone:
+            flash('Geçerli bir telefon numarası girin (05XXXXXXXXX)', 'error')
+            return redirect(url_for('register'))
+        
+        # Name validation
+        if not full_name or len(full_name) < 3:
+            flash('Geçerli bir ad soyad girin (en az 3 karakter)', 'error')
+            return redirect(url_for('register'))
+        
         # Check if user exists
-        if User.query.filter_by(email=data.get('email')).first():
+        if User.query.filter_by(email=email).first():
             flash('Bu e-posta adresi zaten kullanımda', 'error')
             return redirect(url_for('register'))
         
         # Check if bar registration already exists
-        bar_assoc = data.get('bar_association')
-        bar_reg_num = data.get('bar_registration_number')
+        bar_assoc = input_validation.sanitize_plain_text(data.get('bar_association', ''))
+        bar_reg_num = input_validation.sanitize_plain_text(data.get('bar_registration_number', ''))
+        
         if bar_assoc and bar_reg_num:
+            # Baro numarası validation
+            is_valid_baro, bar_reg_num = input_validation.validate_baro_number(bar_reg_num)
+            if not is_valid_baro:
+                flash('Geçerli bir baro sicil numarası girin', 'error')
+                return redirect(url_for('register'))
+            
             existing_user = User.query.filter_by(
                 bar_association=bar_assoc,
                 bar_registration_number=bar_reg_num
@@ -153,9 +258,9 @@ def register():
         
         # Create new user
         user = User(
-            email=data.get('email'),
-            full_name=data.get('full_name'),
-            phone=data.get('phone'),
+            email=email,
+            full_name=full_name,
+            phone=phone,
             tc_number=data.get('tc_number'),
             bar_association=data.get('bar_association'),
             bar_registration_number=data.get('bar_registration_number'),
@@ -1247,14 +1352,13 @@ def update_avatar():
     # Dosya boyutu kontrolü (2MB)
     file.seek(0, 2)
     file_size = file.tell()
-    file.seek(0)
+    # 🔒 FILE UPLOAD VALIDATION
+    is_valid, error_msg, safe_filename = input_validation.validate_image_upload(file)
+    if not is_valid:
+        return jsonify({'success': False, 'error': error_msg}), 400
     
-    if file_size > 2 * 1024 * 1024:
-        return jsonify({'success': False, 'error': 'Dosya boyutu 2MB\'dan büyük'}), 400
-    
-    # Güvenli dosya adı
-    from werkzeug.utils import secure_filename
-    filename = secure_filename(file.filename)
+    # Unique filename
+    file_ext = safe_filename.rsplit('.', 1)[1].lower()
     unique_filename = f"avatar_{current_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{file_ext}"
     
     # avatars klasörünü oluştur
@@ -1265,7 +1369,10 @@ def update_avatar():
     if current_user.avatar_url and '/static/uploads/avatars/' in current_user.avatar_url:
         old_file = os.path.join(app.root_path, current_user.avatar_url.lstrip('/'))
         if os.path.exists(old_file):
-            os.remove(old_file)
+            try:
+                os.remove(old_file)
+            except Exception as e:
+                print(f"⚠️ Could not delete old avatar: {e}")
     
     # Dosyayı kaydet
     file_path = os.path.join(upload_folder, unique_filename)
@@ -2072,21 +2179,19 @@ def upload_chat_file():
         allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx', 'txt'}
         file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
         
-        if file_ext not in allowed_extensions:
-            return jsonify({'success': False, 'error': 'İzin verilmeyen dosya türü'}), 400
+        # 🔒 FILE UPLOAD VALIDATION
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx', 'txt'}
+        is_valid, error_msg, safe_filename = input_validation.validate_file_upload(
+            file, 
+            allowed_extensions=allowed_extensions, 
+            max_size=10*1024*1024  # 10MB
+        )
+        if not is_valid:
+            return jsonify({'success': False, 'error': error_msg}), 400
         
-        # Dosya boyutu kontrolü (10MB)
-        file.seek(0, 2)
-        file_size = file.tell()
-        file.seek(0)
-        
-        if file_size > 10 * 1024 * 1024:
-            return jsonify({'success': False, 'error': 'Dosya boyutu 10MB\'dan büyük'}), 400
-        
-        # Güvenli dosya adı
-        from werkzeug.utils import secure_filename
-        filename = secure_filename(file.filename)
-        unique_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+        # Unique filename
+        file_ext = safe_filename.rsplit('.', 1)[1].lower()
+        unique_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{safe_filename}"
         
         # uploads klasörünü oluştur
         upload_folder = os.path.join(app.root_path, 'static', 'uploads', 'chat')
