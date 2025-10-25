@@ -21,6 +21,61 @@
         <form method="POST" action="{{ url_for('edit_profile') }}" class="bg-white dark:bg-gray-800 rounded-xl p-4 md:p-8 border border-gray-200 dark:border-gray-700">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="space-y-6">
+                <!-- Avatar Section - NEW -->
+                <div class="pb-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">account_circle</span>
+                        Profil Fotoğrafı
+                    </h2>
+                    
+                    <div class="flex flex-col md:flex-row items-center gap-6">
+                        <div class="relative cursor-pointer" onclick="document.getElementById('avatarInput').click()" title="Fotoğraf değiştirmek için tıklayın">
+                            <img id="avatarPreview" src="{{ current_user.avatar_url if current_user.avatar_url else 'https://ui-avatars.com/api/?name=' + current_user.full_name + '&background=1661da&color=fff&size=200' }}" 
+                                 alt="Avatar" 
+                                 class="w-32 h-32 rounded-full border-4 border-primary/20 object-cover hover:opacity-80 transition-opacity">
+                            <div class="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg">
+                                <span class="material-symbols-outlined">photo_camera</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 w-full">
+                            <div id="avatarUploadSection" class="space-y-3">
+                                <!-- Dosya seçici - image/jpeg, image/jpg, image/png, image/gif formatları -->
+                                <input type="file" 
+                                       id="avatarInput" 
+                                       name="avatar" 
+                                       accept="image/jpeg,image/jpg,image/png,image/gif,.jpeg,.jpg,.png,.gif" 
+                                       class="hidden" 
+                                       onchange="previewAvatar(event)"
+                                       capture="environment">
+                                
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <button type="button" onclick="document.getElementById('avatarInput').click()" class="flex items-center justify-center gap-2 px-6 py-3 border-2 border-primary text-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-colors w-full sm:w-auto">
+                                        <span class="material-symbols-outlined">upload_file</span>
+                                        Fotoğraf Seç
+                                    </button>
+                                    <button type="button" id="uploadAvatarBtn" onclick="uploadAvatar()" class="hidden flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors w-full sm:w-auto">
+                                        <span class="material-symbols-outlined">cloud_upload</span>
+                                        Yükle
+                                    </button>
+                                </div>
+                                
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    <span class="material-symbols-outlined text-sm align-middle">info</span>
+                                    JPEG, JPG, PNG veya GIF • Maksimum 2MB
+                                </p>
+                            </div>
+                            
+                            {% if current_user.avatar_url %}
+                            <button type="button" onclick="removeAvatar()" class="mt-3 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-semibold flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                                Fotoğrafı Kaldır
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Personal Info Section -->
                 <div>
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
@@ -293,6 +348,105 @@
         </form>
     </div>
 </div>
+
+<script>
+// Avatar preview
+function previewAvatar(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Check file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Dosya boyutu 2MB\'dan küçük olmalıdır');
+            event.target.value = '';
+            return;
+        }
+        
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            alert('Lütfen bir resim dosyası seçin');
+            event.target.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('avatarPreview').src = e.target.result;
+            document.getElementById('uploadAvatarBtn').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Upload avatar
+function uploadAvatar() {
+    const fileInput = document.getElementById('avatarInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Lütfen bir dosya seçin');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
+    // Show loading state
+    const uploadBtn = document.getElementById('uploadAvatarBtn');
+    const originalText = uploadBtn.innerHTML;
+    uploadBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Yükleniyor...';
+    uploadBtn.disabled = true;
+    
+    fetch('{{ url_for("update_avatar") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Profil fotoğrafı başarıyla güncellendi!');
+            location.reload();
+        } else {
+            alert('Hata: ' + (data.error || 'Bilinmeyen hata'));
+            uploadBtn.innerHTML = originalText;
+            uploadBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        uploadBtn.innerHTML = originalText;
+        uploadBtn.disabled = false;
+    });
+}
+
+// Remove avatar
+function removeAvatar() {
+    if (confirm('Profil fotoğrafınızı kaldırmak istediğinizden emin misiniz?')) {
+        fetch('{{ url_for("remove_avatar") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Bir hata oluştu: ' + (data.error || 'Bilinmeyen hata'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        });
+    }
+}
+</script>
 {% endblock %}
 
 
