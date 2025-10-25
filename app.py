@@ -50,14 +50,14 @@ app.config['GOOGLE_MAPS_API_KEY'] = os.getenv('GOOGLE_MAPS_API_KEY', '')  # Goog
 app.config['SESSION_COOKIE_SECURE'] = not app.config['DEV_MODE']  # HTTPS only in production
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # 30 days - "Remember Me" effect
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # 24 hour session for web
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True  # Extend session on activity
 
-# 🔒 FLASK-LOGIN REMEMBER ME - Keep users logged in
-app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)  # Remember cookie expires in 30 days
+# 🔒 FLASK-LOGIN REMEMBER ME - Disabled for web (mobile uses API tokens)
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(hours=24)  # Same as session
 app.config['REMEMBER_COOKIE_SECURE'] = not app.config['DEV_MODE']  # HTTPS only in production
 app.config['REMEMBER_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
-app.config['REMEMBER_COOKIE_REFRESH_EACH_REQUEST'] = True  # Extend cookie on each request
+app.config['REMEMBER_COOKIE_REFRESH_EACH_REQUEST'] = False  # Don't auto-refresh
 
 # 🔒 SECURITY HEADERS
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # Cache static files for 1 year
@@ -380,11 +380,11 @@ def login():
         # 6. LOGIN BAŞARILI
         print(f"✅ Login successful: {email}")
         
-        # Session'ı kalıcı yap (30 gün boyunca açık kalacak)
-        session.permanent = True
+        # Session'ı geçici tut (web için normal session)
+        session.permanent = False
         
-        # Login yap - Her zaman remember=True (30 gün kalıcı)
-        login_user(user, remember=True)
+        # Login yap - Web için remember=False (mobil API token kullanacak)
+        login_user(user, remember=False)
         
         # Başarısız deneme sayısını sıfırla
         security_utils.reset_failed_attempts(user)
@@ -2615,11 +2615,11 @@ def verify_2fa():
             # 2FA başarılı
             remember = session.get('pending_2fa_remember', False)
             
-            # Session'ı kalıcı yap (30 gün boyunca açık kalacak)
-            session.permanent = True
+            # Session'ı geçici tut (web için normal session)
+            session.permanent = False
             
-            # Login yap - Her zaman remember=True (30 gün kalıcı)
-            login_user(user, remember=True)
+            # Login yap - Web için remember=False
+            login_user(user, remember=False)
             
             # Session işaretle
             session['2fa_verified'] = True
@@ -3138,6 +3138,166 @@ def send_push_notification(user_id, title, body, data=None):
     except Exception as e:
         print(f"❌ Error sending push notification: {e}")
         return False
+
+# ==================== MOBILE API ENDPOINTS ====================
+# 📱 Token-based authentication for mobile apps (persistent sessions)
+
+@app.route('/api/mobile/login', methods=['POST'])
+@limiter.limit("10 per minute")
+def api_mobile_login():
+    """Mobile app login - Returns persistent API token"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({
+                'success': False,
+                'error': 'Email ve şifre gerekli'
+            }), 400
+        
+        # Kullanıcıyı bul
+        user = User.query.filter_by(email=email).first()
+        
+        if not user or not user.check_password(password):
+            return jsonify({
+                'success': False,
+                'error': 'Hatalı email veya şifre'
+            }), 401
+        
+        # Hesap aktif mi kontrol et
+        if not user.is_active:
+            return jsonify({
+                'success': False,
+                'error': 'Hesabınız aktif değil'
+            }), 403
+        
+        # API token oluştur (veya mevcut olanı kullan)
+        if not user.api_token:
+            user.generate_api_token()
+            db.session.commit()
+        else:
+            # Mevcut token'ı güncelle
+            user.api_token_last_used = datetime.utcnow()
+            db.session.commit()
+        
+        # Kullanıcı bilgilerini döndür
+        return jsonify({
+            'success': True,
+            'token': user.api_token,
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'full_name': user.full_name,
+                'phone': user.phone,
+                'avatar_url': user.avatar_url,
+                'city': user.city,
+                'lawyer_type': user.lawyer_type,
+                'rating_average': user.rating_average,
+                'rating_count': user.rating_count,
+                'is_admin': user.is_admin
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Mobile login error: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Giriş işlemi başarısız'
+        }), 500
+
+@app.route('/api/mobile/logout', methods=['POST'])
+def api_mobile_logout():
+    """Mobile app logout - Revokes API token"""
+    try:
+        # Authorization header'dan token al
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({
+                'success': False,
+                'error': 'Token gerekli'
+            }), 401
+        
+        token = auth_header.split(' ')[1]
+        
+        # Token'a sahip kullanıcıyı bul
+        user = User.query.filter_by(api_token=token).first()
+        
+        if not user:
+            return jsonify({
+                'success': False,
+                'error': 'Geçersiz token'
+            }), 401
+        
+        # Token'ı iptal et
+        user.revoke_api_token()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Çıkış başarılı'
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Mobile logout error: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Çıkış işlemi başarısız'
+        }), 500
+
+@app.route('/api/mobile/verify', methods=['POST'])
+def api_mobile_verify():
+    """Verify API token and return user info"""
+    try:
+        # Authorization header'dan token al
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({
+                'success': False,
+                'error': 'Token gerekli'
+            }), 401
+        
+        token = auth_header.split(' ')[1]
+        
+        # Token'a sahip kullanıcıyı bul
+        user = User.query.filter_by(api_token=token).first()
+        
+        if not user:
+            return jsonify({
+                'success': False,
+                'error': 'Geçersiz token',
+                'action': 'login_required'
+            }), 401
+        
+        # Token'ın son kullanım zamanını güncelle
+        user.api_token_last_used = datetime.utcnow()
+        db.session.commit()
+        
+        # Kullanıcı bilgilerini döndür
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'full_name': user.full_name,
+                'phone': user.phone,
+                'avatar_url': user.avatar_url,
+                'city': user.city,
+                'lawyer_type': user.lawyer_type,
+                'rating_average': user.rating_average,
+                'rating_count': user.rating_count,
+                'is_admin': user.is_admin,
+                'unread_notifications': user.notifications_unread_count
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Mobile verify error: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Token doğrulama başarısız'
+        }), 500
 
 # ==================== HEALTH CHECK ====================
 @app.route('/health')

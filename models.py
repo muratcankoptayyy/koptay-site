@@ -102,6 +102,11 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_active = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # 📱 MOBILE API TOKEN - Persistent authentication for mobile apps
+    api_token = db.Column(db.String(64), unique=True, index=True)  # Unique token for mobile auth
+    api_token_created_at = db.Column(db.DateTime)  # Token creation time
+    api_token_last_used = db.Column(db.DateTime)  # Last time token was used
+    
     # Relationships
     posts = db.relationship('TevkilPost', backref='user', lazy='dynamic', foreign_keys='TevkilPost.user_id')
     applications = db.relationship('Application', backref='applicant', lazy='dynamic', foreign_keys='Application.applicant_id')
@@ -130,6 +135,27 @@ class User(UserMixin, db.Model):
     
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def generate_api_token(self):
+        """Generate a unique API token for mobile authentication"""
+        import secrets
+        self.api_token = secrets.token_urlsafe(48)  # 64 characters base64url
+        self.api_token_created_at = datetime.utcnow()
+        self.api_token_last_used = datetime.utcnow()
+        return self.api_token
+    
+    def verify_api_token(self, token):
+        """Verify API token and update last used timestamp"""
+        if self.api_token and self.api_token == token:
+            self.api_token_last_used = datetime.utcnow()
+            return True
+        return False
+    
+    def revoke_api_token(self):
+        """Revoke API token (for logout)"""
+        self.api_token = None
+        self.api_token_created_at = None
+        self.api_token_last_used = None
     
     def __repr__(self):
         return f'<User {self.email}>'
