@@ -51,6 +51,31 @@
 /* ============================================
    HAMBURGER MENU (Mobile Navigation)
    ============================================ */
+   
+/* Floating Mobile Menu Button - Sağ kenarda */
+#mobileMenuBtn {
+    animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+@keyframes pulse-subtle {
+    0%, 100% {
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
+    }
+}
+
+/* Buton hover efekti */
+#mobileMenuBtn:hover {
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Buton active efekti */
+#mobileMenuBtn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
 .mobile-menu-toggle {
     display: none;
     width: 44px;

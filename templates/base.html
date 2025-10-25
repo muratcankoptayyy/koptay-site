@@ -121,9 +121,9 @@
         {% block header %}
         <!-- Sidebar Navigation - Sadece giriş yapılmışsa göster -->
         {% if current_user.is_authenticated %}
-        <!-- Mobile Menu Button -->
-        <button id="mobileMenuBtn" class="lg:hidden fixed top-4 left-4 z-50 bg-white dark:bg-gray-900 p-2 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 w-full sm:w-auto">
-            <span class="material-symbols-outlined text-gray-900 dark:text-white">menu</span>
+        <!-- Mobile Menu Button - Floating, sağ tarafa taşındı -->
+        <button id="mobileMenuBtn" class="lg:hidden fixed right-3 top-1/2 -translate-y-1/2 z-50 bg-primary/80 backdrop-blur-sm hover:bg-primary p-2.5 rounded-full shadow-lg border-2 border-white/20 transition-all duration-300 active:scale-95" style="width: 48px; height: 48px;">
+            <span class="material-symbols-outlined text-white text-xl">menu</span>
         </button>
         
         <!-- Overlay -->
