@@ -43,6 +43,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['DEV_MODE'] = os.getenv('FLASK_ENV', 'production') == 'development'
 app.config['WHATSAPP_ENABLED'] = WHATSAPP_ENABLED  # Template'lerde kullanmak için
+app.config['GOOGLE_MAPS_API_KEY'] = os.getenv('GOOGLE_MAPS_API_KEY', '')  # Google Maps API Key
 
 # ⚡ DATABASE POOLING - High concurrency support
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = DATABASE_CONFIG
@@ -119,7 +120,8 @@ def inject_global_vars():
     
     return dict(
         unread_count=unread_count,
-        current_year=datetime.now().year
+        current_year=datetime.now().year,
+        google_maps_api_key=app.config.get('GOOGLE_MAPS_API_KEY', '')
     )
 
 # ============================================

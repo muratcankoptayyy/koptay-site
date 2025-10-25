@@ -412,6 +412,23 @@
                                 <span>{{ user.city }}{% if user.district %}, {{ user.district }}{% endif %}</span>
                             </div>
                         </div>
+                        
+                        <!-- Google Maps Integration -->
+                        {% if google_maps_api_key and user.city %}
+                        <div class="pt-3 sm:pt-4">
+                            <div id="lawyer-map" class="w-full h-48 sm:h-64 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden" 
+                                 data-city="{{ user.city }}" 
+                                 data-district="{{ user.district or '' }}">
+                                <div class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+                                    <div class="text-center">
+                                        <span class="material-symbols-outlined text-4xl text-gray-400 animate-pulse">map</span>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Harita yükleniyor...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                         <div class="pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
                             <div class="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold mb-1">
                                 <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
@@ -439,4 +456,146 @@
         </div>
     </div>
 </div>
+
+{% if google_maps_api_key and user.city %}
+<script>
+// Google Maps initialization for lawyer location
+function initLawyerMap() {
+    const mapElement = document.getElementById('lawyer-map');
+    if (!mapElement || typeof google === 'undefined') {
+        return;
+    }
+    
+    const city = mapElement.dataset.city;
+    const district = mapElement.dataset.district;
+    const locationQuery = district ? `${district}, ${city}, Türkiye` : `${city}, Türkiye`;
+    
+    // Geocoding service
+    const geocoder = new google.maps.Geocoder();
+    
+    geocoder.geocode({ address: locationQuery }, function(results, status) {
+        if (status === 'OK' && results[0]) {
+            const location = results[0].geometry.location;
+            
+            // Create map
+            const map = new google.maps.Map(mapElement, {
+                center: location,
+                zoom: district ? 13 : 11,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true,
+                zoomControl: true,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    }
+                ]
+            });
+            
+            // Add marker
+            const marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: locationQuery,
+                animation: google.maps.Animation.DROP,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: "#3B82F6",
+                    fillOpacity: 0.8,
+                    strokeColor: "#ffffff",
+                    strokeWeight: 2
+                }
+            });
+            
+            // Info window
+            const infoWindow = new google.maps.InfoWindow({
+                content: `<div style="padding: 8px;">
+                    <h3 style="font-weight: bold; margin-bottom: 4px; color: #1f2937;">{{ user.full_name }}</h3>
+                    <p style="color: #6b7280; font-size: 14px; margin: 0;">${locationQuery}</p>
+                </div>`
+            });
+            
+            marker.addListener('click', function() {
+                infoWindow.open(map, marker);
+            });
+            
+            // Dark mode support
+            if (document.documentElement.classList.contains('dark')) {
+                map.setOptions({
+                    styles: [
+                        { elementType: "geometry", stylers: [{ color: "#1f2937" }] },
+                        { elementType: "labels.text.stroke", stylers: [{ color: "#111827" }] },
+                        { elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }] },
+                        {
+                            featureType: "administrative.locality",
+                            elementType: "labels.text.fill",
+                            stylers: [{ color: "#d1d5db" }]
+                        },
+                        {
+                            featureType: "poi",
+                            elementType: "labels",
+                            stylers: [{ visibility: "off" }]
+                        },
+                        {
+                            featureType: "road",
+                            elementType: "geometry",
+                            stylers: [{ color: "#374151" }]
+                        },
+                        {
+                            featureType: "road",
+                            elementType: "geometry.stroke",
+                            stylers: [{ color: "#1f2937" }]
+                        },
+                        {
+                            featureType: "road.highway",
+                            elementType: "geometry",
+                            stylers: [{ color: "#4b5563" }]
+                        },
+                        {
+                            featureType: "water",
+                            elementType: "geometry",
+                            stylers: [{ color: "#111827" }]
+                        }
+                    ]
+                });
+            }
+        } else {
+            console.error('Geocoding failed:', status);
+            mapElement.innerHTML = `
+                <div class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+                    <div class="text-center px-4">
+                        <span class="material-symbols-outlined text-4xl text-gray-400">location_off</span>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Konum bulunamadı</p>
+                    </div>
+                </div>
+            `;
+        }
+    });
+}
+
+// Initialize map when Google Maps API is loaded
+if (typeof google !== 'undefined' && google.maps) {
+    initLawyerMap();
+} else {
+    window.addEventListener('load', function() {
+        const checkGoogleMaps = setInterval(function() {
+            if (typeof google !== 'undefined' && google.maps) {
+                clearInterval(checkGoogleMaps);
+                initLawyerMap();
+            }
+        }, 100);
+        
+        // Timeout after 10 seconds
+        setTimeout(function() {
+            clearInterval(checkGoogleMaps);
+        }, 10000);
+    });
+}
+</script>
+{% endif %}
+
 {% endblock %}
+
