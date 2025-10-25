@@ -1323,6 +1323,71 @@ def update_notification_settings():
     flash('Bildirim ayarlarınız başarıyla güncellendi!', 'success')
     return redirect(url_for('settings'))
 
+@app.route('/settings/account/delete', methods=['POST'])
+@login_required
+def delete_account():
+    """Kullanıcı hesabını kalıcı olarak sil"""
+    try:
+        data = request.get_json() if request.is_json else request.form
+        password = data.get('password')
+        confirmation = data.get('confirmation')
+        
+        # 1. Şifre doğrulama
+        if not current_user.check_password(password):
+            security_utils.log_security_event(
+                current_user.id, 'account_delete_failed', 'WARNING',
+                'Failed account deletion - incorrect password'
+            )
+            if request.is_json:
+                return jsonify({'success': False, 'error': 'Şifre yanlış!'}), 403
+            flash('Şifre yanlış!', 'error')
+            return redirect(url_for('settings'))
+        
+        # 2. Onay metni kontrolü
+        if confirmation != 'SIL':
+            if request.is_json:
+                return jsonify({'success': False, 'error': 'Onay metni hatalı!'}), 400
+            flash('Hesabınızı silmek için "SIL" yazmalısınız!', 'error')
+            return redirect(url_for('settings'))
+        
+        # 3. Güvenlik log'u
+        security_utils.log_security_event(
+            current_user.id, 'account_deleted', 'CRITICAL',
+            f'User {current_user.email} deleted their account'
+        )
+        
+        user_id = current_user.id
+        user_email = current_user.email
+        
+        # 4. Avatar dosyasını sil
+        if current_user.avatar_url and '/static/uploads/avatars/' in current_user.avatar_url:
+            old_file = os.path.join(app.root_path, current_user.avatar_url.lstrip('/'))
+            if os.path.exists(old_file):
+                try:
+                    os.remove(old_file)
+                except:
+                    pass
+        
+        # 5. Kullanıcı verilerini sil (cascade ile ilişkili veriler de silinecek)
+        from flask_login import logout_user
+        logout_user()
+        
+        # Kullanıcıyı veritabanından sil
+        db.session.delete(User.query.get(user_id))
+        db.session.commit()
+        
+        # 6. Başarılı mesajı
+        flash('Hesabınız başarıyla silindi. Bizi kullandığınız için teşekkür ederiz.', 'info')
+        return redirect(url_for('index'))
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Account deletion error: {str(e)}")
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.'}), 500
+        flash('Bir hata oluştu. Lütfen daha sonra tekrar deneyin.', 'error')
+        return redirect(url_for('settings'))
+
 @app.route('/settings/password', methods=['POST'])
 @login_required
 def change_password():
