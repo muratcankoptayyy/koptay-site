@@ -53,6 +53,12 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # 30 days - "Remember Me" effect
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True  # Extend session on activity
 
+# 🔒 FLASK-LOGIN REMEMBER ME - Keep users logged in
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)  # Remember cookie expires in 30 days
+app.config['REMEMBER_COOKIE_SECURE'] = not app.config['DEV_MODE']  # HTTPS only in production
+app.config['REMEMBER_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
+app.config['REMEMBER_COOKIE_REFRESH_EACH_REQUEST'] = True  # Extend cookie on each request
+
 # 🔒 SECURITY HEADERS
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # Cache static files for 1 year
 
@@ -377,8 +383,8 @@ def login():
         # Session'ı kalıcı yap (30 gün boyunca açık kalacak)
         session.permanent = True
         
-        # Login yap
-        login_user(user, remember=remember)
+        # Login yap - Her zaman remember=True (30 gün kalıcı)
+        login_user(user, remember=True)
         
         # Başarısız deneme sayısını sıfırla
         security_utils.reset_failed_attempts(user)
@@ -2612,7 +2618,8 @@ def verify_2fa():
             # Session'ı kalıcı yap (30 gün boyunca açık kalacak)
             session.permanent = True
             
-            login_user(user, remember=remember)
+            # Login yap - Her zaman remember=True (30 gün kalıcı)
+            login_user(user, remember=True)
             
             # Session işaretle
             session['2fa_verified'] = True
