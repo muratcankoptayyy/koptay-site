@@ -103,6 +103,25 @@ def inject_csrf_token():
     """CSRF token'ı tüm template'lere enjekte et"""
     return dict(csrf_token=generate_csrf)
 
+@app.context_processor
+def inject_global_vars():
+    """Tüm template'lere global değişkenleri enjekte et"""
+    unread_count = 0
+    if current_user.is_authenticated:
+        try:
+            unread_count = Notification.query.filter_by(
+                user_id=current_user.id, 
+                read_at=None
+            ).count()
+        except Exception as e:
+            print(f"⚠️ Notification count error: {str(e)}")
+            unread_count = 0
+    
+    return dict(
+        unread_count=unread_count,
+        current_year=datetime.now().year
+    )
+
 # ============================================
 # AUTHENTICATION ROUTES
 # ============================================
@@ -384,109 +403,134 @@ def index():
     return render_template('index.html', posts=recent_posts)
 
 @app.route('/dashboard')
-@dev_login_optional
+@login_required
 def dashboard():
     """Kullanıcı dashboard"""
-    # Kullanıcının ilanları
-    my_posts = TevkilPost.query.filter_by(user_id=current_user.id).order_by(TevkilPost.created_at.desc()).all()
-    
-    # Kullanıcının başvuruları
-    my_applications = Application.query.filter_by(applicant_id=current_user.id).order_by(Application.created_at.desc()).all()
-    
-    # Gelen başvurular (kullanıcının ilanlarına)
-    incoming_applications = db.session.query(Application).join(TevkilPost).filter(
-        TevkilPost.user_id == current_user.id
-    ).order_by(Application.created_at.desc()).all()
-    
-    # Okunmamış bildirimler
-    unread_notifications = Notification.query.filter_by(user_id=current_user.id, read_at=None).count()
-    
-    # Chart Data: Son 6 ayın başvuru trendi
-    from datetime import datetime, timedelta
-    import calendar
-    
-    now = datetime.now(timezone.utc)
-    chart_months = []
-    chart_incoming = []
-    chart_outgoing = []
-    
-    for i in range(5, -1, -1):  # Son 6 ay
-        month_date = now - timedelta(days=30*i)
-        month_start = month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    try:
+        # Kullanıcının ilanları
+        my_posts = TevkilPost.query.filter_by(user_id=current_user.id).order_by(TevkilPost.created_at.desc()).all()
         
-        if i == 0:
-            month_end = now
-        else:
-            next_month = month_start.replace(day=28) + timedelta(days=4)
-            month_end = next_month - timedelta(days=next_month.day)
+        # Kullanıcının başvuruları
+        my_applications = Application.query.filter_by(applicant_id=current_user.id).order_by(Application.created_at.desc()).all()
         
-        # Ay adı (Türkçe)
-        turkish_months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
-        chart_months.append(turkish_months[month_start.month - 1])
+        # Gelen başvurular (kullanıcının ilanlarına)
+        incoming_applications = db.session.query(Application).join(TevkilPost).filter(
+            TevkilPost.user_id == current_user.id
+        ).order_by(Application.created_at.desc()).all()
         
-        # Gelen başvurular (bu aydaki)
-        incoming_count = db.session.query(Application).join(TevkilPost).filter(
+        # Okunmamış bildirimler
+        unread_notifications = Notification.query.filter_by(user_id=current_user.id, read_at=None).count()
+    except Exception as e:
+        print(f"❌ Dashboard error in initial queries: {str(e)}")
+        flash('Dashboard yüklenirken bir hata oluştu.', 'error')
+        return redirect(url_for('index'))
+    
+    try:
+        # Chart Data: Son 6 ayın başvuru trendi
+        from datetime import datetime, timedelta
+        import calendar
+        
+        now = datetime.now(timezone.utc)
+        chart_months = []
+        chart_incoming = []
+        chart_outgoing = []
+        
+        for i in range(5, -1, -1):  # Son 6 ay
+            month_date = now - timedelta(days=30*i)
+            month_start = month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            
+            if i == 0:
+                month_end = now
+            else:
+                next_month = month_start.replace(day=28) + timedelta(days=4)
+                month_end = next_month - timedelta(days=next_month.day)
+            
+            # Ay adı (Türkçe)
+            turkish_months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+            chart_months.append(turkish_months[month_start.month - 1])
+            
+            # Gelen başvurular (bu aydaki)
+            incoming_count = db.session.query(Application).join(TevkilPost).filter(
+                TevkilPost.user_id == current_user.id,
+                Application.created_at >= month_start,
+                Application.created_at <= month_end
+            ).count()
+            chart_incoming.append(incoming_count)
+            
+            # Yaptığım başvurular
+            outgoing_count = Application.query.filter(
+                Application.applicant_id == current_user.id,
+                Application.created_at >= month_start,
+                Application.created_at <= month_end
+            ).count()
+            chart_outgoing.append(outgoing_count)
+        
+        # Chart Data: Kategori dağılımı
+        from sqlalchemy import func
+        category_data = db.session.query(
+            TevkilPost.category, 
+            func.count(TevkilPost.id)
+        ).filter_by(user_id=current_user.id).group_by(TevkilPost.category).all()
+        
+        category_labels = [cat[0] or 'Diğer' for cat in category_data]
+        category_counts = [cat[1] for cat in category_data]
+        
+        # Performance stats
+        # Bu ay tamamlanan işler
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        monthly_completed = TevkilPost.query.filter(
             TevkilPost.user_id == current_user.id,
-            Application.created_at >= month_start,
-            Application.created_at <= month_end
+            TevkilPost.status == 'completed',
+            TevkilPost.updated_at >= month_start
         ).count()
-        chart_incoming.append(incoming_count)
         
-        # Yaptığım başvurular
-        outgoing_count = Application.query.filter(
-            Application.applicant_id == current_user.id,
-            Application.created_at >= month_start,
-            Application.created_at <= month_end
-        ).count()
-        chart_outgoing.append(outgoing_count)
-    
-    # Chart Data: Kategori dağılımı
-    from sqlalchemy import func
-    category_data = db.session.query(
-        TevkilPost.category, 
-        func.count(TevkilPost.id)
-    ).filter_by(user_id=current_user.id).group_by(TevkilPost.category).all()
-    
-    category_labels = [cat[0] or 'Diğer' for cat in category_data]
-    category_counts = [cat[1] for cat in category_data]
-    
-    # Performance stats
-    # Bu ay tamamlanan işler
-    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    monthly_completed = TevkilPost.query.filter(
-        TevkilPost.user_id == current_user.id,
-        TevkilPost.status == 'completed',
-        TevkilPost.updated_at >= month_start
-    ).count()
-    
-    # Tahmini toplam kazanç (completed işlerin price_max toplamı)
-    completed_posts = TevkilPost.query.filter_by(
-        user_id=current_user.id, 
-        status='completed'
-    ).all()
-    total_earnings = sum([p.price_max for p in completed_posts if p.price_max])
-    
-    # Ortalama rating
-    ratings = Rating.query.filter_by(reviewed_id=current_user.id).all()
-    avg_rating = sum([r.rating for r in ratings]) / len(ratings) if ratings else 0
-    
-    # Kullanıcı istatistiklerini getir
-    user_stats = get_user_stats(current_user.id)
-    
-    return render_template('dashboard.html',
-                         my_posts=my_posts,
-                         my_applications=my_applications,
-                         incoming_applications=incoming_applications,
-                         unread_notifications=unread_notifications,
-                         chart_months=chart_months,
-                         chart_incoming=chart_incoming,
-                         chart_outgoing=chart_outgoing,
-                         category_labels=category_labels,
-                         category_counts=category_counts,
-                         monthly_completed=monthly_completed,
-                         total_earnings=total_earnings,
-                         avg_rating=avg_rating,
-                         user_stats=user_stats)
+        # Tahmini toplam kazanç (completed işlerin price_max toplamı)
+        completed_posts = TevkilPost.query.filter_by(
+            user_id=current_user.id, 
+            status='completed'
+        ).all()
+        total_earnings = sum([p.price_max for p in completed_posts if p.price_max])
+        
+        # Ortalama rating
+        ratings = Rating.query.filter_by(reviewed_id=current_user.id).all()
+        avg_rating = sum([r.rating for r in ratings]) / len(ratings) if ratings else 0
+        
+        # Kullanıcı istatistiklerini getir
+        user_stats = get_user_stats(current_user.id)
+        
+        return render_template('dashboard.html',
+                             my_posts=my_posts,
+                             my_applications=my_applications,
+                             incoming_applications=incoming_applications,
+                             unread_notifications=unread_notifications,
+                             chart_months=chart_months,
+                             chart_incoming=chart_incoming,
+                             chart_outgoing=chart_outgoing,
+                             category_labels=category_labels,
+                             category_counts=category_counts,
+                             monthly_completed=monthly_completed,
+                             total_earnings=total_earnings,
+                             avg_rating=avg_rating,
+                             user_stats=user_stats)
+    except Exception as e:
+        print(f"❌ Dashboard error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        # Minimal dashboard göster
+        return render_template('dashboard.html',
+                             my_posts=my_posts,
+                             my_applications=my_applications,
+                             incoming_applications=incoming_applications,
+                             unread_notifications=unread_notifications,
+                             chart_months=[],
+                             chart_incoming=[],
+                             chart_outgoing=[],
+                             category_labels=[],
+                             category_counts=[],
+                             monthly_completed=0,
+                             total_earnings=0,
+                             avg_rating=0,
+                             user_stats={})
 
 @app.route('/stats')
 @dev_login_optional

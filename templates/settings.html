@@ -11,7 +11,7 @@
                 <h1 class="text-3xl md:text-2xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">Ayarlar</h1>
                 <p class="text-gray-600 dark:text-gray-400">Hesabınızı ve tercihlerinizi yönetin</p>
             </div>
-            <a href="{{ url_for('profile', user_id=current_user.id) }}" class="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
+            <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
                 <span class="material-symbols-outlined">arrow_back</span>
                 <span>Profile Dön</span>
             </a>
@@ -193,7 +193,7 @@
                         </div>
 
                         <div class="flex justify-end gap-3">
-                            <button type="button" onclick="window.location.href='{{ url_for('profile', user_id=current_user.id) }}'" 
+                            <button type="button" onclick="window.location.href='{{ url_for('user_profile', user_id=current_user.id) }}'" 
                                     class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto">
                                 İptal
                             </button>

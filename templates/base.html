@@ -338,7 +338,7 @@
             <span class="badge">{{ unread_count if unread_count < 10 else '9+' }}</span>
             {% endif %}
         </a>
-        <a href="{{ url_for('profile', user_id=current_user.id) }}" class="bottom-nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
+        <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="bottom-nav-item {% if request.endpoint == 'user_profile' %}active{% endif %}">
             <span class="material-symbols-outlined">person</span>
             <span>Profil</span>
         </a>
