@@ -514,7 +514,10 @@ def reset_password(token):
 
 @app.route('/')
 def index():
-    """Ana sayfa"""
+    """Ana sayfa - Giriş yapmışsa dashboard'a yönlendir"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
     recent_posts = TevkilPost.query.filter_by(status='active').order_by(TevkilPost.created_at.desc()).limit(6).all()
     return render_template('index.html', posts=recent_posts)
 
