@@ -3309,8 +3309,39 @@ def health_check():
         'timestamp': datetime.now(timezone.utc).isoformat()
     }), 200
 
+# ==================== LEGAL PAGES ====================
+@app.route('/privacy-policy')
+def privacy_policy():
+    """Privacy policy page (KVKK compliance)"""
+    return render_template('privacy_policy.html', current_date='2025')
+
+@app.route('/terms-of-service')
+def terms_of_service():
+    """Terms of service page"""
+    return render_template('terms_of_service.html', current_date='2025')
+
+@app.route('/cookie-policy')
+def cookie_policy():
+    """Cookie policy page"""
+    return render_template('cookie_policy.html', current_date='2025')
+
+# ==================== ERROR HANDLERS ====================
+@app.errorhandler(404)
+def page_not_found(e):
+    """Custom 404 error page"""
+    return render_template('errors/404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    """Custom 500 error page"""
+    db.session.rollback()  # Rollback any failed database operations
+    error_message = str(e) if app.debug else None
+    return render_template('errors/500.html', error=error_message), 500
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     # Use socketio.run instead of app.run
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    # Production mode - debug=False for security
+    debug_mode = os.getenv('FLASK_ENV', 'production') == 'development'
+    socketio.run(app, host='0.0.0.0', port=5000, debug=debug_mode)
