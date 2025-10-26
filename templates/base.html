@@ -485,8 +485,22 @@
             document.getElementById('cookieConsent').style.display = 'block';
         }
 
-        // Show banner if user hasn't made a choice
+        // Detect if running in mobile app (Capacitor WebView)
+        function isRunningInApp() {
+            // Check for Capacitor
+            if (window.Capacitor) return true;
+            // Check for common mobile app user agents
+            const ua = navigator.userAgent.toLowerCase();
+            return ua.includes('wv') || ua.includes('webview') || ua.includes('capacitor');
+        }
+
+        // Show banner only in web browser (not in mobile app)
         window.addEventListener('DOMContentLoaded', function() {
+            // Don't show cookie banner in mobile app
+            if (isRunningInApp()) {
+                return;
+            }
+            
             const consent = localStorage.getItem('cookieConsent');
             if (!consent) {
                 document.getElementById('cookieConsent').style.display = 'block';
