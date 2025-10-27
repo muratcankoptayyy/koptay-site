@@ -14,9 +14,9 @@
     <form method="POST" class="px-4 pb-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <!-- Alıcı Bilgisi -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 mb-6">
+        <div class="bg-white dark:bg-gray-800 p-4 border border-gray-300 dark:border-gray-700 mb-6">
             <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-white font-bold text-lg">
                     {{ receiver.full_name[0] }}
                 </div>
                 <div>
@@ -29,8 +29,8 @@
         <!-- İlan Bilgisi (varsa) -->
         {% if post %}
         <input type="hidden" name="post_id" value="{{ post.id }}">
-        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800 mb-6">
-            <p class="text-sm text-blue-600 dark:text-blue-400 font-medium mb-2">İlan Hakkında:</p>
+        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-800 mb-6">
+            <p class="text-sm text-gray-900 dark:text-blue-400 font-medium mb-2">İlan Hakkında:</p>
             <div class="flex items-start gap-3">
                 <img src="{{ url_for('static', filename='logo-icon.svg') }}" alt="Logo" class="h-auto max-h-64 sm:max-h-96 w-12 flex-shrink-0">
                 <div>
@@ -50,17 +50,17 @@
             <label class="flex flex-col min-w-40 flex-1">
                 <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">Mesajınız *</p>
                 <textarea name="message" required rows="8"
-                    class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-700 bg-background-light dark:bg-gray-800 placeholder:text-gray-500 dark:placeholder:text-gray-400 p-4 text-base font-normal leading-normal"
+                    class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-700 bg-background-light dark:bg-gray-800 placeholder:text-gray-500 dark:placeholder:text-gray-400 p-4 text-base font-normal leading-normal"
                     placeholder="Mesajınızı buraya yazın..."></textarea>
             </label>
         </div>
         
         <!-- Buttons -->
         <div class="flex gap-3 justify-end pt-4">
-            <a href="{{ url_for('messages') }}" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-background-light dark:bg-gray-800 text-gray-900 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] border border-gray-300 dark:border-gray-700">
+            <a href="{{ url_for('messages') }}" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden h-10 px-4 bg-background-light dark:bg-gray-800 text-gray-900 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] border border-gray-300 dark:border-gray-700">
                 <span class="truncate">İptal</span>
             </a>
-            <button type="submit" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-blue-600 transition-colors gap-2 w-full sm:w-auto">
+            <button type="submit" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden h-10 px-4 bg-gray-900 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-gray-900 transition-colors gap-2 w-full sm:w-auto">
                 <span class="material-symbols-outlined text-lg">send</span>
                 <span class="truncate">Gönder</span>
             </button>

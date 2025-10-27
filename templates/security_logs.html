@@ -7,12 +7,12 @@
     <div class="max-w-6xl mx-auto px-4">
         <!-- Header -->
         <div class="mb-8">
-            <a href="{{ url_for('settings') }}" class="text-blue-600 hover:text-blue-700 mb-4 inline-flex items-center">
+            <a href="{{ url_for('settings') }}" class="text-gray-900 hover:text-blue-700 mb-4 inline-flex items-center">
                 <span class="material-symbols-outlined">arrow_back</span>
                 Ayarlara Dön
             </a>
             <h1 class="text-xl md:text-3xl font-bold text-gray-900 dark:text-white mt-4 flex items-center gap-3">
-                <span class="material-symbols-outlined text-2xl md:text-4xl text-blue-600">shield</span>
+                <span class="material-symbols-outlined text-2xl md:text-4xl text-gray-900">shield</span>
                 Güvenlik Logları
             </h1>
             <p class="text-gray-600 dark:text-gray-400 mt-2">
@@ -22,7 +22,7 @@
 
         <!-- Stats -->
         <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 p-4 border border-gray-300 dark:border-gray-700">
                 <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-green-600 text-xl md:text-3xl">login</span>
                     <div>
@@ -31,7 +31,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 p-4 border border-gray-300 dark:border-gray-700">
                 <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-red-600 text-xl md:text-3xl">block</span>
                     <div>
@@ -40,16 +40,16 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 p-4 border border-gray-300 dark:border-gray-700">
                 <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-blue-600 text-xl md:text-3xl">key</span>
+                    <span class="material-symbols-outlined text-gray-900 text-xl md:text-3xl">key</span>
                     <div>
                         <p class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{{ logs.items|selectattr('event_type', 'equalto', 'password_change')|list|length }}</p>
                         <p class="text-sm text-gray-600 dark:text-gray-400">Şifre Değişikliği</p>
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 p-4 border border-gray-300 dark:border-gray-700">
                 <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-purple-600 text-xl md:text-3xl">security</span>
                     <div>
@@ -61,7 +61,7 @@
         </div>
 
         <!-- Logs Table -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 sm:-2xl border border-gray-300 dark:border-gray-700 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50 dark:bg-gray-700">
@@ -101,7 +101,7 @@
                                     <span class="material-symbols-outlined text-gray-600">logout</span>
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">Çıkış</span>
                                     {% elif log.event_type == 'password_change' %}
-                                    <span class="material-symbols-outlined text-blue-600">key</span>
+                                    <span class="material-symbols-outlined text-gray-900">key</span>
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">Şifre Değişikliği</span>
                                     {% elif log.event_type == '2fa_enabled' %}
                                     <span class="material-symbols-outlined text-purple-600">security</span>
@@ -138,7 +138,7 @@
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{{ log.ip_address or 'N/A' }}</code>
+                                <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1">{{ log.ip_address or 'N/A' }}</code>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                                 {{ log.description or '-' }}
@@ -158,18 +158,18 @@
 
             <!-- Pagination -->
             {% if logs.pages > 1 %}
-            <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-600">
+            <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex items-center justify-between border-t border-gray-300 dark:border-gray-600">
                 <div class="text-sm text-gray-600 dark:text-gray-400">
                     Sayfa {{ logs.page }} / {{ logs.pages }} (Toplam: {{ logs.total }} kayıt)
                 </div>
                 <div class="flex gap-2">
                     {% if logs.has_prev %}
-                    <a href="?page={{ logs.prev_num }}" class="px-4 py-2 bg-white dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors">
+                    <a href="?page={{ logs.prev_num }}" class="px-4 py-2 bg-white dark:bg-gray-600 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors">
                         Önceki
                     </a>
                     {% endif %}
                     {% if logs.has_next %}
-                    <a href="?page={{ logs.next_num }}" class="px-4 py-2 bg-white dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors">
+                    <a href="?page={{ logs.next_num }}" class="px-4 py-2 bg-white dark:bg-gray-600 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors">
                         Sonraki
                     </a>
                     {% endif %}

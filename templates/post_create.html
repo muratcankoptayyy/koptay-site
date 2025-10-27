@@ -6,7 +6,7 @@
 <div class="px-4 md:px-10 lg:px-20 xl:px-40 flex flex-1 justify-center py-10">
     <div class="layout-content-container flex flex-col w-full max-w-[960px] flex-1">
         <div class="flex flex-wrap justify-between gap-3 p-4">
-            <h1 class="text-[#111418] dark:text-white text-2xl md:text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">Yeni Tevkil İlanı Oluştur</h1>
+            <h1 class="text-[#111418] dark:text-white text-2xl md:text-4xl font-light leading-tight tracking-[-0.033em] min-w-72">Yeni Tevkil İlanı Oluştur</h1>
         </div>
         
         <form method="POST" action="{{ url_for('create_post') }}" class="p-4 space-y-6" data-loading="true">
@@ -15,7 +15,7 @@
                 <!-- Görev Türü -->
                 <label class="flex flex-col min-w-40 flex-1">
                     <p class="text-[#111418] dark:text-gray-300 text-base font-medium leading-normal pb-2">Görev Türü</p>
-                    <select name="category" required class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-14 bg-no-repeat bg-right p-[15px] text-base font-normal leading-normal appearance-none">
+                    <select name="category" required class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-14 bg-no-repeat bg-right p-[15px] text-base font-normal leading-normal appearance-none">
                         <option value="" disabled selected>Görev Seçiniz</option>
                         <option value="hukuk_durusma">Hukuk Duruşması Katılım</option>
                         <option value="hukuk_durusma_tanikli">Hukuk Duruşması Katılım (Tanıklı)</option>
@@ -41,7 +41,7 @@
                 <!-- Aciliyet Durumu -->
                 <label class="flex flex-col min-w-40 flex-1">
                     <p class="text-[#111418] dark:text-gray-300 text-base font-medium leading-normal pb-2">Aciliyet Durumu</p>
-                    <select name="urgency_level" required class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-14 bg-no-repeat bg-right p-[15px] text-base font-normal leading-normal appearance-none">
+                    <select name="urgency_level" required class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-14 bg-no-repeat bg-right p-[15px] text-base font-normal leading-normal appearance-none">
                         <option value="normal">Normal</option>
                         <option value="urgent">Acil</option>
                         <option value="very_urgent">Çok Acil</option>
@@ -52,14 +52,14 @@
             <!-- İlan Başlığı -->
             <label class="flex flex-col min-w-40 flex-1">
                 <p class="text-[#111418] dark:text-gray-300 text-base font-medium leading-normal pb-2">İlan Başlığı</p>
-                <input name="title" type="text" required class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-12 sm:h-14 placeholder:text-[#637188] p-[15px] text-base font-normal leading-normal" placeholder="Örn: Ankara Adliyesi'nde Duruşma Temsili"/>
+                <input name="title" type="text" required class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-12 sm:h-14 placeholder:text-[#637188] p-[15px] text-base font-normal leading-normal" placeholder="Örn: Ankara Adliyesi'nde Duruşma Temsili"/>
             </label>
             
             <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                 <!-- Şehir -->
                 <label class="flex flex-col min-w-40 flex-1">
                     <p class="text-[#111418] dark:text-gray-300 text-base font-medium leading-normal pb-2">İl</p>
-                    <select name="city" id="city" required class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-14 bg-no-repeat bg-right p-[15px] text-base font-normal leading-normal appearance-none">
+                    <select name="city" id="city" required class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-14 bg-no-repeat bg-right p-[15px] text-base font-normal leading-normal appearance-none">
                         <option value="">İl Seçiniz</option>
                         {% for city in cities %}
                         <option value="{{ city }}">{{ city }}</option>
@@ -70,7 +70,7 @@
                 <!-- Adliye -->
                 <label class="flex flex-col min-w-40 flex-1">
                     <p class="text-[#111418] dark:text-gray-300 text-base font-medium leading-normal pb-2">Adliye</p>
-                    <select name="courthouse" id="courthouse" class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-14 bg-no-repeat bg-right p-[15px] text-base font-normal leading-normal appearance-none">
+                    <select name="courthouse" id="courthouse" class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-14 bg-no-repeat bg-right p-[15px] text-base font-normal leading-normal appearance-none">
                         <option value="">Önce İl Seçiniz</option>
                     </select>
                 </label>
@@ -85,7 +85,7 @@
                 <label class="flex flex-col min-w-40 flex-1">
                     <p class="text-[#111418] dark:text-gray-300 text-base font-medium leading-normal pb-2">Minimum Ücret (TL)</p>
                     <div class="relative flex w-full items-center">
-                        <input name="price_min" type="number" min="0" step="100" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-12 sm:h-14 placeholder:text-[#637188] p-[15px] pr-10 text-base font-normal leading-normal" placeholder="0"/>
+                        <input name="price_min" type="number" min="0" step="100" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-12 sm:h-14 placeholder:text-[#637188] p-[15px] pr-10 text-base font-normal leading-normal" placeholder="0"/>
                         <span class="absolute right-4 text-[#637188] dark:text-gray-400">₺</span>
                     </div>
                 </label>
@@ -94,7 +94,7 @@
                 <label class="flex flex-col min-w-40 flex-1">
                     <p class="text-[#111418] dark:text-gray-300 text-base font-medium leading-normal pb-2">Maksimum Ücret (TL)</p>
                     <div class="relative flex w-full items-center">
-                        <input name="price_max" type="number" min="0" step="100" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-12 sm:h-14 placeholder:text-[#637188] p-[15px] pr-10 text-base font-normal leading-normal" placeholder="0"/>
+                        <input name="price_max" type="number" min="0" step="100" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary h-12 md:h-12 sm:h-14 placeholder:text-[#637188] p-[15px] pr-10 text-base font-normal leading-normal" placeholder="0"/>
                         <span class="absolute right-4 text-[#637188] dark:text-gray-400">₺</span>
                     </div>
                 </label>
@@ -102,7 +102,7 @@
             
             <!-- Uzaktan Çalışma -->
             <div class="flex items-center gap-3">
-                <input type="checkbox" name="remote_allowed" id="remote_allowed" class="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"/>
+                <input type="checkbox" name="remote_allowed" id="remote_allowed" class="h-5 w-5 border-gray-300 text-gray-900 focus:ring-primary"/>
                 <label for="remote_allowed" class="text-[#111418] dark:text-gray-300 text-sm sm:text-base font-medium leading-normal">
                     Uzaktan çalışmaya uygun (Evrak teslimi, online duruşma vb.)
                 </label>
@@ -111,15 +111,15 @@
             <!-- Açıklama -->
             <label class="flex flex-col min-w-40 flex-1">
                 <p class="text-[#111418] dark:text-gray-300 text-base font-medium leading-normal pb-2">Görev Açıklaması</p>
-                <textarea name="description" required class="form-textarea flex w-full min-w-0 flex-1 resize-y overflow-hidden rounded-lg text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary min-h-[120px] placeholder:text-[#637188] p-[15px] text-base font-normal leading-normal" placeholder="Görevle ilgili detayları buraya yazabilirsiniz...&#10;&#10;Örnek:&#10;- Duruşma tarihi ve saati&#10;- Dava konusu&#10;- Yapılması gereken işlemler&#10;- Özel notlar ve dikkat edilmesi gerekenler"></textarea>
+                <textarea name="description" required class="form-textarea flex w-full min-w-0 flex-1 resize-y overflow-hidden text-[#111418] dark:text-gray-300 dark:bg-background-dark focus:outline-0 focus:ring-0 border border-[#dcdfe5] dark:border-gray-700 bg-white focus:border-primary dark:focus:border-primary min-h-[120px] placeholder:text-[#637188] p-[15px] text-base font-normal leading-normal" placeholder="Görevle ilgili detayları buraya yazabilirsiniz...&#10;&#10;Örnek:&#10;- Duruşma tarihi ve saati&#10;- Dava konusu&#10;- Yapılması gereken işlemler&#10;- Özel notlar ve dikkat edilmesi gerekenler"></textarea>
             </label>
             
             <!-- Buttons -->
             <div class="flex justify-end gap-4 pt-4">
-                <a href="{{ url_for('list_posts') }}" class="px-6 py-3 rounded-lg text-primary dark:text-primary dark:hover:bg-primary/10 hover:bg-primary/10 transition-colors">
+                <a href="{{ url_for('list_posts') }}" class="px-6 py-3 text-gray-900 dark:text-gray-900 dark:hover:bg-gray-900/10 hover:bg-gray-900/10 transition-colors">
                     Vazgeç
                 </a>
-                <button type="submit" class="px-4 md:px-8 py-3 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors w-full sm:w-auto">
+                <button type="submit" class="px-4 md:px-8 py-3 bg-gray-900 text-white font-semibold hover:bg-gray-900/90 transition-colors w-full sm:w-auto">
                     İlanı Yayınla
                 </button>
             </div>

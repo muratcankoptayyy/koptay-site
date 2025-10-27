@@ -8,7 +8,7 @@
         <!-- Page Header -->
         <div class="flex items-center justify-between pb-6">
             <div>
-                <h1 class="text-xl md:text-3xl font-black text-gray-900 dark:text-white">
+                <h1 class="text-xl md:text-3xl font-light text-gray-900 dark:text-white">
                     <span class="material-symbols-outlined align-middle text-green-600 dark:text-green-400 mr-2">inbox</span>
                     Gelen Başvurular
                 </h1>
@@ -25,21 +25,21 @@
         {% if applications %}
         <div class="space-y-4">
             {% for app in applications %}
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
+            <div class="bg-white dark:bg-gray-800 p-3 md:p-6 border border-gray-300 dark:border-gray-700 hover: transition-shadow">
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <!-- İlan Başlığı -->
-                        <a href="{{ url_for('post_detail', post_id=app.post.id) }}" class="text-xl font-bold text-primary hover:underline">
+                        <a href="{{ url_for('post_detail', post_id=app.post.id) }}" class="text-xl font-bold text-gray-900 hover:underline">
                             {{ app.post.title }}
                         </a>
                         
                         <!-- Başvuran Bilgisi -->
                         <div class="flex items-center gap-3 mt-3">
-                            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+                            <div class="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
                                 {{ app.applicant.full_name[0] }}
                             </div>
                             <div>
-                                <a href="{{ url_for('user_profile', user_id=app.applicant.id) }}" class="font-semibold text-gray-900 dark:text-white hover:text-primary">
+                                <a href="{{ url_for('user_profile', user_id=app.applicant.id) }}" class="font-semibold text-gray-900 dark:text-white hover:text-gray-900">
                                     {{ app.applicant.full_name }}
                                 </a>
                                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -50,7 +50,7 @@
 
                         <!-- Başvuru Mesajı -->
                         {% if app.message %}
-                        <div class="mt-4 bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                        <div class="mt-4 bg-gray-50 dark:bg-gray-900 p-4">
                             <p class="text-sm text-gray-700 dark:text-gray-300">{{ app.message }}</p>
                         </div>
                         {% endif %}
@@ -77,11 +77,11 @@
                     <!-- Actions -->
                     {% if app.status == 'pending' %}
                     <div class="flex flex-col gap-2 ml-4">
-                        <button onclick="approveApplication({{ app.id }})" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 w-full sm:w-auto">
+                        <button onclick="approveApplication({{ app.id }})" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 font-semibold transition-colors flex items-center gap-2 w-full sm:w-auto">
                             <span class="material-symbols-outlined text-sm">check_circle</span>
                             Onayla
                         </button>
-                        <button onclick="rejectApplication({{ app.id }})" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 w-full sm:w-auto">
+                        <button onclick="rejectApplication({{ app.id }})" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 font-semibold transition-colors flex items-center gap-2 w-full sm:w-auto">
                             <span class="material-symbols-outlined text-sm">cancel</span>
                             Reddet
                         </button>
@@ -101,7 +101,7 @@
             <p class="text-gray-600 dark:text-gray-400 text-center max-w-full mx-4 sm:max-w-md">
                 İlanlarınıza başvuru yapıldığında burada göreceksiniz.
             </p>
-            <a href="{{ url_for('create_post') }}" class="mt-6 bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2">
+            <a href="{{ url_for('create_post') }}" class="mt-6 bg-gray-900 text-white px-6 py-3 font-semibold hover:bg-gray-900/90 transition-colors flex items-center gap-2">
                 <span class="material-symbols-outlined">add</span>
                 Yeni İlan Oluştur
             </a>

@@ -3,7 +3,7 @@
 {% block title %}Sunucu Hatası - 500{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 dark:from-gray-900 dark:to-gray-800 px-4">
+<div class="min-h-screen flex items-center justify-center bg-white dark:from-gray-900 dark:to-gray-800 px-4">
     <div class="max-w-md w-full text-center">
         <!-- 500 Icon -->
         <div class="mb-8">
@@ -27,19 +27,19 @@
         <!-- Actions -->
         <div class="space-y-3">
             <a href="{{ url_for('index') }}" 
-               class="block w-full px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold">
+               class="block w-full px-6 py-3 bg-gray-900 text-white hover:bg-gray-900/90 transition-colors font-semibold">
                 🏠 Ana Sayfaya Dön
             </a>
             
             <button onclick="location.reload()" 
-                    class="block w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold">
+                    class="block w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold">
                 🔄 Sayfayı Yenile
             </button>
         </div>
         
         <!-- Error Details (dev mode only) -->
         {% if config.DEV_MODE and error %}
-        <div class="mt-8 p-4 bg-red-100 dark:bg-red-900/20 rounded-lg text-left">
+        <div class="mt-8 p-4 bg-red-100 dark:bg-red-900/20 text-left">
             <h3 class="text-sm font-semibold text-red-800 dark:text-red-200 mb-2">Hata Detayı (Dev Mode):</h3>
             <pre class="text-xs text-red-700 dark:text-red-300 overflow-auto">{{ error }}</pre>
         </div>
@@ -48,7 +48,7 @@
         <!-- Help Text -->
         <p class="mt-8 text-sm text-gray-500 dark:text-gray-400">
             Sorun devam ederse lütfen 
-            <a href="mailto:destek@utap.com.tr" class="text-primary hover:underline">
+            <a href="mailto:destek@utap.com.tr" class="text-gray-900 hover:underline">
                 destek@utap.com.tr
             </a> 
             adresine bildirin.

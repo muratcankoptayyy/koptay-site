@@ -41,14 +41,14 @@
         <!-- Header -->
         <div class="mb-6 flex justify-between items-center">
             <h1 class="text-xl md:text-3xl font-bold text-text dark:text-white">İlanlar</h1>
-            <a href="{{ url_for('create_post') }}" class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2">
+            <a href="{{ url_for('create_post') }}" class="bg-gray-900 hover:bg-gray-900-dark text-white px-6 py-2 transition-colors flex items-center gap-2">
                 <span class="material-symbols-outlined">add</span>
                 Yeni İlan
             </a>
         </div>
 
         <!-- Search and Filters Card -->
-        <div class="bg-background-light dark:bg-slate-800 rounded-xl shadow-sm mb-6">
+        <div class="bg-background-light dark:bg-slate-800 mb-6">
             <div class="flex flex-col sm:flex-row gap-3 p-3">
                 <!-- Search Input -->
                 <div class="flex-1 relative">
@@ -57,7 +57,7 @@
                         type="text" 
                         id="searchInput"
                         placeholder="Anahtar kelime ile ara..." 
-                        class="w-full pl-10 pr-4 py-2.5 border border-border dark:border-slate-700 rounded-lg bg-background dark:bg-slate-900 text-text dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        class="w-full pl-10 pr-4 py-2.5 border border-border dark:border-slate-700 bg-background dark:bg-slate-900 text-text dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
                     />
                 </div>
                 
@@ -65,7 +65,7 @@
                 <div class="relative">
                     <select 
                         id="cityFilter"
-                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 rounded-lg bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
+                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
                     >
                         <option value="">Tüm Şehirler</option>
                         {% for city in cities %}
@@ -79,7 +79,7 @@
                 <div class="relative">
                     <select 
                         id="categoryFilter"
-                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 rounded-lg bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
+                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
                     >
                         <option value="">Tüm Görevler</option>
                         <option value="hukuk_durusma">Hukuk Duruşması</option>
@@ -108,7 +108,7 @@
                 <div class="relative">
                     <select 
                         id="urgencyFilter"
-                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 rounded-lg bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
+                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
                     >
                         <option value="">Tüm Aciliyet</option>
                         <option value="normal">Normal</option>
@@ -121,7 +121,7 @@
         </div>
 
         <!-- Table Card -->
-        <div class="bg-background-light dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+        <div class="bg-background-light dark:bg-slate-800 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full" id="postsTable">
                     <thead class="bg-slate-50 dark:bg-slate-900 border-b border-border dark:border-slate-700">
@@ -209,7 +209,7 @@
                                 <td class="px-6 py-4">
                                     <div class="flex gap-2">
                                         <a href="{{ url_for('post_detail', post_id=post.id) }}" 
-                                           class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm transition-colors inline-flex items-center gap-1">
+                                           class="bg-gray-900 hover:bg-gray-900-dark text-white px-4 py-2 text-sm transition-colors inline-flex items-center gap-1">
                                             <span class="material-symbols-outlined text-sm">visibility</span>
                                             Görüntüle
                                         </a>
@@ -230,7 +230,7 @@
                                     <div class="flex flex-col items-center gap-3">
                                         <span class="material-symbols-outlined text-6xl text-text-light dark:text-slate-600">inbox</span>
                                         <p class="text-text-light dark:text-slate-400">Henüz ilan bulunmuyor</p>
-                                        <a href="{{ url_for('create_post') }}" class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg transition-colors">
+                                        <a href="{{ url_for('create_post') }}" class="bg-gray-900 hover:bg-gray-900-dark text-white px-6 py-2 transition-colors">
                                             İlk İlanı Oluştur
                                         </a>
                                     </div>

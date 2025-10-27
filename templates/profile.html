@@ -7,14 +7,14 @@
     <div class="layout-content-container flex flex-col w-full max-w-7xl">
         <!-- Back Button -->
         <div class="p-2 sm:p-4 mb-2">
-            <a href="{{ url_for('dashboard') if current_user.is_authenticated and current_user.id == user.id else url_for('list_posts') }}" class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">
+            <a href="{{ url_for('dashboard') if current_user.is_authenticated and current_user.id == user.id else url_for('list_posts') }}" class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-900 transition-colors">
                 <span class="material-symbols-outlined text-xl">arrow_back</span>
                 <span class="text-sm font-medium">Geri Dön</span>
             </a>
         </div>
         
         <!-- Profile Header -->
-        <div class="relative bg-gradient-to-br from-primary via-blue-600 to-indigo-700 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-4 md:p-8 mb-4 sm:mb-6 text-white overflow-hidden">
+        <div class="relative bg-gradient-to-br from-primary via-blue-600 to-indigo-700 sm:-2xl p-4 sm:p-6 md:p-4 md:p-8 mb-4 sm:mb-6 text-white overflow-hidden">
             <!-- Background Pattern -->
             <div class="absolute inset-0 opacity-10 pointer-events-none">
                 <div class="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
@@ -38,7 +38,7 @@
                     {% endif %}
                     
                     {% if user.verified %}
-                    <div class="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 bg-white rounded-full p-1 sm:p-1.5 shadow-lg" title="Doğrulanmış Üye">
+                    <div class="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 bg-white rounded-full p-1 sm:p-1.5" title="Doğrulanmış Üye">
                         <span class="material-symbols-outlined text-green-500 text-xl sm:text-lg md:text-2xl">verified</span>
                     </div>
                     {% endif %}
@@ -46,7 +46,7 @@
                 
                 <div class="flex-1 text-center md:text-left w-full md:w-auto">
                     <div class="mb-3">
-                        <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-2 leading-tight break-words">{{ user.full_name }}</h1>
+                        <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light mb-2 leading-tight break-words">{{ user.full_name }}</h1>
                         {% if user.lawyer_type == 'stajyer' %}
                         <span class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 backdrop-blur-sm border border-yellow-300/30 rounded-full text-xs sm:text-sm font-semibold">
                             <span class="material-symbols-outlined text-sm sm:text-base">school</span>
@@ -61,22 +61,22 @@
                     </div>
                     
                     <div class="flex flex-wrap gap-2 sm:gap-3 justify-center md:justify-start text-white/90 mb-3 sm:mb-4 text-xs sm:text-sm">
-                        <span class="flex items-center gap-1 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg">
+                        <span class="flex items-center gap-1 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5">
                             <span class="material-symbols-outlined text-base sm:text-lg">location_on</span>
                             <span class="truncate max-w-[120px] sm:max-w-none">{{ user.city }}{% if user.district %}, {{ user.district }}{% endif %}</span>
                         </span>
-                        <span class="flex items-center gap-1 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg">
+                        <span class="flex items-center gap-1 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5">
                             <span class="material-symbols-outlined text-base sm:text-lg">email</span>
                             <span class="truncate max-w-[120px] sm:max-w-[200px]">{{ user.email }}</span>
                         </span>
                         {% if user.phone %}
-                        <span class="flex items-center gap-1 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg">
+                        <span class="flex items-center gap-1 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5">
                             <span class="material-symbols-outlined text-base sm:text-lg">phone</span>
                             <span class="whitespace-nowrap overflow-x-auto">{{ user.phone }}</span>
                         </span>
                         {% endif %}
                         {% if user.whatsapp_number %}
-                        <span class="flex items-center gap-1 bg-green-500/20 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-green-400/30">
+                        <span class="flex items-center gap-1 bg-green-500/20 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 border border-green-400/30">
                             <span class="material-symbols-outlined text-base sm:text-lg">chat</span>
                             <span class="whitespace-nowrap overflow-x-auto">WhatsApp</span>
                         </span>
@@ -94,21 +94,21 @@
                 
                 <div class="flex-shrink-0 w-full md:w-auto mt-2 md:mt-0">
                     {% if current_user.is_authenticated and current_user.id == user.id %}
-                    <a href="{{ url_for('edit_profile') }}" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white text-primary rounded-xl font-semibold hover:bg-gray-100 transition-all hover:shadow-md sm:shadow-xl text-sm sm:text-base whitespace-nowrap overflow-x-auto">
+                    <a href="{{ url_for('edit_profile') }}" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white text-gray-900 font-semibold hover:bg-gray-100 transition-all hover: sm: text-sm sm:text-base whitespace-nowrap overflow-x-auto">
                         <span class="material-symbols-outlined text-xl">edit</span>
                         <span>Profili Düzenle</span>
                     </a>
                     {% else %}
                     <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                        <a href="{{ url_for('send_message', receiver_id=user.id) }}" class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white text-primary rounded-xl font-semibold hover:bg-gray-100 transition-all hover:shadow-md sm:shadow-xl text-sm sm:text-base whitespace-nowrap">
+                        <a href="{{ url_for('send_message', receiver_id=user.id) }}" class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white text-gray-900 font-semibold hover:bg-gray-100 transition-all hover: sm: text-sm sm:text-base whitespace-nowrap">
                             <span class="material-symbols-outlined text-xl">chat</span>
                             <span>Mesaj Gönder</span>
                         </a>
-                        <a href="{{ url_for('rate_user', user_id=user.id) }}" class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-semibold transition-all hover:shadow-md sm:shadow-xl text-sm sm:text-base whitespace-nowrap">
+                        <a href="{{ url_for('rate_user', user_id=user.id) }}" class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold transition-all hover: sm: text-sm sm:text-base whitespace-nowrap">
                             <span class="material-symbols-outlined text-xl">star</span>
                             <span>Değerlendir</span>
                         </a>
-                        <a href="{{ url_for('report_content', report_type='user', item_id=user.id) }}" class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-red-100 text-red-700 hover:bg-red-200 rounded-xl font-semibold transition-all hover:shadow-md sm:shadow-xl text-sm sm:text-base whitespace-nowrap" title="Rapor Et">
+                        <a href="{{ url_for('report_content', report_type='user', item_id=user.id) }}" class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-red-100 text-red-700 hover:bg-red-200 font-semibold transition-all hover: sm: text-sm sm:text-base whitespace-nowrap" title="Rapor Et">
                             <span class="material-symbols-outlined text-xl">report</span>
                             <span class="hidden sm:inline">Rapor Et</span>
                         </a>
@@ -120,33 +120,33 @@
         
         <!-- Achievement Badges -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
-            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-3 sm:p-4 md:p-3 md:p-6 text-white text-center shadow-lg hover:shadow-2xl transition-shadow">
-                <div class="text-2xl sm:text-3xl md:text-2xl md:text-4xl font-black mb-1 sm:mb-2">{{ user.completed_tasks_count }}</div>
+            <div class="bg-white p-3 sm:p-4 md:p-3 md:p-6 text-white text-center transition-shadow">
+                <div class="text-2xl sm:text-3xl md:text-2xl md:text-4xl font-light mb-1 sm:mb-2">{{ user.completed_tasks_count }}</div>
                 <div class="text-[10px] sm:text-xs font-medium opacity-90 flex items-center justify-center gap-0.5 sm:gap-1 flex-wrap">
                     <span class="material-symbols-outlined text-sm sm:text-base">task_alt</span>
                     <span><span class="hidden sm:inline">Tamamlanan </span>Görev</span>
                 </div>
             </div>
             
-            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-3 sm:p-4 md:p-3 md:p-6 text-white text-center shadow-lg hover:shadow-2xl transition-shadow">
-                <div class="text-2xl sm:text-3xl md:text-2xl md:text-4xl font-black mb-1 sm:mb-2">{{ user.attended_hearings_count }}</div>
+            <div class="bg-white p-3 sm:p-4 md:p-3 md:p-6 text-white text-center transition-shadow">
+                <div class="text-2xl sm:text-3xl md:text-2xl md:text-4xl font-light mb-1 sm:mb-2">{{ user.attended_hearings_count }}</div>
                 <div class="text-[10px] sm:text-xs font-medium opacity-90">Duruşma</div>
             </div>
             
-            <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-3 sm:p-4 md:p-3 md:p-6 text-white text-center shadow-lg hover:shadow-2xl transition-shadow">
-                <div class="text-2xl sm:text-3xl md:text-2xl md:text-4xl font-black mb-1 sm:mb-2 flex items-center justify-center gap-1">
+            <div class="bg-white p-3 sm:p-4 md:p-3 md:p-6 text-white text-center transition-shadow">
+                <div class="text-2xl sm:text-3xl md:text-2xl md:text-4xl font-light mb-1 sm:mb-2 flex items-center justify-center gap-1">
                     {% if user.rating_average %}{{ "%.1f"|format(user.rating_average) }}<span class="material-symbols-outlined text-lg sm:text-lg md:text-2xl">star</span>{% else %}-{% endif %}
                 </div>
                 <div class="text-[10px] sm:text-xs font-medium opacity-90"><span class="hidden sm:inline">Ortalama </span>Puan</div>
             </div>
             
-            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-3 sm:p-4 md:p-3 md:p-6 text-white text-center shadow-lg hover:shadow-2xl transition-shadow">
-                <div class="text-2xl sm:text-3xl md:text-2xl md:text-4xl font-black mb-1 sm:mb-2">{{ user.rating_count }}</div>
+            <div class="bg-white p-3 sm:p-4 md:p-3 md:p-6 text-white text-center transition-shadow">
+                <div class="text-2xl sm:text-3xl md:text-2xl md:text-4xl font-light mb-1 sm:mb-2">{{ user.rating_count }}</div>
                 <div class="text-[10px] sm:text-xs font-medium opacity-90">Değerlendirme</div>
             </div>
             
-            <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-3 sm:p-4 md:p-3 md:p-6 text-white text-center shadow-lg hover:shadow-2xl transition-shadow col-span-2 sm:col-span-1">
-                <div class="text-2xl sm:text-3xl md:text-2xl md:text-4xl font-black mb-1 sm:mb-2">{% if user.total_jobs > 0 %}{{ ((user.completed_jobs / user.total_jobs) * 100)|round|int }}%{% else %}-%{% endif %}</div>
+            <div class="bg-white p-3 sm:p-4 md:p-3 md:p-6 text-white text-center transition-shadow col-span-2 sm:col-span-1">
+                <div class="text-2xl sm:text-3xl md:text-2xl md:text-4xl font-light mb-1 sm:mb-2">{% if user.total_jobs > 0 %}{{ ((user.completed_jobs / user.total_jobs) * 100)|round|int }}%{% else %}-%{% endif %}</div>
                 <div class="text-[10px] sm:text-xs font-medium opacity-90">Başarı Oranı</div>
             </div>
         </div>
@@ -157,9 +157,9 @@
             <div class="lg:col-span-2 space-y-4 sm:space-y-6">
                 
                 <!-- Professional Info -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-4 md:p-8 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-md sm:shadow-xl transition-shadow">
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-4 sm:p-6 md:p-4 md:p-8 border border-gray-300 dark:border-gray-700 hover: sm: transition-shadow">
                     <h2 class="text-xl sm:text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-2xl sm:text-xl md:text-3xl">badge</span>
+                        <span class="material-symbols-outlined text-gray-900 text-2xl sm:text-xl md:text-3xl">badge</span>
                         Profesyonel Bilgiler
                     </h2>
                     <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-4 sm:gap-3 md:gap-6">
@@ -169,7 +169,7 @@
                                 <span class="material-symbols-outlined text-sm sm:text-base">account_balance</span>
                                 Bağlı Olduğu Baro
                             </div>
-                            <div class="text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors break-words">{{ user.bar_association }}</div>
+                            <div class="text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-gray-900 transition-colors break-words">{{ user.bar_association }}</div>
                         </div>
                         {% endif %}
                         
@@ -179,7 +179,7 @@
                                 <span class="material-symbols-outlined text-sm sm:text-base">numbers</span>
                                 Baro Sicil Numarası
                             </div>
-                            <div class="text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors">{{ user.bar_registration_number }}</div>
+                            <div class="text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-gray-900 transition-colors">{{ user.bar_registration_number }}</div>
                         </div>
                         {% endif %}
                         
@@ -188,7 +188,7 @@
                                 <span class="material-symbols-outlined text-sm sm:text-base">calendar_today</span>
                                 Üyelik Tarihi
                             </div>
-                            <div class="text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors">{{ user.created_at.strftime('%d %B %Y') }}</div>
+                            <div class="text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-gray-900 transition-colors">{{ user.created_at.strftime('%d %B %Y') }}</div>
                         </div>
                         
                         <div class="group">
@@ -196,11 +196,11 @@
                                 <span class="material-symbols-outlined text-sm sm:text-base">schedule</span>
                                 Son Aktiflik
                             </div>
-                            <div class="text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors">{{ user.last_active.strftime('%d %B %Y') if user.last_active else 'Bilinmiyor' }}</div>
+                            <div class="text-base sm:text-lg font-bold text-gray-900 dark:text-white group-hover:text-gray-900 transition-colors">{{ user.last_active.strftime('%d %B %Y') if user.last_active else 'Bilinmiyor' }}</div>
                         </div>
                         
                         {% if user.verified %}
-                        <div class="md:col-span-2 p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-700">
+                        <div class="md:col-span-2 p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700">
                             <div class="flex items-center gap-3">
                                 <span class="material-symbols-outlined text-green-500 text-2xl sm:text-xl md:text-3xl flex-shrink-0">verified</span>
                                 <div>
@@ -214,9 +214,9 @@
                 </div>
                 
                 {% if user.bio %}
-                <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-4 md:p-8 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-md sm:shadow-xl transition-shadow">
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-4 sm:p-6 md:p-4 md:p-8 border border-gray-300 dark:border-gray-700 hover: sm: transition-shadow">
                     <h2 class="text-xl sm:text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-2xl sm:text-xl md:text-3xl">person</span>
+                        <span class="material-symbols-outlined text-gray-900 text-2xl sm:text-xl md:text-3xl">person</span>
                         Hakkında
                     </h2>
                     <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">{{ user.bio }}</p>
@@ -224,29 +224,29 @@
                 {% endif %}
                 
                 {% if completed_posts %}
-                <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-4 md:p-8 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-md sm:shadow-xl transition-shadow">
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-4 sm:p-6 md:p-4 md:p-8 border border-gray-300 dark:border-gray-700 hover: sm: transition-shadow">
                     <h2 class="text-xl sm:text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-2xl sm:text-xl md:text-3xl">check_circle</span>
+                        <span class="material-symbols-outlined text-gray-900 text-2xl sm:text-xl md:text-3xl">check_circle</span>
                         <span class="break-words">Tamamlanan İşler ({{ completed_posts|length }})</span>
                     </h2>
                     
                     <div class="space-y-3 sm:space-y-4">
                         {% for post in completed_posts %}
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-3 sm:p-4 md:p-3 md:p-6 hover:shadow-lg hover:border-primary/50 transition-all group">
+                        <div class="border border-gray-300 dark:border-gray-700 p-3 sm:p-4 md:p-3 md:p-6 hover: hover:border-primary/50 transition-all group">
                             <div class="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
                                 <div class="flex-1 w-full">
-                                    <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 group-hover:text-primary transition-colors break-words">{{ post.title }}</h3>
+                                    <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 group-hover:text-gray-900 transition-colors break-words">{{ post.title }}</h3>
                                     <div class="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                                        <span class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 sm:px-3 py-1 rounded-lg whitespace-nowrap overflow-x-auto">
+                                        <span class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 sm:px-3 py-1 whitespace-nowrap overflow-x-auto">
                                             <span class="material-symbols-outlined text-sm sm:text-base">location_on</span>
                                             <span class="truncate max-w-[100px] sm:max-w-none">{{ post.city or post.location }}</span>
                                         </span>
-                                        <span class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 sm:px-3 py-1 rounded-lg whitespace-nowrap overflow-x-auto">
+                                        <span class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 sm:px-3 py-1 whitespace-nowrap overflow-x-auto">
                                             <span class="material-symbols-outlined text-sm sm:text-base">work</span>
                                             <span class="truncate max-w-[80px] sm:max-w-none">{{ post.category }}</span>
                                         </span>
                                         {% if post.price_max %}
-                                        <span class="flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 sm:px-3 py-1 rounded-lg font-semibold whitespace-nowrap overflow-x-auto">
+                                        <span class="flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 sm:px-3 py-1 font-semibold whitespace-nowrap overflow-x-auto">
                                             <span class="material-symbols-outlined text-sm sm:text-base">payments</span>
                                             {{ post.price_max }} TL
                                         </span>
@@ -262,15 +262,15 @@
                 {% endif %}
                 
                 {% if ratings %}
-                <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-4 md:p-8 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-md sm:shadow-xl transition-shadow">
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-4 sm:p-6 md:p-4 md:p-8 border border-gray-300 dark:border-gray-700 hover: sm: transition-shadow">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
                         <h2 class="text-xl sm:text-lg md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary text-2xl sm:text-xl md:text-3xl">star</span>
+                            <span class="material-symbols-outlined text-gray-900 text-2xl sm:text-xl md:text-3xl">star</span>
                             <span class="break-words">Değerlendirmeler ({{ ratings|length }})</span>
                         </h2>
                         {% if user.rating_average %}
-                        <div class="flex items-center gap-2 bg-yellow-100 dark:bg-yellow-900/30 px-3 sm:px-4 py-2 rounded-xl flex-shrink-0">
-                            <span class="text-xl sm:text-lg md:text-2xl font-black text-yellow-700 dark:text-yellow-400">{{ "%.1f"|format(user.rating_average) }}</span>
+                        <div class="flex items-center gap-2 bg-yellow-100 dark:bg-yellow-900/30 px-3 sm:px-4 py-2 flex-shrink-0">
+                            <span class="text-xl sm:text-lg md:text-2xl font-light text-yellow-700 dark:text-yellow-400">{{ "%.1f"|format(user.rating_average) }}</span>
                             <span class="material-symbols-outlined text-yellow-500 text-2xl sm:text-xl md:text-3xl">star</span>
                         </div>
                         {% endif %}
@@ -278,7 +278,7 @@
                     
                     <div class="space-y-3 sm:space-y-4">
                         {% for rating in ratings %}
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-3 sm:p-4 md:p-3 md:p-6 hover:shadow-lg transition-shadow">
+                        <div class="border border-gray-300 dark:border-gray-700 p-3 sm:p-4 md:p-3 md:p-6 hover: transition-shadow">
                             <div class="flex items-start gap-3 sm:gap-4">
                                 <img src="https://ui-avatars.com/api/?name={{ rating.reviewer.full_name }}&background=1661da&color=fff&size=60" 
                                      alt="{{ rating.reviewer.full_name }}" 
@@ -289,7 +289,7 @@
                                             <p class="font-bold text-gray-900 dark:text-white text-sm sm:text-base md:text-lg truncate">{{ rating.reviewer.full_name }}</p>
                                             <p class="text-xs sm:text-sm text-gray-500">{{ rating.created_at.strftime('%d %B %Y') }}</p>
                                         </div>
-                                        <div class="flex items-center gap-0.5 sm:gap-1 bg-yellow-50 dark:bg-yellow-900/20 px-2 sm:px-3 py-1 rounded-lg flex-shrink-0">
+                                        <div class="flex items-center gap-0.5 sm:gap-1 bg-yellow-50 dark:bg-yellow-900/20 px-2 sm:px-3 py-1 flex-shrink-0">
                                             {% for i in range(5) %}
                                                 {% if i < rating.rating %}
                                                 <span class="material-symbols-outlined text-yellow-500 text-base sm:text-lg md:text-xl">star</span>
@@ -300,7 +300,7 @@
                                         </div>
                                     </div>
                                     {% if rating.comment %}
-                                    <p class="text-xs sm:text-sm md:text-base text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-3 sm:p-4 rounded-lg italic break-words">"{{ rating.comment }}"</p>
+                                    <p class="text-xs sm:text-sm md:text-base text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-3 sm:p-4 italic break-words">"{{ rating.comment }}"</p>
                                     {% endif %}
                                 </div>
                             </div>
@@ -309,7 +309,7 @@
                     </div>
                 </div>
                 {% else %}
-                <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-8 sm:p-12 border border-gray-200 dark:border-gray-700 text-center shadow-lg">
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-8 sm:p-12 border border-gray-300 dark:border-gray-700 text-center">
                     <span class="material-symbols-outlined text-gray-400 text-5xl sm:text-6xl md:text-7xl mb-3 sm:mb-4 block">star_outline</span>
                     <h3 class="text-lg sm:text-xl md:text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-2">Henüz Değerlendirme Yok</h3>
                     <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">Bu kullanıcı henüz değerlendirme almamış</p>
@@ -319,30 +319,30 @@
             
             <!-- Right Column -->
             <div class="lg:col-span-1 space-y-4 sm:space-y-6">
-                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl p-4 sm:p-3 md:p-6 text-white shadow-lg">
+                <div class="bg-white sm:-2xl p-4 sm:p-3 md:p-6 text-white">
                     <h3 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
                         <span class="material-symbols-outlined text-xl sm:text-lg md:text-2xl">analytics</span>
                         Hızlı İstatistikler
                     </h3>
                     <div class="space-y-3 sm:space-y-4">
-                        <div class="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3">
+                        <div class="flex items-center justify-between bg-white/10 backdrop-blur-sm p-2 sm:p-3">
                             <div>
                                 <div class="text-xs sm:text-sm opacity-90">Toplam İş</div>
-                                <div class="text-xl sm:text-lg md:text-2xl font-black">{{ user.total_jobs }}</div>
+                                <div class="text-xl sm:text-lg md:text-2xl font-light">{{ user.total_jobs }}</div>
                             </div>
                             <span class="material-symbols-outlined text-2xl sm:text-xl md:text-3xl opacity-50 flex-shrink-0">work</span>
                         </div>
-                        <div class="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3">
+                        <div class="flex items-center justify-between bg-white/10 backdrop-blur-sm p-2 sm:p-3">
                             <div>
                                 <div class="text-xs sm:text-sm opacity-90">Tamamlanan</div>
-                                <div class="text-xl sm:text-lg md:text-2xl font-black">{{ user.completed_jobs }}</div>
+                                <div class="text-xl sm:text-lg md:text-2xl font-light">{{ user.completed_jobs }}</div>
                             </div>
                             <span class="material-symbols-outlined text-2xl sm:text-xl md:text-3xl opacity-50 flex-shrink-0">task_alt</span>
                         </div>
-                        <div class="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3">
+                        <div class="flex items-center justify-between bg-white/10 backdrop-blur-sm p-2 sm:p-3">
                             <div>
                                 <div class="text-xs sm:text-sm opacity-90">Başarı Oranı</div>
-                                <div class="text-xl sm:text-lg md:text-2xl font-black">{% if user.total_jobs > 0 %}{{ ((user.completed_jobs / user.total_jobs) * 100)|round|int }}%{% else %}0%{% endif %}</div>
+                                <div class="text-xl sm:text-lg md:text-2xl font-light">{% if user.total_jobs > 0 %}{{ ((user.completed_jobs / user.total_jobs) * 100)|round|int }}%{% else %}0%{% endif %}</div>
                             </div>
                             <span class="material-symbols-outlined text-2xl sm:text-xl md:text-3xl opacity-50 flex-shrink-0">trending_up</span>
                         </div>
@@ -350,18 +350,18 @@
                 </div>
                 
                 {% if not (current_user.is_authenticated and current_user.id == user.id) %}
-                <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-3 md:p-6 border border-gray-200 dark:border-gray-700 shadow-lg">
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-4 sm:p-3 md:p-6 border border-gray-300 dark:border-gray-700">
                     <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-xl sm:text-lg md:text-2xl">contact_mail</span>
+                        <span class="material-symbols-outlined text-gray-900 text-xl sm:text-lg md:text-2xl">contact_mail</span>
                         İletişim
                     </h3>
                     <div class="space-y-2 sm:space-y-3">
-                        <a href="{{ url_for('send_message', receiver_id=user.id) }}" class="flex items-center gap-2 sm:gap-3 w-full bg-primary hover:bg-blue-700 text-white rounded-xl p-3 sm:p-4 transition-colors font-semibold text-sm sm:text-base">
+                        <a href="{{ url_for('send_message', receiver_id=user.id) }}" class="flex items-center gap-2 sm:gap-3 w-full bg-gray-900 hover:bg-gray-900 text-white p-3 sm:p-4 transition-colors font-semibold text-sm sm:text-base">
                             <span class="material-symbols-outlined text-xl sm:text-lg md:text-2xl flex-shrink-0">chat</span>
                             <span class="truncate">Mesaj Gönder</span>
                         </a>
                         {% if user.whatsapp_number %}
-                        <a href="https://wa.me/{{ user.whatsapp_number }}" target="_blank" class="flex items-center gap-2 sm:gap-3 w-full bg-green-500 hover:bg-green-600 text-white rounded-xl p-3 sm:p-4 transition-colors font-semibold text-sm sm:text-base">
+                        <a href="https://wa.me/{{ user.whatsapp_number }}" target="_blank" class="flex items-center gap-2 sm:gap-3 w-full bg-green-500 hover:bg-green-600 text-white p-3 sm:p-4 transition-colors font-semibold text-sm sm:text-base">
                             <span class="material-symbols-outlined text-xl sm:text-lg md:text-2xl flex-shrink-0">chat</span>
                             <span class="truncate">WhatsApp</span>
                         </a>
@@ -371,35 +371,35 @@
                 {% endif %}
                 
                 {% if user.linkedin_url or user.twitter_url or user.instagram_url or user.website_url %}
-                <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-3 md:p-6 border border-gray-200 dark:border-gray-700 shadow-lg">
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-4 sm:p-3 md:p-6 border border-gray-300 dark:border-gray-700">
                     <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-xl sm:text-lg md:text-2xl">share</span>
+                        <span class="material-symbols-outlined text-gray-900 text-xl sm:text-lg md:text-2xl">share</span>
                         Sosyal Medya
                     </h3>
                     <div class="space-y-2 sm:space-y-3">
                         {% if user.linkedin_url %}
-                        <a href="{{ user.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-3 sm:p-4 transition-colors font-semibold group text-sm sm:text-base">
+                        <a href="{{ user.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-gray-900 hover:bg-gray-900 text-white p-3 sm:p-4 transition-colors font-semibold group text-sm sm:text-base">
                             <svg class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                             <span class="truncate flex-1">LinkedIn</span>
                             <span class="material-symbols-outlined text-base sm:text-lg group-hover:translate-x-1 transition-transform flex-shrink-0">arrow_forward</span>
                         </a>
                         {% endif %}
                         {% if user.twitter_url %}
-                        <a href="{{ user.twitter_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-gray-900 hover:bg-black text-white rounded-xl p-3 sm:p-4 transition-colors font-semibold group text-sm sm:text-base">
+                        <a href="{{ user.twitter_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-gray-900 hover:bg-black text-white p-3 sm:p-4 transition-colors font-semibold group text-sm sm:text-base">
                             <svg class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                             <span class="truncate flex-1">Twitter/X</span>
                             <span class="material-symbols-outlined text-base sm:text-lg group-hover:translate-x-1 transition-transform flex-shrink-0">arrow_forward</span>
                         </a>
                         {% endif %}
                         {% if user.instagram_url %}
-                        <a href="{{ user.instagram_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white rounded-xl p-3 sm:p-4 transition-all font-semibold group text-sm sm:text-base">
+                        <a href="{{ user.instagram_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white p-3 sm:p-4 transition-all font-semibold group text-sm sm:text-base">
                             <svg class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                             <span class="truncate flex-1">Instagram</span>
                             <span class="material-symbols-outlined text-base sm:text-lg group-hover:translate-x-1 transition-transform flex-shrink-0">arrow_forward</span>
                         </a>
                         {% endif %}
                         {% if user.website_url %}
-                        <a href="{{ user.website_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl p-3 sm:p-4 transition-colors font-semibold group text-sm sm:text-base">
+                        <a href="{{ user.website_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 sm:p-4 transition-colors font-semibold group text-sm sm:text-base">
                             <span class="material-symbols-outlined text-xl sm:text-lg md:text-2xl flex-shrink-0">language</span>
                             <span class="truncate flex-1">Website</span>
                             <span class="material-symbols-outlined text-base sm:text-lg group-hover:translate-x-1 transition-transform flex-shrink-0">arrow_forward</span>
@@ -409,9 +409,9 @@
                 </div>
                 {% endif %}
                 
-                <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-3 md:p-6 border border-gray-200 dark:border-gray-700 shadow-lg">
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-4 sm:p-3 md:p-6 border border-gray-300 dark:border-gray-700">
                     <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-xl sm:text-lg md:text-2xl">location_on</span>
+                        <span class="material-symbols-outlined text-gray-900 text-xl sm:text-lg md:text-2xl">location_on</span>
                         Konum & Müsaitlik
                     </h3>
                     <div class="space-y-3 sm:space-y-4">
@@ -426,7 +426,7 @@
                         <!-- Google Maps Integration -->
                         {% if google_maps_api_key and user.city %}
                         <div class="pt-3 sm:pt-4">
-                            <div id="lawyer-map" class="w-full h-48 sm:h-64 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden" 
+                            <div id="lawyer-map" class="w-full h-48 sm:h-64 border border-gray-300 dark:border-gray-700 overflow-hidden" 
                                  data-city="{{ user.city }}" 
                                  data-district="{{ user.district or '' }}">
                                 <div class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-900">
@@ -439,7 +439,7 @@
                         </div>
                         {% endif %}
                         
-                        <div class="pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
                             <div class="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold mb-1">
                                 <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
                                 <span class="text-sm sm:text-base">Aktif</span>
@@ -450,14 +450,14 @@
                 </div>
                 
                 {% if user.specializations %}
-                <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-3 md:p-6 border border-gray-200 dark:border-gray-700 shadow-lg">
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-4 sm:p-3 md:p-6 border border-gray-300 dark:border-gray-700">
                     <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-xl sm:text-lg md:text-2xl">workspace_premium</span>
+                        <span class="material-symbols-outlined text-gray-900 text-xl sm:text-lg md:text-2xl">workspace_premium</span>
                         Uzmanlık Alanları
                     </h3>
                     <div class="flex flex-wrap gap-2">
                         {% for spec in user.specializations %}
-                        <span class="px-2 sm:px-3 py-1.5 sm:py-2 bg-primary/10 text-primary rounded-lg text-xs sm:text-sm font-semibold border border-primary/20 hover:bg-primary/20 transition-colors break-words">{{ spec }}</span>
+                        <span class="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-900/10 text-gray-900 text-xs sm:text-sm font-semibold border border-primary/20 hover:bg-gray-900/20 transition-colors break-words">{{ spec }}</span>
                         {% endfor %}
                     </div>
                 </div>

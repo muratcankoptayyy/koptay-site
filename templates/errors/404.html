@@ -3,11 +3,11 @@
 {% block title %}Sayfa Bulunamadı - 404{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 px-4">
+<div class="min-h-screen flex items-center justify-center bg-white dark:from-gray-900 dark:to-gray-800 px-4">
     <div class="max-w-md w-full text-center">
         <!-- 404 Icon -->
         <div class="mb-8">
-            <svg class="mx-auto h-32 w-32 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="mx-auto h-32 w-32 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         </div>
@@ -27,18 +27,18 @@
         <!-- Actions -->
         <div class="space-y-3">
             <a href="{{ url_for('index') }}" 
-               class="block w-full px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold">
+               class="block w-full px-6 py-3 bg-gray-900 text-white hover:bg-gray-900/90 transition-colors font-semibold">
                 🏠 Ana Sayfaya Dön
             </a>
             
             <a href="{{ url_for('list_posts') }}" 
-               class="block w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold">
+               class="block w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold">
                 📋 İlanları Görüntüle
             </a>
             
             {% if current_user.is_authenticated %}
             <a href="{{ url_for('dashboard') }}" 
-               class="block w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold">
+               class="block w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold">
                 📊 Dashboard
             </a>
             {% endif %}
@@ -47,7 +47,7 @@
         <!-- Help Text -->
         <p class="mt-8 text-sm text-gray-500 dark:text-gray-400">
             Sorun devam ederse lütfen 
-            <a href="mailto:destek@utap.com.tr" class="text-primary hover:underline">
+            <a href="mailto:destek@utap.com.tr" class="text-gray-900 hover:underline">
                 destek ekibimizle
             </a> 
             iletişime geçin.

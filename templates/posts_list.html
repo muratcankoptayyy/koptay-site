@@ -42,11 +42,11 @@
         <div class="mb-4 lg:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <h1 class="text-2xl lg:text-xl md:text-3xl font-bold text-text dark:text-white">İlanlar</h1>
             <div class="flex gap-2 w-full sm:w-auto">
-                <a href="{{ url_for('map_view') }}" class="bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-4 lg:px-6 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm lg:text-base flex-1 sm:flex-initial justify-center border border-blue-200 dark:border-blue-800">
+                <a href="{{ url_for('map_view') }}" class="bg-blue-50 dark:bg-blue-900/20 hover:bg-gray-800 dark:hover:bg-gray-800/30 text-gray-900 dark:text-blue-400 px-4 lg:px-6 py-2 transition-colors flex items-center gap-2 text-sm lg:text-base flex-1 sm:flex-initial justify-center border border-blue-200 dark:border-blue-800">
                     <span class="material-symbols-outlined text-lg">map</span>
                     <span>Harita Görünümü</span>
                 </a>
-                <a href="{{ url_for('create_post') }}" class="bg-primary hover:bg-primary-dark text-white px-4 lg:px-6 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm lg:text-base flex-1 sm:flex-initial justify-center">
+                <a href="{{ url_for('create_post') }}" class="bg-gray-900 hover:bg-gray-900-dark text-white px-4 lg:px-6 py-2 transition-colors flex items-center gap-2 text-sm lg:text-base flex-1 sm:flex-initial justify-center">
                     <span class="material-symbols-outlined text-lg">add</span>
                     <span>Yeni İlan</span>
                 </a>
@@ -54,7 +54,7 @@
         </div>
 
         <!-- Search and Filters Card -->
-        <div class="bg-background-light dark:bg-slate-800 rounded-xl shadow-sm mb-6">
+        <div class="bg-background-light dark:bg-slate-800 mb-6">
             <div class="flex flex-col sm:flex-row gap-3 p-3">
                 <!-- Search Input -->
                 <div class="flex-1 relative">
@@ -63,7 +63,7 @@
                         type="text" 
                         id="searchInput"
                         placeholder="Anahtar kelime ile ara..." 
-                        class="w-full pl-10 pr-4 py-2.5 border border-border dark:border-slate-700 rounded-lg bg-background dark:bg-slate-900 text-text dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        class="w-full pl-10 pr-4 py-2.5 border border-border dark:border-slate-700 bg-background dark:bg-slate-900 text-text dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
                     />
                 </div>
                 
@@ -71,7 +71,7 @@
                 <div class="relative">
                     <select 
                         id="cityFilter"
-                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 rounded-lg bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
+                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
                     >
                         <option value="">Tüm Şehirler</option>
                         {% for city in cities %}
@@ -85,7 +85,7 @@
                 <div class="relative">
                     <select 
                         id="categoryFilter"
-                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 rounded-lg bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
+                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
                     >
                         <option value="">Tüm Görevler</option>
                         <option value="hukuk_durusma">Hukuk Duruşması</option>
@@ -114,7 +114,7 @@
                 <div class="relative">
                     <select 
                         id="urgencyFilter"
-                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 rounded-lg bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
+                        class="appearance-none px-4 py-2.5 pr-10 border border-border dark:border-slate-700 bg-background dark:bg-slate-900 text-text dark:text-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
                     >
                         <option value="">Tüm Aciliyet</option>
                         <option value="normal">Normal</option>
@@ -130,7 +130,7 @@
         {% if posts %}
         <div class="space-y-4" id="postsContainer">
             {% for post in posts %}
-            <div class="bg-background-light dark:bg-slate-800 rounded-xl p-4 lg:p-3 md:p-6 border border-border dark:border-slate-700 hover:shadow-lg hover:border-primary transition-all duration-200 post-card"
+            <div class="bg-background-light dark:bg-slate-800 p-4 lg:p-3 md:p-6 border border-border dark:border-slate-700 hover: hover:border-primary transition-all duration-200 post-card"
                  data-title="{{ post.title|lower }}"
                  data-description="{{ post.description|lower }}"
                  data-city="{{ post.city|lower if post.city else '' }}"
@@ -140,7 +140,7 @@
                 <div class="flex items-start gap-3 lg:gap-4">
                     <!-- Post Owner Avatar -->
                     <div class="flex-shrink-0 hidden sm:block">
-                        <div class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-base lg:text-lg">
+                        <div class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gray-900/10 flex items-center justify-center text-gray-900 font-bold text-base lg:text-lg">
                             {{ post.user.full_name[0] if post.user and post.user.full_name else 'A' }}
                         </div>
                     </div>
@@ -160,7 +160,7 @@
                         
                         <!-- Post Title -->
                         <h3 class="text-lg lg:text-xl font-bold text-text dark:text-white mb-2">
-                            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="hover:text-primary transition-colors">
+                            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="hover:text-gray-900 transition-colors">
                                 {{ post.title }}
                             </a>
                         </h3>
@@ -278,7 +278,7 @@
                         <!-- Action Buttons -->
                         <div class="flex items-center gap-2 lg:gap-3 pt-3 lg:pt-4 border-t border-border dark:border-slate-700">
                             <a href="{{ url_for('post_detail', post_id=post.id) }}" 
-                               class="flex-1 bg-primary text-white px-3 lg:px-4 py-2 lg:py-2.5 rounded-lg text-sm lg:text-base font-semibold hover:bg-primary-dark transition-colors flex items-center justify-center gap-1.5 lg:gap-2">
+                               class="flex-1 bg-gray-900 text-white px-3 lg:px-4 py-2 lg:py-2.5 text-sm lg:text-base font-semibold hover:bg-gray-900-dark transition-colors flex items-center justify-center gap-1.5 lg:gap-2">
                                 <span class="material-symbols-outlined text-base lg:text-lg">visibility</span>
                                 <span class="hidden sm:inline">Detayları Gör</span>
                                 <span class="sm:hidden">Detay</span>
@@ -286,7 +286,7 @@
                             
                             {% if current_user.is_authenticated %}
                             <button onclick="toggleFavorite({{ post.id }}, this)" 
-                                    class="favorite-btn p-2 lg:p-2.5 rounded-lg border border-border dark:border-slate-700 hover:bg-background dark:hover:bg-slate-700 transition-colors" 
+                                    class="favorite-btn p-2 lg:p-2.5 border border-border dark:border-slate-700 hover:bg-background dark:hover:bg-slate-700 transition-colors" 
                                     data-favorited="{{ 'true' if post.id in current_user_favorites else 'false' }}">
                                 <span class="material-symbols-outlined text-lg lg:text-xl {% if post.id in current_user_favorites %}text-red-500 fill-icon{% else %}text-text-light{% endif %}">favorite</span>
                             </button>
@@ -305,11 +305,11 @@
         
         {% else %}
         <!-- Empty State -->
-        <div class="bg-background-light dark:bg-slate-800 rounded-xl p-12 border-2 border-dashed border-border dark:border-slate-700 text-center">
+        <div class="bg-background-light dark:bg-slate-800 p-12 border-2 border-dashed border-border dark:border-slate-700 text-center">
             <span class="material-symbols-outlined text-6xl text-text-light dark:text-slate-600 mb-4 block">inbox</span>
             <h3 class="text-xl font-semibold text-text dark:text-white mb-2">Henüz ilan bulunmuyor</h3>
             <p class="text-text-light dark:text-slate-400 mb-6">İlk ilanı siz oluşturun ve meslektaşlarınızla paylaşın!</p>
-            <a href="{{ url_for('create_post') }}" class="bg-primary text-white px-4 md:px-8 py-3 rounded-lg font-semibold hover:bg-primary-dark transition-colors inline-flex items-center gap-2">
+            <a href="{{ url_for('create_post') }}" class="bg-gray-900 text-white px-4 md:px-8 py-3 font-semibold hover:bg-gray-900-dark transition-colors inline-flex items-center gap-2">
                 <span class="material-symbols-outlined">add</span>
                 Yeni İlan Oluştur
             </a>
