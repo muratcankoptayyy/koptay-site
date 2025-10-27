@@ -9,7 +9,7 @@
             <h1 class="text-[#111418] dark:text-white text-2xl md:text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">Yeni Tevkil İlanı Oluştur</h1>
         </div>
         
-        <form method="POST" action="{{ url_for('create_post') }}" class="p-4 space-y-6">
+        <form method="POST" action="{{ url_for('create_post') }}" class="p-4 space-y-6" data-loading="true">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                 <!-- Görev Türü -->

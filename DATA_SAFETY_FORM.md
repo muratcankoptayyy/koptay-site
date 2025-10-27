@@ -163,10 +163,24 @@
 ## 4️⃣ GÜVENLİK PRATİKLERİ
 
 ### Veriler nasıl korunuyor?
-- ✅ Veriler şifrelenerek iletiliyor (HTTPS/TLS)
-- ✅ Veriler şifrelenerek saklanıyor (encrypted database)
+
+#### 🔒 İletim Sırasında Şifreleme (Data encrypted in transit)
+- ✅ **EVET** - Tüm veriler HTTPS/TLS 1.3 ile şifrelenir
+- ✅ SSL/TLS sertifikası (Let's Encrypt)
+- ✅ Tüm API istekleri şifreli kanal üzerinden
+
+#### 💾 Depolama Sırasında Şifreleme (Data encrypted at rest)
+- ✅ **EVET** - Fly.io PostgreSQL otomatik disk şifrelemesi (AES-256)
+- ✅ Şifreler: Bcrypt hash algoritması (tek yönlü, geri döndürülemez)
+- ✅ API Token'lar: UUID v4 güvenli rastgele token
+- ✅ 2FA kodları: Tek kullanımlık, hash'lenmiş
+- ✅ Hassas veriler uygulama seviyesinde hash'lenir
+
+#### 🗑️ Kullanıcı Hakları
 - ✅ Kullanıcılar hesap silme talebinde bulunabilir
 - ✅ Kullanıcılar verilerini indirebilir (KVKK hakkı)
+- ✅ Mesajları dilediği zaman silebilir
+- ✅ Profil verilerini düzenleyebilir/silebilir
 
 ### Veri saklama süresi
 - **Aktif hesaplar:** Hesap silinene kadar

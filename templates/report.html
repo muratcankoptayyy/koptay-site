@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Rapor Et - Tevkil{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 py-8">
+    <div class="max-w-2xl mx-auto px-4">
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="{{ request.referrer or url_for('dashboard') }}" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Geri Dön
+            </a>
+            
+            <div class="bg-white rounded-2xl shadow-xl p-8 border-t-4 border-red-500">
+                <div class="flex items-center mb-6">
+                    <div class="bg-red-100 p-3 rounded-full mr-4">
+                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">İçerik Rapor Et</h1>
+                        <p class="text-gray-600 mt-1">
+                            {% if report_type == 'user' %}
+                            Kullanıcı: {{ item.full_name }}
+                            {% elif report_type == 'post' %}
+                            İlan: {{ item.title }}
+                            {% else %}
+                            Mesaj Raporu
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Bilgilendirme -->
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                <strong>Önemli:</strong> Rapor etme özelliği kötüye kullanıldığında hesabınız askıya alınabilir. 
+                                Sadece gerçekten uygunsuz içerik veya davranış için rapor gönderin.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rapor Formu -->
+                <form method="POST" class="space-y-6">
+                    <!-- Kategori Seçimi -->
+                    <div>
+                        <label for="category" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Rapor Kategorisi *
+                        </label>
+                        <select 
+                            id="category" 
+                            name="category" 
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                        >
+                            <option value="">Seçiniz...</option>
+                            <option value="spam">🚫 Spam / İstenmeyen İçerik</option>
+                            <option value="inappropriate">⚠️ Uygunsuz İçerik</option>
+                            <option value="abuse">😠 Taciz / Hakaret</option>
+                            <option value="fake">🎭 Sahte Bilgi / Dolandırıcılık</option>
+                            <option value="other">❓ Diğer</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Açıklama -->
+                    <div>
+                        <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Detaylı Açıklama *
+                        </label>
+                        <textarea 
+                            id="description" 
+                            name="description" 
+                            rows="6"
+                            required
+                            placeholder="Lütfen rapor etme nedeninizi detaylı bir şekilde açıklayın..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                            maxlength="1000"
+                        ></textarea>
+                        <p class="text-xs text-gray-500 mt-1">Maksimum 1000 karakter</p>
+                    </div>
+                    
+                    <!-- Kurallar -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3">📋 Rapor Kuralları</h3>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span>Yanlış veya asılsız raporlar hesap kısıtlaması getirebilir</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span>Tüm raporlar incelenir ve 48 saat içinde geri dönüş yapılır</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span>Kişisel anlaşmazlıklar için rapor sistemi kullanılmamalıdır</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span>Raporlarınız gizli tutulur, kimseyle paylaşılmaz</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Gönder Butonu -->
+                    <div class="flex items-center justify-between pt-4">
+                        <a href="{{ request.referrer or url_for('dashboard') }}" class="text-gray-600 hover:text-gray-800">
+                            İptal
+                        </a>
+                        <button 
+                            type="submit"
+                            class="bg-red-500 hover:bg-red-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md transition duration-200 flex items-center"
+                        >
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            Rapor Gönder
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- İstatistikler (Opsiyonel) -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Rapor İstatistikleri</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="text-3xl font-bold text-blue-600">48 saat</div>
+                    <div class="text-sm text-gray-600">Ortalama İnceleme Süresi</div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4">
+                    <div class="text-3xl font-bold text-green-600">95%</div>
+                    <div class="text-sm text-gray-600">İşleme Alınan Raporlar</div>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-4">
+                    <div class="text-3xl font-bold text-purple-600">24/7</div>
+                    <div class="text-sm text-gray-600">Moderasyon Desteği</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

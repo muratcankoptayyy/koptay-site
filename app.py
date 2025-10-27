@@ -31,6 +31,7 @@ load_dotenv()
 
 # ⚡ FEATURE FLAGS
 WHATSAPP_ENABLED = os.getenv('WHATSAPP_ENABLED', 'false').lower() == 'true'
+EMAIL_ENABLED = os.getenv('EMAIL_ENABLED', 'true').lower() == 'true'  # E-posta bildirimleri aktif
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -68,7 +69,17 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = DATABASE_CONFIG
 # Initialize extensions
 db.init_app(app)
 
-# 🔒 CORS Configuration - Restrict origins in production
+# � E-posta Servisi
+if EMAIL_ENABLED:
+    try:
+        from email_service import init_mail
+        mail = init_mail(app)
+        print("✅ E-posta servisi başlatıldı")
+    except Exception as e:
+        print(f"⚠️ E-posta servisi başlatılamadı: {e}")
+        EMAIL_ENABLED = False
+
+# �🔒 CORS Configuration - Restrict origins in production
 if app.config['DEV_MODE']:
     # Development: Allow all origins for testing
     CORS(app, resources={r"/*": {"origins": "*"}})
@@ -131,6 +142,20 @@ def dev_login_optional(f):
         else:
             # Production modunda: Normal login_required davranışı
             return login_required(f)(*args, **kwargs)
+    return decorated_function
+
+# Admin Required Decorator
+def admin_required(f):
+    """Sadece admin kullanıcıların erişimine izin verir"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash('Bu sayfaya erişim için giriş yapmalısınız.', 'error')
+            return redirect(url_for('login'))
+        if not current_user.is_admin:
+            flash('Bu sayfaya erişim yetkiniz yok.', 'error')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
     return decorated_function
 
 @login_manager.user_loader
@@ -278,6 +303,14 @@ def register():
         
         db.session.add(user)
         db.session.commit()
+        
+        # 📧 Hoş geldiniz e-postası gönder
+        if EMAIL_ENABLED:
+            try:
+                from email_service import send_welcome_email
+                send_welcome_email(user)
+            except Exception as e:
+                print(f"⚠️ Hoş geldiniz e-postası gönderilemedi: {e}")
         
         flash('Kayıt başarılı! Giriş yapabilirsiniz.', 'success')
         return redirect(url_for('login'))
@@ -732,7 +765,7 @@ def applications_sent():
 @app.route('/posts')
 @dev_login_optional
 def list_posts():
-    """İlan listesi"""
+    """İlan listesi - Gelişmiş Filtreleme"""
     from constants import CITIES
     
     # Filters
@@ -741,6 +774,14 @@ def list_posts():
     city = request.args.get('city')
     urgency = request.args.get('urgency')
     search = request.args.get('search')
+    
+    # 🆕 GELİŞMİŞ FİLTRELER
+    price_min = request.args.get('price_min', type=int)
+    price_max = request.args.get('price_max', type=int)
+    hearing_date_from = request.args.get('hearing_date_from')
+    hearing_date_to = request.args.get('hearing_date_to')
+    urgent_only = request.args.get('urgent_only') == 'on'
+    remote_allowed = request.args.get('remote_allowed') == 'on'
     
     # Base query
     if filter_type == 'my_active':
@@ -756,6 +797,7 @@ def list_posts():
         # Tüm aktif ilanlar (genel liste)
         query = TevkilPost.query.filter_by(status='active')
     
+    # Temel filtreler
     if category:
         query = query.filter_by(category=category)
     if city:
@@ -768,7 +810,50 @@ def list_posts():
             TevkilPost.description.ilike(f'%{search}%')
         ))
     
-    posts = query.order_by(TevkilPost.created_at.desc()).all()
+    # 🆕 FİYAT FİLTRELERİ
+    if price_min is not None:
+        query = query.filter(TevkilPost.price_max >= price_min)
+    if price_max is not None:
+        query = query.filter(
+            or_(
+                TevkilPost.price_min <= price_max,
+                TevkilPost.price_min.is_(None)
+            )
+        )
+    
+    # 🆕 TARİH FİLTRELERİ
+    if hearing_date_from:
+        try:
+            from_date = datetime.strptime(hearing_date_from, '%Y-%m-%d')
+            query = query.filter(TevkilPost.hearing_date >= from_date)
+        except ValueError:
+            pass
+    
+    if hearing_date_to:
+        try:
+            to_date = datetime.strptime(hearing_date_to, '%Y-%m-%d')
+            query = query.filter(TevkilPost.hearing_date <= to_date)
+        except ValueError:
+            pass
+    
+    # 🆕 ACİLİYET FİLTRESİ
+    if urgent_only:
+        query = query.filter_by(urgency_level='urgent')
+    
+    # 🆕 UZAKTAN ÇALIŞMA FİLTRESİ
+    if remote_allowed:
+        query = query.filter_by(remote_allowed=True)
+    
+    # Sıralama
+    query = query.order_by(TevkilPost.created_at.desc())
+    
+    # 🆕 PAGINATION
+    from pagination_utils import paginate_query
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    pagination = paginate_query(query, page=page, per_page=per_page)
+    posts = pagination['items']
     
     # Get current user's favorites
     current_user_favorites = []
@@ -776,7 +861,12 @@ def list_posts():
         favorites = Favorite.query.filter_by(user_id=current_user.id).all()
         current_user_favorites = [fav.post_id for fav in favorites]
     
-    return render_template('posts_list.html', posts=posts, current_user_favorites=current_user_favorites, cities=CITIES, filter_type=filter_type)
+    return render_template('posts_list.html', 
+                         posts=posts, 
+                         pagination=pagination,
+                         current_user_favorites=current_user_favorites, 
+                         cities=CITIES, 
+                         filter_type=filter_type)
 
 @app.route('/map')
 @dev_login_optional
@@ -816,7 +906,30 @@ def map_view():
 def create_post():
     """Yeni ilan oluştur"""
     if request.method == 'POST':
+        from spam_detector import is_spam, is_inappropriate, check_flood, sanitize_text
+        
         data = request.form
+        title = data.get('title', '')
+        description = data.get('description', '')
+        
+        # 1. SPAM KONTROLÜ
+        if is_spam(title) or is_spam(description):
+            flash('⚠️ İlanınız spam içerik tespit edildiği için oluşturulamadı. Lütfen içeriği kontrol edin.', 'danger')
+            return redirect(url_for('create_post'))
+        
+        # 2. UYGUNSUZ İÇERİK KONTROLÜ
+        if is_inappropriate(title) or is_inappropriate(description):
+            flash('⚠️ İlanınız uygunsuz içerik tespit edildiği için oluşturulamadı.', 'danger')
+            return redirect(url_for('create_post'))
+        
+        # 3. FLOOD KONTROLÜ (1 saatte 5'ten fazla ilan)
+        if check_flood(current_user.id, db.session, action_type='post', max_count=5, time_window_minutes=60):
+            flash('⚠️ Çok fazla ilan oluşturdunuz. Lütfen bir süre bekleyin.', 'warning')
+            return redirect(url_for('dashboard'))
+        
+        # 4. METNİ TEMİZLE
+        title = sanitize_text(title, max_length=200)
+        description = sanitize_text(description, max_length=5000)
         
         # Konum bilgisini geocode et
         location_str = data.get('location')
@@ -824,8 +937,8 @@ def create_post():
         
         post = TevkilPost(
             user_id=current_user.id,
-            title=data.get('title'),
-            description=data.get('description'),
+            title=title,
+            description=description,
             category=data.get('category'),
             urgency_level=data.get('urgency_level', 'normal'),
             location=location_str,
@@ -1009,6 +1122,14 @@ def apply_to_post(post_id):
         except Exception as e:
             print(f"WhatsApp bildirimi gönderilemedi: {str(e)}")
     
+    # 📧 E-posta bildirimi gönder (ilan sahibine)
+    if EMAIL_ENABLED and post.user.notify_email:
+        try:
+            from email_service import send_application_received_email
+            send_application_received_email(post.user, application)
+        except Exception as e:
+            print(f"⚠️ Başvuru alındı e-postası gönderilemedi: {e}")
+    
     flash('Başvurunuz gönderildi!', 'success')
     return redirect(url_for('post_detail', post_id=post_id))
 
@@ -1064,6 +1185,14 @@ def accept_application(app_id):
             )
         except Exception as e:
             print(f"WhatsApp bildirimi gönderilemedi: {str(e)}")
+    
+    # 📧 E-posta bildirimi gönder
+    if EMAIL_ENABLED and application.applicant.notify_email:
+        try:
+            from email_service import send_application_accepted_email
+            send_application_accepted_email(application.applicant, application)
+        except Exception as e:
+            print(f"⚠️ Başvuru kabul e-postası gönderilemedi: {e}")
     
     flash('Başvuru kabul edildi!', 'success')
     return redirect(url_for('post_detail', post_id=post.id))
@@ -1247,14 +1376,22 @@ def generate_authorization_pdf(app_id):
 
 @app.route('/profile/<int:user_id>')
 def user_profile(user_id):
-    """Kullanıcı profili"""
-    user = User.query.get_or_404(user_id)
+    """Kullanıcı profili - Optimized with eager loading"""
+    from sqlalchemy.orm import joinedload
+    
+    # Eager loading ile user al (N+1 problemi önleme)
+    user = User.query.options(
+        joinedload(User.posts_created),
+        joinedload(User.applications_sent)
+    ).get_or_404(user_id)
     
     # Kullanıcının tamamladığı işler
     completed_posts = TevkilPost.query.filter_by(assigned_to=user_id, status='completed').all()
     
-    # Aldığı değerlendirmeler
-    ratings = Rating.query.filter_by(reviewed_id=user_id).order_by(Rating.created_at.desc()).all()
+    # Aldığı değerlendirmeler (eager loading ile reviewer bilgisi)
+    ratings = Rating.query.options(
+        joinedload(Rating.reviewer)
+    ).filter_by(reviewed_id=user_id).order_by(Rating.created_at.desc()).all()
     
     return render_template('profile.html', user=user, completed_posts=completed_posts, ratings=ratings)
 
@@ -1318,7 +1455,19 @@ def edit_profile():
 @login_required
 def settings():
     """Ayarlar sayfası"""
-    return render_template('settings.html')
+    # 2FA bilgilerini hazırla
+    two_fa_enabled = current_user.two_factor_enabled
+    backup_codes = []
+    if current_user.two_factor_backup_codes:
+        import json
+        try:
+            backup_codes = json.loads(current_user.two_factor_backup_codes)
+        except:
+            backup_codes = []
+    
+    return render_template('settings.html', 
+                         two_fa_enabled=two_fa_enabled,
+                         backup_codes=backup_codes)
 
 @app.route('/settings/profile', methods=['POST'])
 @login_required
@@ -1342,6 +1491,156 @@ def update_profile():
     db.session.commit()
     flash('Profil bilgileriniz başarıyla güncellendi!', 'success')
     return redirect(url_for('edit_profile'))
+
+@app.route('/rate/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def rate_user(user_id):
+    """Kullanıcıyı değerlendir"""
+    user = User.query.get_or_404(user_id)
+    
+    # Kendini değerlendiremez
+    if user_id == current_user.id:
+        flash('Kendinizi değerlendiremezsiniz!', 'error')
+        return redirect(url_for('user_profile', user_id=user_id))
+    
+    # Daha önce değerlendirmiş mi kontrol et
+    existing_rating = Rating.query.filter_by(
+        reviewer_id=current_user.id,
+        reviewed_id=user_id
+    ).first()
+    
+    if request.method == 'POST':
+        rating_value = int(request.form.get('rating', 0))
+        professionalism = request.form.get('professionalism', type=int)
+        communication = request.form.get('communication', type=int)
+        quality = request.form.get('quality', type=int)
+        comment = request.form.get('comment', '').strip()
+        
+        # Validasyon
+        if not (1 <= rating_value <= 5):
+            flash('Geçersiz puan değeri!', 'error')
+            return redirect(url_for('rate_user', user_id=user_id))
+        
+        if existing_rating:
+            # Güncelle
+            existing_rating.rating = rating_value
+            existing_rating.professionalism = professionalism
+            existing_rating.communication = communication
+            existing_rating.quality = quality
+            existing_rating.comment = comment
+            flash_message = 'Değerlendirmeniz güncellendi!'
+        else:
+            # Yeni oluştur
+            rating = Rating(
+                reviewer_id=current_user.id,
+                reviewed_id=user_id,
+                rating=rating_value,
+                professionalism=professionalism,
+                communication=communication,
+                quality=quality,
+                comment=comment
+            )
+            db.session.add(rating)
+            flash_message = 'Değerlendirmeniz kaydedildi!'
+        
+        # Kullanıcının ortalama puanını güncelle
+        all_ratings = Rating.query.filter_by(reviewed_id=user_id).all()
+        if all_ratings:
+            avg_rating = sum(r.rating for r in all_ratings) / len(all_ratings)
+            user.rating_average = avg_rating
+            user.rating_count = len(all_ratings)
+        
+        # Bildirim gönder
+        create_notification(
+            user_id=user_id,
+            notification_type='new_rating',
+            title='⭐ Yeni Değerlendirme!',
+            message=f'{current_user.full_name} sizi değerlendirdi: {rating_value}/5 yıldız',
+            related_user_id=current_user.id,
+            priority='normal',
+            category='rating',
+            action_url=f'/profile/{user_id}',
+            action_text='Profili Görüntüle'
+        )
+        
+        db.session.commit()
+        flash(flash_message, 'success')
+        return redirect(url_for('user_profile', user_id=user_id))
+    
+    # GET request - rating formunu göster
+    return render_template('rate_user.html', user=user, existing_rating=existing_rating)
+
+@app.route('/report/<report_type>/<int:item_id>', methods=['GET', 'POST'])
+@login_required
+def report_content(report_type, item_id):
+    """İçerik/kullanıcı rapor et"""
+    from models import Report
+    
+    # Report type kontrolü
+    valid_types = ['user', 'post', 'message']
+    if report_type not in valid_types:
+        abort(404)
+    
+    if request.method == 'POST':
+        from spam_detector import sanitize_text
+        
+        # Daha önce rapor edilmiş mi kontrol et
+        existing_report = None
+        if report_type == 'user':
+            existing_report = Report.query.filter_by(
+                reporter_id=current_user.id,
+                reported_user_id=item_id
+            ).first()
+        elif report_type == 'post':
+            existing_report = Report.query.filter_by(
+                reporter_id=current_user.id,
+                reported_post_id=item_id
+            ).first()
+        elif report_type == 'message':
+            existing_report = Report.query.filter_by(
+                reporter_id=current_user.id,
+                reported_message_id=item_id
+            ).first()
+        
+        if existing_report:
+            flash('⚠️ Bu içeriği daha önce raporladınız.', 'warning')
+            return redirect(request.referrer or url_for('dashboard'))
+        
+        # Rapor oluştur
+        description = sanitize_text(request.form.get('description', ''), max_length=1000)
+        category = request.form.get('category', 'other')  # spam, inappropriate, abuse, fake, other
+        
+        report = Report(
+            reporter_id=current_user.id,
+            report_type=category,
+            description=description
+        )
+        
+        # İlgili ID'yi ata
+        if report_type == 'user':
+            report.reported_user_id = item_id
+        elif report_type == 'post':
+            report.reported_post_id = item_id
+        elif report_type == 'message':
+            report.reported_message_id = item_id
+        
+        db.session.add(report)
+        db.session.commit()
+        
+        flash('✅ Raporunuz alındı. İncelenecek ve gerekli işlem yapılacaktır.', 'success')
+        return redirect(request.referrer or url_for('dashboard'))
+    
+    # GET request - rapor formunu göster
+    item = None
+    if report_type == 'user':
+        item = User.query.get_or_404(item_id)
+    elif report_type == 'post':
+        item = TevkilPost.query.get_or_404(item_id)
+    elif report_type == 'message':
+        from models import Message
+        item = Message.query.get_or_404(item_id)
+    
+    return render_template('report.html', report_type=report_type, item=item)
 
 @app.route('/settings/avatar', methods=['POST'])
 @login_required
@@ -1427,6 +1726,98 @@ def update_privacy_settings():
     
     db.session.commit()
     flash('Gizlilik ayarlarınız başarıyla güncellendi!', 'success')
+    return redirect(url_for('settings'))
+
+@app.route('/settings/2fa/setup', methods=['GET', 'POST'])
+@login_required
+def setup_2fa():
+    """2FA kurulumu"""
+    import pyotp
+    import qrcode
+    import io
+    import base64
+    import json
+    import secrets
+    
+    if request.method == 'POST':
+        # Verify code
+        code = request.form.get('code')
+        secret = request.form.get('secret')
+        
+        if not secret or not code:
+            flash('Geçersiz istek!', 'error')
+            return redirect(url_for('settings'))
+        
+        # TOTP doğrulama
+        totp = pyotp.TOTP(secret)
+        if totp.verify(code):
+            # 2FA'yı aktifleştir
+            current_user.two_factor_enabled = True
+            current_user.two_factor_secret = secret
+            
+            # Yedek kodlar oluştur (10 adet)
+            backup_codes = [secrets.token_hex(4).upper() for _ in range(10)]
+            current_user.two_factor_backup_codes = json.dumps(backup_codes)
+            
+            db.session.commit()
+            
+            flash('✅ İki faktörlü doğrulama başarıyla aktifleştirildi!', 'success')
+            return redirect(url_for('settings'))
+        else:
+            flash('❌ Doğrulama kodu hatalı! Lütfen tekrar deneyin.', 'error')
+            return redirect(url_for('setup_2fa'))
+    
+    # GET request - QR kod oluştur
+    if current_user.two_factor_enabled:
+        flash('İki faktörlü doğrulama zaten aktif!', 'info')
+        return redirect(url_for('settings'))
+    
+    # Yeni secret oluştur
+    secret = pyotp.random_base32()
+    
+    # TOTP URI oluştur
+    totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
+        name=current_user.email,
+        issuer_name='Tevkil Platform'
+    )
+    
+    # QR kod oluştur
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(totp_uri)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # QR kodu base64'e çevir
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+    
+    return render_template('2fa_setup.html', 
+                         qr_code=qr_code_base64, 
+                         secret=secret,
+                         manual_entry_key=secret)
+
+@app.route('/settings/2fa/disable', methods=['POST'])
+@login_required
+def disable_2fa():
+    """2FA'yı devre dışı bırak"""
+    password = request.form.get('password')
+    
+    # Şifre kontrolü
+    if not current_user.check_password(password):
+        flash('❌ Şifre hatalı!', 'error')
+        return redirect(url_for('settings'))
+    
+    # 2FA'yı kapat
+    current_user.two_factor_enabled = False
+    current_user.two_factor_secret = None
+    current_user.two_factor_backup_codes = None
+    
+    db.session.commit()
+    
+    flash('✅ İki faktörlü doğrulama devre dışı bırakıldı.', 'success')
     return redirect(url_for('settings'))
 
 @app.route('/settings/notifications', methods=['POST'])
@@ -2678,81 +3069,6 @@ def security_settings():
                          security_logs=recent_logs)
 
 
-@app.route('/security/2fa/setup', methods=['GET', 'POST'])
-@login_required
-def setup_2fa():
-    """2FA kurulum sayfası"""
-    if request.method == 'POST':
-        action = request.form.get('action')
-        
-        if action == 'enable':
-            # 2FA'yı etkinleştir
-            if not current_user.two_factor_secret:
-                # Secret oluştur
-                secret = security_utils.generate_2fa_secret()
-                current_user.two_factor_secret = secret
-                db.session.commit()
-            
-            # QR kod oluştur
-            qr_code = security_utils.generate_2fa_qr_code(
-                current_user.email,
-                current_user.two_factor_secret
-            )
-            
-            # Backup kodları oluştur
-            backup_codes = security_utils.generate_backup_codes()
-            current_user.two_factor_backup_codes = json.dumps(backup_codes)
-            db.session.commit()
-            
-            return render_template('setup_2fa.html',
-                                 step='scan',
-                                 qr_code=qr_code,
-                                 secret=current_user.two_factor_secret,
-                                 backup_codes=backup_codes)
-        
-        elif action == 'verify':
-            # Kurulumu doğrula
-            token = request.form.get('token', '').replace('-', '').replace(' ', '')
-            
-            if security_utils.verify_2fa_token(current_user.two_factor_secret, token):
-                # 2FA aktif
-                current_user.two_factor_enabled = True
-                db.session.commit()
-                
-                security_utils.log_security_event(
-                    current_user.id, '2fa_enabled', 'INFO',
-                    'Two-factor authentication enabled'
-                )
-                
-                flash('İki faktörlü kimlik doğrulama başarıyla etkinleştirildi!', 'success')
-                return redirect(url_for('security_settings'))
-            else:
-                flash('Geçersiz kod. Lütfen tekrar deneyin.', 'error')
-                return redirect(url_for('setup_2fa'))
-        
-        elif action == 'disable':
-            # 2FA'yı devre dışı bırak
-            password = request.form.get('password')
-            
-            if current_user.check_password(password):
-                current_user.two_factor_enabled = False
-                current_user.two_factor_secret = None
-                current_user.two_factor_backup_codes = None
-                db.session.commit()
-                
-                security_utils.log_security_event(
-                    current_user.id, '2fa_disabled', 'WARNING',
-                    'Two-factor authentication disabled'
-                )
-                
-                flash('İki faktörlü kimlik doğrulama devre dışı bırakıldı.', 'success')
-                return redirect(url_for('security_settings'))
-            else:
-                flash('Hatalı şifre.', 'error')
-    
-    return render_template('setup_2fa.html', step='start')
-
-
 @app.route('/security/sessions/terminate/<int:session_id>', methods=['POST'])
 @login_required
 def terminate_session(session_id):
@@ -3327,6 +3643,172 @@ def terms_of_service():
 def cookie_policy():
     """Cookie policy page"""
     return render_template('cookie_policy.html', current_date='2025')
+
+# ==================== ADMIN & ANALYTICS ====================
+@app.route('/admin/analytics')
+@admin_required
+def admin_analytics():
+    """Admin analytics dashboard with comprehensive statistics"""
+    from sqlalchemy import func, extract
+    from datetime import datetime, timedelta
+    
+    # Time ranges
+    today = datetime.utcnow()
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+    year_ago = today - timedelta(days=365)
+    
+    # User Statistics
+    total_users = User.query.count()
+    active_users_week = User.query.filter(User.last_active >= week_ago).count()
+    active_users_month = User.query.filter(User.last_active >= month_ago).count()
+    new_users_week = User.query.filter(User.created_at >= week_ago).count()
+    new_users_month = User.query.filter(User.created_at >= month_ago).count()
+    
+    # User registrations by month (last 12 months)
+    user_registrations_by_month = db.session.query(
+        extract('year', User.created_at).label('year'),
+        extract('month', User.created_at).label('month'),
+        func.count(User.id).label('count')
+    ).filter(
+        User.created_at >= year_ago
+    ).group_by('year', 'month').order_by('year', 'month').all()
+    
+    # Post Statistics
+    total_posts = TevkilPost.query.count()
+    active_posts = TevkilPost.query.filter_by(status='active').count()
+    completed_posts = TevkilPost.query.filter_by(status='completed').count()
+    cancelled_posts = TevkilPost.query.filter_by(status='cancelled').count()
+    posts_this_week = TevkilPost.query.filter(TevkilPost.created_at >= week_ago).count()
+    posts_this_month = TevkilPost.query.filter(TevkilPost.created_at >= month_ago).count()
+    
+    # Posts by category
+    posts_by_category = db.session.query(
+        TevkilPost.category,
+        func.count(TevkilPost.id).label('count')
+    ).group_by(TevkilPost.category).order_by(func.count(TevkilPost.id).desc()).all()
+    
+    # Posts by city (top 10)
+    posts_by_city = db.session.query(
+        TevkilPost.city,
+        func.count(TevkilPost.id).label('count')
+    ).group_by(TevkilPost.city).order_by(func.count(TevkilPost.id).desc()).limit(10).all()
+    
+    # Application Statistics
+    total_applications = Application.query.count()
+    pending_applications = Application.query.filter_by(status='pending').count()
+    accepted_applications = Application.query.filter_by(status='accepted').count()
+    rejected_applications = Application.query.filter_by(status='rejected').count()
+    applications_this_week = Application.query.filter(Application.created_at >= week_ago).count()
+    
+    # Message Statistics
+    total_messages = Message.query.count()
+    messages_this_week = Message.query.filter(Message.created_at >= week_ago).count()
+    
+    # Rating Statistics
+    total_ratings = Rating.query.count()
+    avg_rating = db.session.query(func.avg(Rating.rating)).scalar() or 0
+    ratings_this_week = Rating.query.filter(Rating.created_at >= week_ago).count()
+    
+    # Most active users (by posts created)
+    top_post_creators = db.session.query(
+        User.full_name,
+        User.email,
+        func.count(TevkilPost.id).label('post_count')
+    ).join(TevkilPost, TevkilPost.lawyer_id == User.id).group_by(User.id).order_by(func.count(TevkilPost.id).desc()).limit(10).all()
+    
+    # Most active applicants
+    top_applicants = db.session.query(
+        User.full_name,
+        User.email,
+        func.count(Application.id).label('application_count')
+    ).join(Application, Application.applicant_id == User.id).group_by(User.id).order_by(func.count(Application.id).desc()).limit(10).all()
+    
+    # Report Statistics
+    total_reports = Report.query.count()
+    pending_reports = Report.query.filter_by(status='pending').count()
+    
+    return render_template('admin_analytics.html',
+                         # User stats
+                         total_users=total_users,
+                         active_users_week=active_users_week,
+                         active_users_month=active_users_month,
+                         new_users_week=new_users_week,
+                         new_users_month=new_users_month,
+                         user_registrations_by_month=user_registrations_by_month,
+                         # Post stats
+                         total_posts=total_posts,
+                         active_posts=active_posts,
+                         completed_posts=completed_posts,
+                         cancelled_posts=cancelled_posts,
+                         posts_this_week=posts_this_week,
+                         posts_this_month=posts_this_month,
+                         posts_by_category=posts_by_category,
+                         posts_by_city=posts_by_city,
+                         # Application stats
+                         total_applications=total_applications,
+                         pending_applications=pending_applications,
+                         accepted_applications=accepted_applications,
+                         rejected_applications=rejected_applications,
+                         applications_this_week=applications_this_week,
+                         # Message stats
+                         total_messages=total_messages,
+                         messages_this_week=messages_this_week,
+                         # Rating stats
+                         total_ratings=total_ratings,
+                         avg_rating=round(avg_rating, 2),
+                         ratings_this_week=ratings_this_week,
+                         # Top users
+                         top_post_creators=top_post_creators,
+                         top_applicants=top_applicants,
+                         # Reports
+                         total_reports=total_reports,
+                         pending_reports=pending_reports)
+
+@app.route('/admin/analytics/export')
+@admin_required
+def export_analytics():
+    """Export analytics data as CSV"""
+    import csv
+    from io import StringIO
+    from flask import make_response
+    from datetime import datetime
+    
+    # Gather all statistics
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Headers
+    writer.writerow(['Analytics Report', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')])
+    writer.writerow([])
+    
+    # User Statistics
+    writer.writerow(['User Statistics'])
+    writer.writerow(['Total Users', User.query.count()])
+    writer.writerow(['Active This Week', User.query.filter(User.last_active >= datetime.utcnow() - timedelta(days=7)).count()])
+    writer.writerow(['New This Month', User.query.filter(User.created_at >= datetime.utcnow() - timedelta(days=30)).count()])
+    writer.writerow([])
+    
+    # Post Statistics
+    writer.writerow(['Post Statistics'])
+    writer.writerow(['Total Posts', TevkilPost.query.count()])
+    writer.writerow(['Active Posts', TevkilPost.query.filter_by(status='active').count()])
+    writer.writerow(['Completed Posts', TevkilPost.query.filter_by(status='completed').count()])
+    writer.writerow([])
+    
+    # Application Statistics
+    writer.writerow(['Application Statistics'])
+    writer.writerow(['Total Applications', Application.query.count()])
+    writer.writerow(['Pending', Application.query.filter_by(status='pending').count()])
+    writer.writerow(['Accepted', Application.query.filter_by(status='accepted').count()])
+    writer.writerow(['Rejected', Application.query.filter_by(status='rejected').count()])
+    
+    # Create response
+    response = make_response(output.getvalue())
+    response.headers['Content-Disposition'] = f'attachment; filename=analytics_export_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv'
+    response.headers['Content-Type'] = 'text/csv'
+    
+    return response
 
 # ==================== ERROR HANDLERS ====================
 @app.errorhandler(404)

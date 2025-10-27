@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil - Tevkil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            letter-spacing: -0.01em;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    
+    <!-- Top Bar -->
+    <div class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-300 z-20 flex items-center px-12">
+        <h1 class="text-xl font-light text-gray-900">Tevkil</h1>
+        <div class="ml-auto flex items-center gap-8">
+            <button class="text-gray-400 hover:text-gray-900"><i class="fas fa-search"></i></button>
+            <button class="text-gray-400 hover:text-gray-900 relative">
+                <i class="fas fa-bell"></i>
+                <span class="absolute -top-1 -right-1 bg-black text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">3</span>
+            </button>
+            <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center text-white text-sm font-light">
+                MK
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="fixed left-0 top-16 h-full w-48 bg-white border-r border-gray-300 z-10">
+        <nav class="px-6 py-12">
+            <a href="dashboard_minimal.html" class="nav-link flex items-center gap-4 py-4 text-gray-400 hover:text-gray-900 border-l-2 border-transparent pl-4 -ml-6">
+                <span>Dashboard</span>
+            </a>
+            <a href="ilans_minimal.html" class="nav-link flex items-center gap-4 py-4 text-gray-400 hover:text-gray-900 border-l-2 border-transparent pl-4 -ml-6">
+                <span>İlanlar</span>
+            </a>
+            <a href="messages_minimal.html" class="nav-link flex items-center gap-4 py-4 text-gray-400 hover:text-gray-900 border-l-2 border-transparent pl-4 -ml-6">
+                <span>Sohbetler</span>
+            </a>
+            
+            <div class="my-12"></div>
+            
+            <a href="profile_minimal.html" class="nav-link active flex items-center gap-4 py-4 text-gray-900 font-medium border-l-2 border-gray-900 pl-4 -ml-6">
+                <span>Profil</span>
+            </a>
+            <a href="settings_minimal.html" class="nav-link flex items-center gap-4 py-4 text-gray-400 hover:text-gray-900 border-l-2 border-transparent pl-4 -ml-6">
+                <span>Ayarlar</span>
+            </a>
+            <a href="index_minimal.html" class="nav-link flex items-center gap-4 py-4 text-gray-400 hover:text-gray-900 border-l-2 border-transparent pl-4 -ml-6">
+                <span>Çıkış</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ml-48 mt-16 p-12">
+        
+        <div class="mb-16">
+            <h2 class="text-4xl font-light text-gray-900 mb-2">Profil</h2>
+            <p class="text-gray-400">Profil bilgilerinizi görüntüleyin ve düzenleyin</p>
+        </div>
+
+        <div class="max-w-4xl">
+            
+            <!-- Profile Header -->
+            <div class="flex items-start gap-8 pb-16 border-b border-gray-300 mb-16">
+                <div class="w-32 h-32 bg-gray-900 rounded-full flex items-center justify-center text-white text-4xl font-light">
+                    MK
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-3xl font-light text-gray-900 mb-2">Av. Murat Can Koptay</h3>
+                    <p class="text-gray-500 mb-6">İstanbul Barosu • Baro Sicil No: 12345</p>
+                    <div class="flex gap-4">
+                        <button class="px-8 py-3 bg-gray-900 text-white hover:bg-gray-800">
+                            Profil Fotoğrafını Değiştir
+                        </button>
+                        <button class="px-8 py-3 border border-gray-300 text-gray-900 hover:border-gray-900">
+                            Kaldır
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-light text-gray-900 mb-8">Kişisel Bilgiler</h3>
+                
+                <div class="space-y-8">
+                    <div class="grid grid-cols-2 gap-8">
+                        <div>
+                            <label class="block text-sm text-gray-500 mb-2">Ad</label>
+                            <input type="text" value="Murat Can" 
+                                class="w-full px-0 py-3 border-0 border-b border-gray-200 focus:border-gray-900 focus:outline-none font-light">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-500 mb-2">Soyad</label>
+                            <input type="text" value="Koptay" 
+                                class="w-full px-0 py-3 border-0 border-b border-gray-200 focus:border-gray-900 focus:outline-none font-light">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-500 mb-2">E-posta</label>
+                        <input type="email" value="murat@koptay.com" 
+                            class="w-full px-0 py-3 border-0 border-b border-gray-200 focus:border-gray-900 focus:outline-none font-light">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-500 mb-2">Telefon</label>
+                        <input type="tel" value="+90 555 123 4567" 
+                            class="w-full px-0 py-3 border-0 border-b border-gray-200 focus:border-gray-900 focus:outline-none font-light">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-8">
+                        <div>
+                            <label class="block text-sm text-gray-500 mb-2">Baro</label>
+                            <select class="w-full px-0 py-3 border-0 border-b border-gray-200 focus:border-gray-900 focus:outline-none font-light bg-white">
+                                <option>İstanbul Barosu</option>
+                                <option>Ankara Barosu</option>
+                                <option>İzmir Barosu</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-500 mb-2">Baro Sicil No</label>
+                            <input type="text" value="12345" 
+                                class="w-full px-0 py-3 border-0 border-b border-gray-200 focus:border-gray-900 focus:outline-none font-light">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Professional Information -->
+            <div class="mb-16 pb-16 border-b border-gray-300">
+                <h3 class="text-2xl font-light text-gray-900 mb-8">Mesleki Bilgiler</h3>
+                
+                <div class="space-y-8">
+                    <div>
+                        <label class="block text-sm text-gray-500 mb-2">Uzmanlık Alanları</label>
+                        <div class="flex flex-wrap gap-3 mb-4">
+                            <span class="px-4 py-2 bg-gray-100 text-gray-900 text-sm">Aile Hukuku</span>
+                            <span class="px-4 py-2 bg-gray-100 text-gray-900 text-sm">İcra-İflas Hukuku</span>
+                            <span class="px-4 py-2 bg-gray-100 text-gray-900 text-sm">Ticaret Hukuku</span>
+                            <span class="px-4 py-2 bg-gray-100 text-gray-900 text-sm">Ceza Hukuku</span>
+                        </div>
+                        <button class="text-sm text-gray-500 hover:text-gray-900">+ Yeni Alan Ekle</button>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-500 mb-2">Mesleki Deneyim</label>
+                        <input type="text" value="12 yıl" 
+                            class="w-full px-0 py-3 border-0 border-b border-gray-200 focus:border-gray-900 focus:outline-none font-light">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-500 mb-2">Biyografi</label>
+                        <textarea rows="4" 
+                            class="w-full px-0 py-3 border-0 border-b border-gray-200 focus:border-gray-900 focus:outline-none font-light resize-none"
+                        >2012 yılından beri İstanbul'da avukatlık yapmaktayım. Özellikle aile hukuku, icra-iflas ve ticaret hukuku alanlarında uzmanlaşmış durumdayım. Müvekkillerime en iyi hukuki hizmeti sunmayı hedefliyorum.</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-500 mb-2">Çalışma Saatleri</label>
+                        <input type="text" value="Pazartesi - Cuma, 09:00 - 18:00" 
+                            class="w-full px-0 py-3 border-0 border-b border-gray-200 focus:border-gray-900 focus:outline-none font-light">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-light text-gray-900 mb-8">İstatistikler</h3>
+                
+                <div class="grid grid-cols-3 gap-8">
+                    <div>
+                        <div class="text-4xl font-light text-gray-900 mb-2">150</div>
+                        <div class="text-sm text-gray-500">Toplam İlan</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-light text-gray-900 mb-2">127</div>
+                        <div class="text-sm text-gray-500">Tamamlanan İş</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-light text-gray-900 mb-2">4.8</div>
+                        <div class="text-sm text-gray-500">Ortalama Değerlendirme</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-4">
+                <button class="px-8 py-3 bg-gray-900 text-white hover:bg-gray-800">
+                    Değişiklikleri Kaydet
+                </button>
+                <button class="px-8 py-3 border border-gray-300 text-gray-900 hover:border-gray-900">
+                    İptal
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

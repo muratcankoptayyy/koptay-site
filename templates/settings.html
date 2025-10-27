@@ -52,7 +52,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6">
                 <!-- Profile Info -->
                 <div class="lg:col-span-2">
-                    <form method="POST" action="{{ url_for('update_profile') }}" class="space-y-6">
+                    <form method="POST" action="{{ url_for('update_profile') }}" class="space-y-6" data-loading="true">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-3 md:p-6 border border-gray-200 dark:border-gray-700 shadow-lg">
                             <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
@@ -173,7 +173,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-3 md:p-6 border border-gray-200 dark:border-gray-700 shadow-lg">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Gizlilik Ayarları</h3>
                 
-                <form method="POST" action="{{ url_for('update_privacy_settings') }}" class="space-y-6">
+                <form method="POST" action="{{ url_for('update_privacy_settings') }}" class="space-y-6" data-loading="true">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="flex items-center justify-between py-4 border-b border-gray-200 dark:border-gray-700">
                         <div class="flex-1">
@@ -261,18 +261,30 @@
                     <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4 mb-4">
                         <div class="flex items-start gap-3">
                             <span class="material-symbols-outlined text-green-600">check_circle</span>
-                            <div>
+                            <div class="flex-1">
                                 <p class="font-semibold text-green-900 dark:text-green-100">2FA Etkin</p>
                                 <p class="text-sm text-green-700 dark:text-green-300 mt-1">
                                     Hesabınız iki faktörlü kimlik doğrulama ile korunuyor
                                 </p>
+                                
+                                <!-- Yedek Kodlar -->
+                                {% if backup_codes %}
+                                <div class="mt-4 pt-4 border-t border-green-200">
+                                    <button 
+                                        onclick="document.getElementById('backup-codes-modal').classList.remove('hidden')"
+                                        class="text-sm text-green-700 hover:text-green-900 font-semibold flex items-center gap-1"
+                                    >
+                                        <span class="material-symbols-outlined text-base">key</span>
+                                        Yedek Kodları Göster
+                                    </button>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ url_for('setup_2fa') }}" onsubmit="return confirm('2FA devre dışı bırakıldığında hesabınız daha az güvenli olacak. Emin misiniz?');">
+                    <form method="POST" action="{{ url_for('disable_2fa') }}" onsubmit="return confirm('2FA devre dışı bırakıldığında hesabınız daha az güvenli olacak. Emin misiniz?');">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="action" value="disable">
                         <div class="mb-4">
                             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Şifrenizi Girin (Doğrulama için)</label>
                             <input type="password" name="password" required
@@ -299,7 +311,7 @@
                         Şifre Değiştir
                     </h3>
                     
-                    <form method="POST" action="{{ url_for('change_password') }}" class="space-y-4">
+                    <form method="POST" action="{{ url_for('change_password') }}" class="space-y-4" data-loading="true">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Mevcut Şifre</label>
@@ -721,4 +733,69 @@ if (passwordInput) {
     {% endif %}
 {% endwith %}
 </script>
+
+<!-- Yedek Kodlar Modalı -->
+{% if current_user.two_factor_enabled and backup_codes %}
+<div id="backup-codes-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-yellow-500">key</span>
+                Yedek Kodlarınız
+            </h3>
+            <button onclick="document.getElementById('backup-codes-modal').classList.add('hidden')" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6">
+            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                <strong>⚠️ Önemli:</strong> Bu kodları güvenli bir yerde saklayın! Telefonunuzu kaybederseniz bu kodlarla giriş yapabilirsiniz.
+                Her kod sadece bir kez kullanılabilir.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            {% for code in backup_codes %}
+            <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 font-mono text-center text-lg font-bold">
+                {{ code }}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="flex gap-3">
+            <button 
+                onclick="copyBackupCodes()"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+                <span class="material-symbols-outlined">content_copy</span>
+                Kodları Kopyala
+            </button>
+            <button 
+                onclick="printBackupCodes()"
+                class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+                <span class="material-symbols-outlined">print</span>
+                Yazdır
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyBackupCodes() {
+    const codes = {{ backup_codes|tojson }};
+    const text = codes.join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+        alert('✅ Yedek kodlar kopyalandı!');
+    });
+}
+
+function printBackupCodes() {
+    window.print();
+}
+</script>
+{% endif %}
 {% endblock %}

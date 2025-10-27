@@ -646,7 +646,7 @@ class PasswordHistory(db.Model):
 
 
 class LoginAttempt(db.Model):
-    """Login denemeleri takibi (rate limiting için)"""
+    """Track login attempts for security monitoring"""
     __tablename__ = 'login_attempts'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -663,3 +663,43 @@ class LoginAttempt(db.Model):
     
     def __repr__(self):
         return f'<LoginAttempt {self.email} - {"Success" if self.success else "Failed"}>'
+
+class Report(db.Model):
+    """User reports for spam, inappropriate content, or abuse"""
+    __tablename__ = 'reports'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Reporter
+    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    reporter = db.relationship('User', foreign_keys=[reporter_id], backref='reports_made')
+    
+    # Reported
+    reported_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    reported_post_id = db.Column(db.Integer, db.ForeignKey('tevkil_posts.id'), index=True)
+    reported_message_id = db.Column(db.Integer, db.ForeignKey('messages.id'), index=True)
+    
+    reported_user = db.relationship('User', foreign_keys=[reported_user_id], backref='reports_received')
+    reported_post = db.relationship('TevkilPost', backref='reports')
+    reported_message = db.relationship('Message', backref='reports')
+    
+    # Report Details
+    report_type = db.Column(db.String(50), nullable=False)  # 'spam', 'inappropriate', 'abuse', 'fake', 'other'
+    description = db.Column(db.Text)
+    
+    # Status
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'reviewed', 'resolved', 'dismissed'
+    admin_note = db.Column(db.Text)  # Admin açıklaması
+    
+    # Action Taken
+    action_taken = db.Column(db.String(50))  # 'none', 'warning', 'content_removed', 'user_banned'
+    actioned_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    actioned_by = db.relationship('User', foreign_keys=[actioned_by_id])
+    actioned_at = db.Column(db.DateTime)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    def __repr__(self):
+        return f'<Report {self.id} - {self.report_type} by User {self.reporter_id}>'

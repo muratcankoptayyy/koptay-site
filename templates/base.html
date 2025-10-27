@@ -60,6 +60,9 @@
     <!-- Material Symbols Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
     
+    <!-- Custom Animations & UI Utilities -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}"/>
+    
     <!-- Tailwind Config -->
     <script>
         tailwind.config = {
@@ -251,6 +254,13 @@
                     <span class="text-sm font-medium">Ayarlar</span>
                 </a>
                 
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('admin_analytics') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mb-1 border border-purple-200 dark:border-purple-800">
+                    <span class="material-symbols-outlined">analytics</span>
+                    <span class="text-sm font-medium">Admin Analytics</span>
+                </a>
+                {% endif %}
+                
                 <a href="{{ url_for('notifications') }}" class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-primary transition-colors mb-1">
                     <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined">notifications</span>
@@ -295,21 +305,25 @@
         <!-- Main Content Area -->
         <div class="flex-1 {% block main_classes %}{% if current_user.is_authenticated %}lg:ml-64{% endif %}{% endblock %}">
             
-            <!-- Flash Messages -->
+            <!-- Flash Messages (Toast Notifications) -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    <div class="fixed top-4 right-4 z-40 space-y-2">
-                        {% for category, message in messages %}
-                        <div class="animate-slide-in-right max-w-full mx-4 sm:max-w-md bg-white dark:bg-gray-800 border-l-4 {% if category == 'error' %}border-red-500{% elif category == 'success' %}border-green-500{% else %}border-blue-500{% endif %} p-4 rounded-lg shadow-lg">
-                            <div class="flex items-center">
-                                <span class="material-symbols-outlined {% if category == 'error' %}text-red-500{% elif category == 'success' %}text-green-500{% else %}text-blue-500{% endif %} mr-3">
-                                    {% if category == 'error' %}error{% elif category == 'success' %}check_circle{% else %}info{% endif %}
-                                </span>
-                                <p class="text-gray-900 dark:text-white">{{ message }}</p>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+                    <script>
+                        // Show toast notifications for flash messages
+                        document.addEventListener('DOMContentLoaded', function() {
+                            {% for category, message in messages %}
+                            {% if category == 'error' %}
+                            window.toast.error('{{ message|safe }}');
+                            {% elif category == 'success' %}
+                            window.toast.success('{{ message|safe }}');
+                            {% elif category == 'warning' %}
+                            window.toast.warning('{{ message|safe }}');
+                            {% else %}
+                            window.toast.info('{{ message|safe }}');
+                            {% endif %}
+                            {% endfor %}
+                        });
+                    </script>
                 {% endif %}
             {% endwith %}
             
@@ -507,6 +521,9 @@
             }
         });
     </script>
+    
+    <!-- UI Utilities -->
+    <script src="{{ url_for('static', filename='js/ui-utils.js') }}"></script>
     
     {% block extra_js %}{% endblock %}
 </body>

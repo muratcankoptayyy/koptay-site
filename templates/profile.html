@@ -99,10 +99,20 @@
                         <span>Profili Düzenle</span>
                     </a>
                     {% else %}
-                    <a href="{{ url_for('send_message', receiver_id=user.id) }}" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white text-primary rounded-xl font-semibold hover:bg-gray-100 transition-all hover:shadow-md sm:shadow-xl text-sm sm:text-base whitespace-nowrap overflow-x-auto">
-                        <span class="material-symbols-outlined text-xl">chat</span>
-                        <span>Mesaj Gönder</span>
-                    </a>
+                    <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                        <a href="{{ url_for('send_message', receiver_id=user.id) }}" class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-white text-primary rounded-xl font-semibold hover:bg-gray-100 transition-all hover:shadow-md sm:shadow-xl text-sm sm:text-base whitespace-nowrap">
+                            <span class="material-symbols-outlined text-xl">chat</span>
+                            <span>Mesaj Gönder</span>
+                        </a>
+                        <a href="{{ url_for('rate_user', user_id=user.id) }}" class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-semibold transition-all hover:shadow-md sm:shadow-xl text-sm sm:text-base whitespace-nowrap">
+                            <span class="material-symbols-outlined text-xl">star</span>
+                            <span>Değerlendir</span>
+                        </a>
+                        <a href="{{ url_for('report_content', report_type='user', item_id=user.id) }}" class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-red-100 text-red-700 hover:bg-red-200 rounded-xl font-semibold transition-all hover:shadow-md sm:shadow-xl text-sm sm:text-base whitespace-nowrap" title="Rapor Et">
+                            <span class="material-symbols-outlined text-xl">report</span>
+                            <span class="hidden sm:inline">Rapor Et</span>
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </div>
