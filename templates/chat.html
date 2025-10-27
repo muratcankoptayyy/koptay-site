@@ -497,7 +497,7 @@ function handleFileSelect(event) {
         textColor = 'text-blue-600 dark:text-blue-400';
     }
     
-    fileIcon.className = `w-12 h-12 ${bgColor} rounded-lg flex items-center justify-center`;
+    fileIcon.className = `w-12 h-12 ${bgColor} flex items-center justify-center border border-gray-300`;
     fileIcon.innerHTML = `<span class="material-symbols-outlined ${textColor}">${icon}</span>`;
     fileName.textContent = file.name;
     fileSize.textContent = formatFileSize(file.size);

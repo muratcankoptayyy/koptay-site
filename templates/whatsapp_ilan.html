@@ -319,7 +319,7 @@ Aciliyet: [Normal/Acil/Çok Acil]`;
             const data = await response.json();
             
             if (data.success) {
-                resultDiv.className = 'mt-4 p-4 rounded-lg bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700';
+                resultDiv.className = 'mt-4 p-4 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700';
                 resultDiv.innerHTML = `
                     <div class="flex items-start gap-3">
                         <span class="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
@@ -330,7 +330,7 @@ Aciliyet: [Normal/Acil/Çok Acil]`;
                     </div>
                 `;
             } else {
-                resultDiv.className = 'mt-4 p-4 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700';
+                resultDiv.className = 'mt-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700';
                 resultDiv.innerHTML = `
                     <div class="flex items-start gap-3">
                         <span class="material-symbols-outlined text-red-600 dark:text-red-400">error</span>
@@ -345,7 +345,7 @@ Aciliyet: [Normal/Acil/Çok Acil]`;
             resultDiv.classList.remove('hidden');
             
         } catch (error) {
-            resultDiv.className = 'mt-4 p-4 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700';
+            resultDiv.className = 'mt-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700';
             resultDiv.innerHTML = `
                 <div class="flex items-start gap-3">
                     <span class="material-symbols-outlined text-red-600 dark:text-red-400">error</span>

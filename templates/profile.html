@@ -13,20 +13,15 @@
             </a>
         </div>
         
-        <!-- Profile Header -->
-        <div class="relative bg-gradient-to-br from-primary via-blue-600 to-indigo-700 sm:-2xl p-4 sm:p-6 md:p-4 md:p-8 mb-4 sm:mb-6 text-white overflow-hidden">
-            <!-- Background Pattern -->
-            <div class="absolute inset-0 opacity-10 pointer-events-none">
-                <div class="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
-                <div class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2"></div>
-            </div>
+        <!-- Profile Header - Minimal White Theme -->
+        <div class="relative bg-white border border-gray-300 p-4 sm:p-6 md:p-4 md:p-8 mb-4 sm:mb-6 overflow-hidden">
             
-            <div class="relative z-10 flex flex-col md:flex-row items-center gap-4 sm:gap-3 md:gap-6">
+            <div class="relative flex flex-col md:flex-row items-center gap-4 sm:gap-3 md:gap-6">
                 <!-- Profile Photo -->
                 <div class="relative group flex-shrink-0">
-                    <img src="{{ user.avatar_url if user.avatar_url else 'https://ui-avatars.com/api/?name=' + user.full_name + '&background=ffffff&color=1661da&size=160' }}" 
+                    <img src="{{ user.avatar_url if user.avatar_url else 'https://ui-avatars.com/api/?name=' + user.full_name + '&background=111827&color=ffffff&size=160' }}" 
                          alt="{{ user.full_name }}" 
-                         class="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-auto max-h-64 sm:max-h-96 rounded-full border-4 border-white shadow-2xl object-cover">
+                         class="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-auto max-h-64 sm:max-h-96 rounded-full border-2 border-gray-300 object-cover">
                     
                     {% if current_user.is_authenticated and current_user.id == user.id %}
                     <a href="{{ url_for('edit_profile') }}" class="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
@@ -46,21 +41,21 @@
                 
                 <div class="flex-1 text-center md:text-left w-full md:w-auto">
                     <div class="mb-3">
-                        <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light mb-2 leading-tight break-words">{{ user.full_name }}</h1>
+                        <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light mb-2 leading-tight break-words text-gray-900">{{ user.full_name }}</h1>
                         {% if user.lawyer_type == 'stajyer' %}
-                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 backdrop-blur-sm border border-yellow-300/30 rounded-full text-xs sm:text-sm font-semibold">
+                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-50 border border-yellow-300 text-yellow-900 text-xs sm:text-sm font-semibold">
                             <span class="material-symbols-outlined text-sm sm:text-base">school</span>
                             <span class="whitespace-nowrap overflow-x-auto">Stajyer Avukat</span>
                         </span>
                         {% else %}
-                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs sm:text-sm font-semibold">
+                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-gray-50 border border-gray-300 text-gray-900 text-xs sm:text-sm font-semibold">
                             <span class="material-symbols-outlined text-sm sm:text-base">gavel</span>
                             <span class="whitespace-nowrap overflow-x-auto">Avukat</span>
                         </span>
                         {% endif %}
                     </div>
                     
-                    <div class="flex flex-wrap gap-2 sm:gap-3 justify-center md:justify-start text-white/90 mb-3 sm:mb-4 text-xs sm:text-sm">
+                    <div class="flex flex-wrap gap-2 sm:gap-3 justify-center md:justify-start text-gray-600 mb-3 sm:mb-4 text-xs sm:text-sm">
                         <span class="flex items-center gap-1 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5">
                             <span class="material-symbols-outlined text-base sm:text-lg">location_on</span>
                             <span class="truncate max-w-[120px] sm:max-w-none">{{ user.city }}{% if user.district %}, {{ user.district }}{% endif %}</span>
@@ -392,14 +387,14 @@
                         </a>
                         {% endif %}
                         {% if user.instagram_url %}
-                        <a href="{{ user.instagram_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white p-3 sm:p-4 transition-all font-semibold group text-sm sm:text-base">
+                        <a href="{{ user.instagram_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-gray-900 hover:bg-gray-800 text-white p-3 sm:p-4 transition-colors font-light group text-sm sm:text-base border border-gray-300">
                             <svg class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                             <span class="truncate flex-1">Instagram</span>
                             <span class="material-symbols-outlined text-base sm:text-lg group-hover:translate-x-1 transition-transform flex-shrink-0">arrow_forward</span>
                         </a>
                         {% endif %}
                         {% if user.website_url %}
-                        <a href="{{ user.website_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 sm:p-4 transition-colors font-semibold group text-sm sm:text-base">
+                        <a href="{{ user.website_url }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 sm:gap-3 w-full bg-gray-900 hover:bg-gray-800 text-white p-3 sm:p-4 transition-colors font-light group text-sm sm:text-base border border-gray-300">
                             <span class="material-symbols-outlined text-xl sm:text-lg md:text-2xl flex-shrink-0">language</span>
                             <span class="truncate flex-1">Website</span>
                             <span class="material-symbols-outlined text-base sm:text-lg group-hover:translate-x-1 transition-transform flex-shrink-0">arrow_forward</span>
@@ -409,7 +404,7 @@
                 </div>
                 {% endif %}
                 
-                <div class="bg-white dark:bg-gray-800 sm:-2xl p-4 sm:p-3 md:p-6 border border-gray-300 dark:border-gray-700">
+                <div class="bg-white dark:bg-gray-800 p-4 sm:p-3 md:p-6 border border-gray-300 dark:border-gray-700">
                     <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
                         <span class="material-symbols-outlined text-gray-900 text-xl sm:text-lg md:text-2xl">location_on</span>
                         Konum & Müsaitlik
