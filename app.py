@@ -1377,21 +1377,14 @@ def generate_authorization_pdf(app_id):
 @app.route('/profile/<int:user_id>')
 def user_profile(user_id):
     """Kullanıcı profili - Optimized with eager loading"""
-    from sqlalchemy.orm import joinedload
-    
-    # Eager loading ile user al (N+1 problemi önleme)
-    user = User.query.options(
-        joinedload(User.posts_created),
-        joinedload(User.applications_sent)
-    ).get_or_404(user_id)
+    # User bilgisini al
+    user = User.query.get_or_404(user_id)
     
     # Kullanıcının tamamladığı işler
     completed_posts = TevkilPost.query.filter_by(assigned_to=user_id, status='completed').all()
     
-    # Aldığı değerlendirmeler (eager loading ile reviewer bilgisi)
-    ratings = Rating.query.options(
-        joinedload(Rating.reviewer)
-    ).filter_by(reviewed_id=user_id).order_by(Rating.created_at.desc()).all()
+    # Aldığı değerlendirmeler
+    ratings = Rating.query.filter_by(reviewed_id=user_id).order_by(Rating.created_at.desc()).all()
     
     return render_template('profile.html', user=user, completed_posts=completed_posts, ratings=ratings)
 
