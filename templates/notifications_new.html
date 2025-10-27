@@ -185,16 +185,16 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    border-radius: 9999px;
+    border-radius: 0;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 300;
     white-space: nowrap;
     transition: all 0.2s;
-    border: 2px solid transparent;
+    border: 1px solid rgb(209 213 219);
 }
 
 .filter-btn:not(.active) {
-    background-color: rgb(243 244 246);
+    background-color: white;
     color: rgb(55 65 81);
 }
 
@@ -204,7 +204,7 @@
 }
 
 .filter-btn:not(.active):hover {
-    background-color: rgb(229 231 235);
+    border-color: rgb(17 24 39);
 }
 
 .dark .filter-btn:not(.active):hover {
@@ -212,9 +212,9 @@
 }
 
 .filter-btn.active {
-    background-color: rgb(99 102 241);
+    background-color: rgb(17 24 39);
     color: white;
-    border-color: rgb(99 102 241);
+    border-color: rgb(17 24 39);
 }
 
 .notification-card {
