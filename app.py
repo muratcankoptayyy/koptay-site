@@ -218,6 +218,7 @@ def set_security_headers(response):
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
             "https://cdn.tailwindcss.com "
             "https://cdn.socket.io "
+            "https://cdn.jsdelivr.net "
             "https://maps.googleapis.com "
             "https://fonts.googleapis.com "
             "https://www.googletagmanager.com "
