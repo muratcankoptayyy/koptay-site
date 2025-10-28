@@ -254,10 +254,25 @@
 </div>
 
 {% if active_conversation %}
+<!-- Socket.IO Client - ÖNCE YÜKLENMELİ -->
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
 <script>
 const conversationId = {{ active_conversation.id }};
 let lastMessageId = {{ messages[-1].id if messages else 0 }};
 let isPolling = false;
+
+// File handling - EN BAŞTA TANIMLANMALI
+let selectedFile = null;
+
+// Initialize Socket.IO
+const socket = io({
+    transports: ['websocket', 'polling']
+});
+
+const currentUserId = {{ current_user.id }};
+const otherUserId = {{ active_conversation.get_other_user(current_user.id).id }};
+let typingTimeout;
 
 // Auto-resize textarea
 const messageInput = document.getElementById('messageInput');
@@ -457,9 +472,7 @@ document.getElementById('searchConversations')?.addEventListener('input', (e) =>
     });
 });
 
-// File handling
-let selectedFile = null;
-
+// File handling functions
 function handleFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -539,7 +552,6 @@ function insertEmoji(emoji) {
     // Close picker
     document.getElementById('emojiPicker').classList.add('hidden');
 }
-
 // Close emoji picker when clicking outside
 document.addEventListener('click', (e) => {
     const picker = document.getElementById('emojiPicker');
@@ -549,21 +561,10 @@ document.addEventListener('click', (e) => {
         picker.classList.add('hidden');
     }
 });
-</script>
 
-<!-- Socket.IO Client -->
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-<script>
-{% if active_conversation %}
-// Initialize Socket.IO
-const socket = io({
-    transports: ['websocket', 'polling']
-});
-
-// conversationId already defined above - don't redeclare
-const currentUserId = {{ current_user.id }};
-const otherUserId = {{ active_conversation.get_other_user(current_user.id).id }};
-let typingTimeout;
+// ============================================
+// SOCKET.IO EVENT LISTENERS
+// ============================================
 
 // Connection events
 socket.on('connect', () => {
@@ -592,7 +593,7 @@ socket.on('user_status', (data) => {
             if (data.status === 'online') {
                 statusEl.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-xs text-green-600 dark:text-green-400">Çevrimiçi</span>';
             } else {
-                statusEl.innerHTML = '<span class="text-xs text-gray-500">Çevr imdışı</span>';
+                statusEl.innerHTML = '<span class="text-xs text-gray-500">Çevrimdışı</span>';
             }
         }
     }
@@ -676,33 +677,6 @@ socket.on('user_typing', (data) => {
     }
 });
 
-// Send message via WebSocket
-const originalSubmit = document.getElementById('messageForm').onsubmit;
-document.getElementById('messageForm').onsubmit = null;
-
-document.getElementById('messageForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const message = messageInput.value.trim();
-    if (!message) return;
-    
-    // Send via WebSocket
-    socket.emit('send_message', {
-        conversation_id: conversationId,
-        content: message
-    });
-    
-    // Clear input
-    messageInput.value = '';
-    messageInput.style.height = 'auto';
-    
-    // Stop typing indicator
-    socket.emit('typing', {
-        conversation_id: conversationId,
-        is_typing: false
-    });
-});
-
 // Typing indicator on input
 messageInput.addEventListener('input', () => {
     // Emit typing event
@@ -734,8 +708,6 @@ function playNotificationSound() {
 if (window.pollingInterval) {
     clearInterval(window.pollingInterval);
 }
-
-{% endif %}
 </script>
 
 {% endif %}

@@ -14,9 +14,10 @@ compileOptions {
 
 ### 2. Gradle Properties
 - **Dosya**: `android/gradle.properties`
-- **Ekleme**: Java home path ayarı
+- **Ekleme**: Java home path ayarı (Java 21 kurulduktan sonra)
 ```properties
-org.gradle.java.home=C:\\Program Files\\Java\\jdk-21
+# Uncomment after installing Java 21:
+# org.gradle.java.home=C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.5.11-hotspot
 ```
 
 ## 📋 Gereksinimler
