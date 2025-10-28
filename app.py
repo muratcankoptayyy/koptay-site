@@ -5,12 +5,9 @@ Avukatlar arası iş devri ve tevkil platformu
 import os
 from datetime import datetime, timedelta, timezone
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, send_file, send_from_directory, session
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from flask_cors import CORS
-from flask_socketio import SocketIO, emit, join_room, leave_room, send
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from flask_wtf.csrf import CSRFProtect, generate_csrf
+from flask_login import login_user, logout_user, login_required, current_user
+from flask_socketio import emit, join_room, leave_room, send
+from flask_wtf.csrf import generate_csrf
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from models import db, User, TevkilPost, Application, Rating, Message, Notification, Favorite, PasswordReset, Conversation
@@ -25,104 +22,46 @@ from functools import wraps
 import security_utils
 import input_validation  # 🔒 Input validation & sanitization
 from cache_config import init_cache
-from database_pooling_config import DATABASE_CONFIG
+from tevkil.config import get_config
+from tevkil.extensions import csrf, init_extensions, limiter, login_manager, socketio
 
 # Load environment variables
 load_dotenv()
 
-# ⚡ FEATURE FLAGS
-WHATSAPP_ENABLED = os.getenv('WHATSAPP_ENABLED', 'false').lower() == 'true'
-EMAIL_ENABLED = os.getenv('EMAIL_ENABLED', 'true').lower() == 'true'  # E-posta bildirimleri aktif
+# ⚙️ Configuration / feature flags
+config_class = get_config()
+whatsapp_enabled = config_class.WHATSAPP_ENABLED
+email_enabled = config_class.EMAIL_ENABLED  # E-posta bildirimleri aktif
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
+app.config.from_object(config_class)
 
-# ⚡ FIX PostgreSQL URL - SQLAlchemy 1.4+ requires 'postgresql://' not 'postgres://'
-database_url = os.getenv('DATABASE_URL', 'sqlite:///tevkil.db')
-if database_url.startswith('postgres://'):
-    database_url = database_url.replace('postgres://', 'postgresql://', 1)
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['DEV_MODE'] = os.getenv('FLASK_ENV', 'production') == 'development'
-app.config['WHATSAPP_ENABLED'] = WHATSAPP_ENABLED  # Template'lerde kullanmak için
-app.config['GOOGLE_MAPS_API_KEY'] = os.getenv('GOOGLE_MAPS_API_KEY', '')  # Google Maps API Key
+# Legacy template flags
+app.config['WHATSAPP_ENABLED'] = whatsapp_enabled
+app.config['EMAIL_ENABLED'] = email_enabled
+app.config['DEV_MODE'] = config_class.DEV_MODE
+app.config['GOOGLE_MAPS_API_KEY'] = config_class.GOOGLE_MAPS_API_KEY
 
-# 🔒 SESSION SECURITY - Production-ready session configuration
-app.config['SESSION_COOKIE_SECURE'] = not app.config['DEV_MODE']  # HTTPS only in production
-app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # 24 hour session for web
-app.config['SESSION_REFRESH_EACH_REQUEST'] = True  # Extend session on activity
-
-# 🔒 FLASK-LOGIN REMEMBER ME - Disabled for web (mobile uses API tokens)
-app.config['REMEMBER_COOKIE_DURATION'] = timedelta(hours=24)  # Same as session
-app.config['REMEMBER_COOKIE_SECURE'] = not app.config['DEV_MODE']  # HTTPS only in production
-app.config['REMEMBER_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
-app.config['REMEMBER_COOKIE_REFRESH_EACH_REQUEST'] = False  # Don't auto-refresh
-
-# 🔒 SECURITY HEADERS
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # Cache static files for 1 year
-
-# ⚡ DATABASE POOLING - High concurrency support
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = DATABASE_CONFIG
-
-# Initialize extensions
+# Initialize extensions / database
 db.init_app(app)
+init_extensions(app)
+
+# ⚡ REDIS CACHE - 70% faster response times
+cache = init_cache(app)
 
 # � E-posta Servisi
-if EMAIL_ENABLED:
+if email_enabled:
     try:
         from email_service import init_mail
         mail = init_mail(app)
         print("✅ E-posta servisi başlatıldı")
     except Exception as e:
         print(f"⚠️ E-posta servisi başlatılamadı: {e}")
-        EMAIL_ENABLED = False
+        email_enabled = False
+        app.config['EMAIL_ENABLED'] = False
 
-# �🔒 CORS Configuration - Restrict origins in production
-if app.config['DEV_MODE']:
-    # Development: Allow all origins for testing
-    CORS(app, resources={r"/*": {"origins": "*"}})
-else:
-    # Production: Only allow specific domains
-    allowed_origins = [
-        "https://tevkil.fly.dev",
-        "https://www.tevkil.fly.dev",
-        os.getenv('FRONTEND_URL', 'https://tevkil.fly.dev')
-    ]
-    CORS(app, resources={r"/*": {
-        "origins": allowed_origins,
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "X-CSRFToken"],
-        "supports_credentials": True
-    }})
-
-# SocketIO with CORS
-if app.config['DEV_MODE']:
-    socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
-else:
-    socketio = SocketIO(app, cors_allowed_origins=["https://tevkil.fly.dev"], async_mode='threading')
-
-# ⚡ REDIS CACHE - 70% faster response times
-cache = init_cache(app)
-
-# Initialize CSRF Protection
-csrf = CSRFProtect(app)
-
-# Initialize Rate Limiter - Production-friendly limits
-limiter = Limiter(
-    app=app,
-    key_func=get_remote_address,
-    default_limits=["10000 per day", "500 per hour"],  # 🔥 Daha yüksek limitler
-    storage_uri="memory://",
-    strategy="fixed-window"
-)
-
-# Login Manager
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+# Extensions already configure CORS, CSRF, Socket.IO and rate limiting
 
 # Initialize SMS service
 sms_service = NetgsmSMSService()
@@ -329,7 +268,7 @@ def register():
             return redirect(url_for('register'))
         
         # 📧 Hoş geldiniz e-postası gönder
-        if EMAIL_ENABLED:
+        if email_enabled:
             try:
                 from email_service import send_welcome_email
                 send_welcome_email(user)
@@ -1014,7 +953,7 @@ def create_post():
 @login_required
 def whatsapp_ilan():
     """WhatsApp ile ilan oluşturma bilgilendirmesi"""
-    if not WHATSAPP_ENABLED:
+    if not whatsapp_enabled:
         abort(404)
     return render_template('whatsapp_ilan.html')
 
@@ -1022,7 +961,7 @@ def whatsapp_ilan():
 @login_required
 def whatsapp_setup():
     """WhatsApp entegrasyon kurulum ve test sayfası"""
-    if not WHATSAPP_ENABLED:
+    if not whatsapp_enabled:
         abort(404)
     return render_template('whatsapp_setup.html')
 
@@ -1172,7 +1111,7 @@ def apply_to_post(post_id):
             print(f"WhatsApp bildirimi gönderilemedi: {str(e)}")
     
     # 📧 E-posta bildirimi gönder (ilan sahibine)
-    if EMAIL_ENABLED and post.user.notify_email:
+    if email_enabled and post.user.notify_email:
         try:
             from email_service import send_application_received_email
             send_application_received_email(post.user, application)
@@ -1236,7 +1175,7 @@ def accept_application(app_id):
             print(f"WhatsApp bildirimi gönderilemedi: {str(e)}")
     
     # 📧 E-posta bildirimi gönder
-    if EMAIL_ENABLED and application.applicant.notify_email:
+    if email_enabled and application.applicant.notify_email:
         try:
             from email_service import send_application_accepted_email
             send_application_accepted_email(application.applicant, application)
@@ -2898,7 +2837,7 @@ def whatsapp_webhook():
     Merkezi WhatsApp Cloud API Webhook
     Tek numara - Tüm avukatlar için
     """
-    if not WHATSAPP_ENABLED:
+    if not whatsapp_enabled:
         abort(404)
     
     from whatsapp_central_bot import central_bot
@@ -3031,7 +2970,7 @@ def whatsapp_test():
     WhatsApp bot test endpoint - Manuel test için
     Merkezi bot sistemini kullanır
     """
-    if not WHATSAPP_ENABLED:
+    if not whatsapp_enabled:
         return jsonify({'success': False, 'error': 'WhatsApp özelliği şu anda devre dışı'}), 404
     
     from whatsapp_central_bot import central_bot
