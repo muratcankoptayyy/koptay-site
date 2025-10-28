@@ -312,19 +312,6 @@
                 </a>
                 {% endif %}
                 
-                <a href="{{ url_for('notifications') }}" class="flex items-center justify-between gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-900 transition-colors mb-1">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined">notifications</span>
-                        <span class="text-sm font-light">Bildirimler</span>
-                    </div>
-                    {% set unread_notif_count = current_user.notifications_unread_count if current_user.is_authenticated else 0 %}
-                    {% if unread_notif_count > 0 %}
-                    <span class="w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                        {{ unread_notif_count if unread_notif_count < 10 else '9+' }}
-                    </span>
-                    {% endif %}
-                </a>
-                
                 <div class="h-px bg-gray-200 dark:bg-gray-700 my-3"></div>
                 
                 <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-900 transition-colors mb-1">

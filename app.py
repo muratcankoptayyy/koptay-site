@@ -1104,7 +1104,8 @@ def apply_to_post(post_id):
         title='Yeni Başvuru',
         message=f'{current_user.full_name} ilanınıza başvurdu: {post.title}',
         related_post_id=post_id,
-        related_user_id=current_user.id
+        related_user_id=current_user.id,
+        action_url=f'/applications/received'  # Gelen başvurular sayfasına yönlendir
     )
     db.session.add(notification)
     
