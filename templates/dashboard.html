@@ -6,16 +6,16 @@
 <div class="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-3 pb-20 md:pb-5">
     <div class="max-w-7xl mx-auto w-full">
         <!-- Welcome Header -->
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
             <div>
-                <p class="text-gray-900 dark:text-white text-xl sm:text-2xl md:text-3xl font-light leading-tight">
+                <p class="text-gray-900 dark:text-white text-lg sm:text-xl md:text-2xl lg:text-3xl font-light leading-tight mb-2">
                     Hoş Geldiniz, {{ current_user.full_name.split()[0] }}!
                 </p>
-                <p class="text-gray-600 dark:text-gray-400 text-sm sm:text-base mt-1">
+                <p class="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
                     İşte hesabınızın genel durumu
                 </p>
             </div>
-            <a href="{{ url_for('create_post') }}" class="flex items-center justify-center gap-2 h-11 sm:h-12 px-4 sm:px-5 bg-gray-900 text-white text-sm sm:text-base font-bold hover:bg-gray-900/90 transition-colors whitespace-nowrap">
+            <a href="{{ url_for('create_post') }}" class="flex items-center justify-center gap-2 h-11 sm:h-12 px-4 sm:px-5 bg-gray-900 text-white text-sm sm:text-base font-bold hover:bg-gray-900/90 transition-colors whitespace-nowrap flex-shrink-0">
                 <span class="material-symbols-outlined text-lg sm:text-xl">add</span>
                 <span>Yeni İlan</span>
             </a>
@@ -362,14 +362,14 @@
         
         <!-- Tabs -->
         <div class="px-4 py-3">
-            <div class="flex border-b border-gray-300 dark:border-gray-700">
-                <button onclick="showTab('my-posts')" id="tab-my-posts" class="tab-button border-b-2 border-primary text-gray-900 px-4 py-3 font-semibold">
+            <div class="flex border-b border-gray-300 dark:border-gray-700 overflow-x-auto scrollbar-hide">
+                <button onclick="showTab('my-posts')" id="tab-my-posts" class="tab-button border-b-2 border-primary text-gray-900 px-3 sm:px-4 py-3 font-semibold whitespace-nowrap text-sm sm:text-base">
                     Benim İlanlarım
                 </button>
-                <button onclick="showTab('incoming')" id="tab-incoming" class="tab-button border-b-2 border-transparent text-gray-600 dark:text-gray-400 px-4 py-3 font-semibold hover:text-gray-900">
+                <button onclick="showTab('incoming')" id="tab-incoming" class="tab-button border-b-2 border-transparent text-gray-600 dark:text-gray-400 px-3 sm:px-4 py-3 font-semibold hover:text-gray-900 whitespace-nowrap text-sm sm:text-base">
                     Gelen Başvurular
                 </button>
-                <button onclick="showTab('my-applications')" id="tab-my-applications" class="tab-button border-b-2 border-transparent text-gray-600 dark:text-gray-400 px-4 py-3 font-semibold hover:text-gray-900">
+                <button onclick="showTab('my-applications')" id="tab-my-applications" class="tab-button border-b-2 border-transparent text-gray-600 dark:text-gray-400 px-3 sm:px-4 py-3 font-semibold hover:text-gray-900 whitespace-nowrap text-sm sm:text-base">
                     Başvurularım
                 </button>
             </div>
@@ -381,48 +381,48 @@
             <div class="space-y-4">
                 {% for post in my_posts %}
                 <div class="bg-white dark:bg-gray-800 p-3 md:p-6 border border-gray-300 dark:border-gray-700 hover: transition-shadow">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-2">
-                                <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ post.title }}</h3>
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <h3 class="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white break-words">{{ post.title }}</h3>
                                 {% if post.urgency_level == 'urgent' %}
-                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">ACİL</span>
+                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 flex-shrink-0">ACİL</span>
                                 {% endif %}
                                 {% if post.status == 'active' %}
-                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">AKTİF</span>
+                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 flex-shrink-0">AKTİF</span>
                                 {% elif post.status == 'assigned' %}
-                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-blue-100 text-gray-900 dark:bg-blue-900/30 dark:text-blue-400">ATANDI</span>
+                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-blue-100 text-gray-900 dark:bg-blue-900/30 dark:text-blue-400 flex-shrink-0">ATANDI</span>
                                 {% elif post.status == 'completed' %}
-                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">TAMAMLANDI</span>
+                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 flex-shrink-0">TAMAMLANDI</span>
                                 {% endif %}
                             </div>
                             
-                            <div class="flex flex-wrap gap-4 mt-3 text-sm text-gray-600 dark:text-gray-400">
+                            <div class="flex flex-wrap gap-3 sm:gap-4 mt-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                                 <span class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-base">location_on</span>
+                                    <span class="material-symbols-outlined text-sm sm:text-base">location_on</span>
                                     {{ post.location }}
                                 </span>
                                 <span class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-base">work</span>
+                                    <span class="material-symbols-outlined text-sm sm:text-base">work</span>
                                     {{ post.category }}
                                 </span>
                                 <span class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-base">visibility</span>
+                                    <span class="material-symbols-outlined text-sm sm:text-base">visibility</span>
                                     {{ post.views }} görüntüleme
                                 </span>
                                 <span class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-base">person</span>
+                                    <span class="material-symbols-outlined text-sm sm:text-base">person</span>
                                     {{ post.applications_count }} başvuru
                                 </span>
                             </div>
                         </div>
                         
-                        <div class="flex gap-2">
-                            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="p-2 bg-gray-900/10 text-gray-900 hover:bg-gray-900/20 transition-colors">
-                                <span class="material-symbols-outlined">visibility</span>
+                        <div class="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="p-2 bg-gray-900/10 text-gray-900 hover:bg-gray-900/20 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px]">
+                                <span class="material-symbols-outlined text-xl">visibility</span>
                             </a>
-                            <a href="{{ url_for('edit_post', post_id=post.id) }}" class="p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                                <span class="material-symbols-outlined">edit</span>
+                            <a href="{{ url_for('edit_post', post_id=post.id) }}" class="p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center min-w-[40px] min-h-[40px]">
+                                <span class="material-symbols-outlined text-xl">edit</span>
                             </a>
                         </div>
                     </div>
