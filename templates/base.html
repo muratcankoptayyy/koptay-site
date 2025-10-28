@@ -76,14 +76,11 @@
                         "tighter": "-0.01em"
                     },
                     borderRadius: {
-                        // Mobile-friendly: yumuşak köşeler
-                        "DEFAULT": "0.375rem", // 6px
-                        "sm": "0.25rem", // 4px
-                        "md": "0.5rem", // 8px
-                        "lg": "0.75rem", // 12px
-                        "xl": "1rem", // 16px
-                        "2xl": "1.5rem", // 24px
-                        "full": "9999px" // circles
+                        // Minimal theme: keskin köşeler (0)
+                        "DEFAULT": "0",
+                        "lg": "0",
+                        "xl": "0",
+                        "full": "9999px" // sadece avatar için
                     },
                 },
             },
@@ -109,10 +106,9 @@
             background-color: #111827 !important;
             color: white !important;
             padding: 0.75rem 2rem !important;
-            border-radius: 0.5rem !important; /* 8px */
+            border-radius: 0 !important;
             font-weight: 300;
             transition: background-color 0.2s;
-            min-height: 44px; /* Touch friendly */
         }
         .btn-primary:hover {
             background-color: #1F2937 !important;
@@ -121,10 +117,9 @@
             border: 1px solid #D1D5DB !important;
             color: #111827 !important;
             padding: 0.75rem 2rem !important;
-            border-radius: 0.5rem !important; /* 8px */
+            border-radius: 0 !important;
             font-weight: 300;
             transition: border-color 0.2s;
-            min-height: 44px; /* Touch friendly */
         }
         .btn-secondary:hover {
             border-color: #111827 !important;
@@ -144,7 +139,6 @@
             padding-left: 0 !important;
             padding-right: 0 !important;
             font-weight: 300;
-            min-height: 44px; /* Touch friendly - iOS requirement */
         }
         input:focus,
         textarea:focus,
@@ -157,46 +151,29 @@
         /* Card minimal style */
         .card {
             border: 1px solid #D1D5DB !important;
-            border-radius: 0.75rem !important; /* 12px */
+            border-radius: 0 !important;
             box-shadow: none !important;
             transition: border-color 0.2s;
         }
         .card:hover {
             border-color: #111827 !important;
         }
-        
         /* Mobil scroll optimizasyonu */
         * {
             -webkit-overflow-scrolling: touch;
         }
-        
-        /* Touch-friendly button sizing - iOS/Android standard */
-        button, a.btn, .btn {
+        /* Touch-friendly button sizing */
+        button, a {
             min-height: 44px;
             min-width: 44px;
         }
-        
         /* Prevent zoom on input focus (iOS) */
         input, select, textarea {
             font-size: 16px !important;
         }
-        
         /* Smooth scrolling */
         html {
             scroll-behavior: smooth;
-        }
-        
-        /* Responsive font sizes */
-        @media (max-width: 640px) {
-            html {
-                font-size: 14px;
-            }
-        }
-        
-        @media (min-width: 1024px) {
-            html {
-                font-size: 16px;
-            }
         }
     </style>
     
@@ -264,106 +241,106 @@
         <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
         
         <!-- Sidebar Navigation - Minimal White Theme -->
-        <aside id="sidebar" class="fixed left-0 top-0 h-screen w-64 md:w-72 lg:w-48 bg-white border-r border-gray-300 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <aside id="sidebar" class="fixed left-0 top-0 h-screen w-48 bg-white border-r border-gray-300 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
             <!-- Logo -->
-            <div class="flex items-center gap-3 px-4 md:px-6 py-4 md:py-5 border-b border-gray-300">
-                <img src="{{ url_for('static', filename='logo-icon.svg') }}" alt="UTAP" class="h-8 w-8 flex-shrink-0">
+            <div class="flex items-center gap-3 px-6 py-5 border-b border-gray-300">
+                <img src="{{ url_for('static', filename='logo-icon.svg') }}" alt="UTAP" class="h-8 w-8">
                 <div class="flex flex-col">
-                    <span class="text-lg md:text-xl font-light text-gray-900">Tevkil</span>
+                    <span class="text-lg font-light text-gray-900">Tevkil</span>
                 </div>
             </div>
             
             <!-- Search -->
-            <div class="px-3 md:px-4 py-3 border-b border-gray-300 dark:border-gray-700">
-                <div class="flex items-stretch overflow-hidden rounded-lg">
+            <div class="px-4 py-3 border-b border-gray-300 dark:border-gray-700">
+                <div class="flex items-stretch overflow-hidden">
                     <div class="text-gray-500 dark:text-gray-400 flex bg-gray-100 dark:bg-gray-800 items-center justify-center pl-3">
                         <span class="material-symbols-outlined text-lg">search</span>
                     </div>
-                    <input class="form-input flex-1 border-none bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-0 focus:ring-0 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-3 py-2.5 text-sm" placeholder="İlanlarda Ara..." value=""/>
+                    <input class="form-input flex-1 border-none bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-0 focus:ring-0 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-3 py-2 text-sm" placeholder="İlanlarda Ara..." value=""/>
                 </div>
             </div>
             
             <!-- Navigation Links - Minimal White Theme -->
-            <nav class="flex-1 px-3 md:px-4 py-6 md:py-8 overflow-y-auto">
-                <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 px-3 md:px-4 py-3 md:py-2.5 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'dashboard' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined text-xl md:text-2xl flex-shrink-0">dashboard</span>
-                    <span class="text-sm md:text-base font-medium">Dashboard</span>
+            <nav class="flex-1 px-6 py-12 overflow-y-auto">
+                <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'dashboard' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span class="text-sm font-medium">Dashboard</span>
                 </a>
                 
-                <a href="{{ url_for('list_posts') }}" class="flex items-center gap-3 px-3 md:px-4 py-3 md:py-2.5 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'list_posts' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined text-xl md:text-2xl flex-shrink-0">description</span>
-                    <span class="text-sm md:text-base font-medium">İlanlar</span>
+                <a href="{{ url_for('list_posts') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'list_posts' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
+                    <span class="material-symbols-outlined">description</span>
+                    <span class="text-sm font-medium">İlanlar</span>
                 </a>
                 
-                <a href="{{ url_for('map_view') }}" class="flex items-center gap-3 px-3 md:px-4 py-3 md:py-2.5 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'map_view' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined text-xl md:text-2xl flex-shrink-0">map</span>
-                    <span class="text-sm md:text-base font-medium">Harita</span>
+                <a href="{{ url_for('map_view') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'map_view' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
+                    <span class="material-symbols-outlined">map</span>
+                    <span class="text-sm font-medium">Harita</span>
                 </a>
                 
-                <a href="{{ url_for('create_post') }}" class="flex items-center gap-3 px-3 md:px-4 py-3 md:py-2.5 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'create_post' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined text-xl md:text-2xl flex-shrink-0">add_circle</span>
-                    <span class="text-sm md:text-base font-medium">Yeni İlan</span>
+                <a href="{{ url_for('create_post') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'create_post' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    <span class="text-sm font-medium">Yeni İlan</span>
                 </a>
                 
                 {% if config.WHATSAPP_ENABLED %}
-                <a href="{{ url_for('whatsapp_ilan') }}" class="flex items-center gap-3 px-3 md:px-4 py-3 md:py-2.5 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'whatsapp_ilan' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined text-xl md:text-2xl flex-shrink-0">chat</span>
-                    <span class="text-sm md:text-base font-medium">WhatsApp İlan</span>
+                <a href="{{ url_for('whatsapp_ilan') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'whatsapp_ilan' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
+                    <span class="material-symbols-outlined">chat</span>
+                    <span class="text-sm font-medium">WhatsApp İlan</span>
                 </a>
                 
-                <a href="{{ url_for('whatsapp_setup') }}" class="flex items-center gap-3 px-3 md:px-4 py-3 md:py-2.5 rounded-lg text-green-700 bg-green-50 dark:text-green-400 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors mb-1">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ url_for('whatsapp_setup') }}" class="flex items-center gap-3 px-4 py-3 text-green-700 bg-green-50 dark:text-green-400 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors mb-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
-                    <span class="text-sm md:text-base font-medium">WhatsApp Ayarları</span>
+                    <span class="text-sm font-medium">WhatsApp Ayarları</span>
                 </a>
                 {% endif %}
                 
-                <a href="{{ url_for('chat') }}" class="flex items-center gap-3 px-3 md:px-4 py-3 md:py-2.5 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'chat' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined text-xl md:text-2xl flex-shrink-0">chat</span>
-                    <span class="text-sm md:text-base font-medium">Sohbetler</span>
+                <a href="{{ url_for('chat') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'chat' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
+                    <span class="material-symbols-outlined">chat</span>
+                    <span class="text-sm font-medium">Sohbetler</span>
                 </a>
                 
-                <a href="{{ url_for('favorites') }}" class="flex items-center gap-3 px-3 md:px-4 py-3 md:py-2.5 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'favorites' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined text-xl md:text-2xl flex-shrink-0">favorite</span>
-                    <span class="text-sm md:text-base font-medium">Favorilerim</span>
+                <a href="{{ url_for('favorites') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'favorites' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
+                    <span class="material-symbols-outlined">favorite</span>
+                    <span class="text-sm font-medium">Favorilerim</span>
                 </a>
                 
-                <a href="{{ url_for('settings') }}" class="flex items-center gap-3 px-3 md:px-4 py-3 md:py-2.5 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'settings' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined text-xl md:text-2xl flex-shrink-0">settings</span>
-                    <span class="text-sm md:text-base font-medium">Ayarlar</span>
+                <a href="{{ url_for('settings') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'settings' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span class="text-sm font-medium">Ayarlar</span>
                 </a>
                 
                 {% if current_user.is_admin %}
-                <a href="{{ url_for('admin_analytics') }}" class="flex items-center gap-3 px-3 md:px-4 py-3 md:py-2.5 rounded-lg text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors mb-1 border border-purple-200 dark:border-purple-800">
-                    <span class="material-symbols-outlined text-xl md:text-2xl flex-shrink-0">analytics</span>
-                    <span class="text-sm md:text-base font-medium">Admin Analytics</span>
+                <a href="{{ url_for('admin_analytics') }}" class="flex items-center gap-3 px-4 py-3 text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors mb-1 border border-purple-200 dark:border-purple-800">
+                    <span class="material-symbols-outlined">analytics</span>
+                    <span class="text-sm font-medium">Admin Analytics</span>
                 </a>
                 {% endif %}
                 
                 <div class="h-px bg-gray-200 dark:bg-gray-700 my-3"></div>
                 
-                <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="flex items-center gap-3 px-3 md:px-4 py-3 md:py-2.5 rounded-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'user_profile' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined text-xl md:text-2xl flex-shrink-0">person</span>
-                    <span class="text-sm md:text-base font-medium">Profilim</span>
+                <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'user_profile' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
+                    <span class="material-symbols-outlined">person</span>
+                    <span class="text-sm font-medium">Profilim</span>
                 </a>
             </nav>
             
             <!-- User Info & Logout -->
-            <div class="px-2 md:px-3 py-3 md:py-4 border-t border-gray-300 dark:border-gray-700">
-                <div class="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 md:py-3 mb-2">
-                    <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-sm md:text-base flex-shrink-0">
+            <div class="px-3 py-4 border-t border-gray-300 dark:border-gray-700">
+                <div class="flex items-center gap-3 px-4 py-3 mb-2">
+                    <div class="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
                         {{ current_user.full_name[0] if current_user.full_name else 'U' }}
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs md:text-sm font-semibold text-gray-900 dark:text-white truncate">{{ current_user.full_name }}</p>
+                        <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ current_user.full_name }}</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ current_user.email }}</p>
                     </div>
                 </div>
-                <a href="{{ url_for('logout') }}" class="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2.5 md:py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                    <span class="material-symbols-outlined text-xl md:text-2xl flex-shrink-0">logout</span>
-                    <span class="text-sm md:text-base font-medium">Çıkış Yap</span>
+                <a href="{{ url_for('logout') }}" class="flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Çıkış Yap</span>
                 </a>
             </div>
         </aside>
@@ -375,19 +352,19 @@
             
             <!-- Top Bar (Üst Çubuk) - Sadece giriş yapılmışsa -->
             {% if current_user.is_authenticated %}
-            <div class="fixed top-0 {% if current_user.is_authenticated %}lg:left-48{% else %}left-0{% endif %} right-0 h-14 md:h-16 bg-white border-b border-gray-300 z-20 flex items-center px-4 md:px-8 lg:px-12">
-                <h1 class="text-base md:text-xl font-light text-gray-900 truncate mr-auto">{% block page_title %}Dashboard{% endblock %}</h1>
-                <div class="flex items-center gap-3 md:gap-6 flex-shrink-0">
+            <div class="fixed top-0 {% if current_user.is_authenticated %}lg:left-48{% else %}left-0{% endif %} right-0 h-16 bg-white border-b border-gray-300 z-20 flex items-center px-12">
+                <h1 class="text-xl font-light text-gray-900">{% block page_title %}Dashboard{% endblock %}</h1>
+                <div class="ml-auto flex items-center gap-8">
                     <!-- Bildirimler -->
-                    <a href="{{ url_for('notifications') }}" class="relative text-gray-400 hover:text-gray-900 p-2 -m-2">
-                        <span class="material-symbols-outlined text-xl md:text-2xl">notifications</span>
+                    <a href="{{ url_for('notifications') }}" class="relative text-gray-400 hover:text-gray-900">
+                        <span class="material-symbols-outlined">notifications</span>
                         {% set unread_notif_count = current_user.notifications_unread_count if current_user.is_authenticated else 0 %}
                         {% if unread_notif_count > 0 %}
-                        <span class="absolute top-0 right-0 bg-red-500 text-white text-xs min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">{{ unread_notif_count if unread_notif_count < 10 else '9+' }}</span>
+                        <span class="absolute -top-1 -right-1 bg-gray-900 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">{{ unread_notif_count if unread_notif_count < 10 else '9+' }}</span>
                         {% endif %}
                     </a>
                     <!-- User Avatar -->
-                    <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="w-9 h-9 md:w-10 md:h-10 bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-medium hover:bg-gray-800 transition-colors flex-shrink-0">
+                    <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-700 text-xs font-light hover:bg-gray-400 transition-colors">
                         {{ current_user.full_name[0] if current_user.full_name else 'U' }}
                     </a>
                 </div>
@@ -417,7 +394,7 @@
             {% endwith %}
             
             <!-- Main Content - Minimal White Theme -->
-            <main class="{% if current_user.is_authenticated %}mt-14 md:mt-16 p-3 sm:p-4 md:p-6 lg:p-8{% else %}p-4 md:p-6{% endif %} min-h-screen pb-20 md:pb-8">
+            <main class="{% if current_user.is_authenticated %}mt-16 p-12{% else %}p-6{% endif %} min-h-screen">
                 {% block content %}{% endblock %}
             </main>
             

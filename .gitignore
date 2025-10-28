@@ -59,6 +59,3 @@ static/uploads/
 *.key
 *.cert
 secrets/
-
-# Node modules
-node_modules/
