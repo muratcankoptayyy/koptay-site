@@ -733,6 +733,33 @@ def dashboard():
                              avg_rating=0,
                              user_stats={})
 
+@app.route('/dashboard/mobile-preview')
+@login_required
+def dashboard_mobile_preview():
+    """Modern Mobile Dashboard Preview - Test Route"""
+    try:
+        # Kullanıcının ilanları
+        my_posts = TevkilPost.query.filter_by(user_id=current_user.id).order_by(TevkilPost.created_at.desc()).all()
+        
+        # Kullanıcının başvuruları
+        my_applications = Application.query.filter_by(applicant_id=current_user.id).order_by(Application.created_at.desc()).all()
+        
+        # Gelen başvurular (kullanıcının ilanlarına)
+        incoming_applications = db.session.query(Application).join(TevkilPost).filter(
+            TevkilPost.user_id == current_user.id
+        ).order_by(Application.created_at.desc()).all()
+        
+        return render_template('dashboard_mobile_preview.html',
+                             my_posts=my_posts,
+                             my_applications=my_applications,
+                             incoming_applications=incoming_applications)
+    except Exception as e:
+        print(f"❌ Mobile Dashboard Preview error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        flash('Mobil dashboard yüklenirken bir hata oluştu.', 'error')
+        return redirect(url_for('dashboard'))
+
 @app.route('/stats')
 @dev_login_optional
 def stats_page():
