@@ -227,6 +227,7 @@ def set_security_headers(response):
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https: blob:; "
             "connect-src 'self' wss: ws: "
+            "https://cdn.jsdelivr.net "
             "https://maps.googleapis.com "
             "https://www.google-analytics.com "
             "https://cdn.socket.io; "
