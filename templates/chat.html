@@ -193,7 +193,7 @@
                                 title="Dosya ekle">
                             <span class="material-symbols-outlined text-xl">attach_file</span>
                         </button>
-                        <input type="file" id="fileInput" class="hidden" accept="image/*,.pdf,.doc,.docx,.txt" onchange="handleFileSelect(event)">
+                        <input type="file" id="fileInput" class="hidden" accept=".png,.jpg,.jpeg,.pdf,.docx,.udf,.gif,.webp,image/*" onchange="handleFileSelect(event)">
                         
                         <!-- Emoji Button -->
                         <button type="button" onclick="toggleEmojiPicker()" 
@@ -228,12 +228,12 @@
                             <textarea id="messageInput" 
                                       rows="1"
                                       placeholder="Mesaj..." 
-                                      class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base sm:-2xl bg-gray-100 dark:bg-gray-700 border-0 focus:ring-2 focus:ring-primary resize-none text-gray-900 dark:text-white"
+                                      class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-2xl bg-gray-100 dark:bg-gray-700 border-0 focus:ring-2 focus:ring-primary resize-none text-gray-900 dark:text-white"
                                       style="max-height: 100px;"></textarea>
                         </div>
                         
                         <button type="submit" 
-                                class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-900 text-white hover:bg-gray-900 transition-colors flex-shrink-0">
+                                class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors flex-shrink-0">
                             <span class="material-symbols-outlined text-xl sm:text-2xl">send</span>
                         </button>
                     </form>
@@ -297,65 +297,50 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
     if (!message && !selectedFile) return;
     
     try {
-        let response, data;
+        const formData = new FormData();
+        formData.append('conversation_id', conversationId);
+        formData.append('message', message || '');  // Boş olabilir (sadece dosya gönderiliyorsa)
+        formData.append('csrf_token', '{{ csrf_token() }}');
         
-        // Dosya yükleme varsa
+        // Dosya varsa ekle
         if (selectedFile) {
-            const formData = new FormData();
             formData.append('file', selectedFile);
-            formData.append('conversation_id', conversationId);
-            formData.append('message', message);
-            formData.append('csrf_token', '{{ csrf_token() }}');
-            
-            response = await fetch('/chat/upload', {
-                method: 'POST',
-                body: formData
-            });
-            
-            data = await response.json();
-            
-            if (data.success) {
-                // Dosya önizlemesini temizle
+        }
+        
+        const response = await fetch('/chat/send', {
+            method: 'POST',
+            body: formData  // FormData kullan (JSON değil)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Dosya önizlemesini temizle
+            if (selectedFile) {
                 clearFileSelection();
-                
-                // Mesajı UI'a ekle
-                addMessageToUI(data.message);
-                lastMessageId = data.message.id;
-            } else {
-                alert('Dosya gönderilemedi: ' + data.error);
             }
-        } 
-        // Normal metin mesajı
-        else {
-            response = await fetch('/chat/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    conversation_id: conversationId,
-                    message: message
-                })
-            });
             
-            data = await response.json();
+            // Mesajı UI'a ekle
+            const newMessage = {
+                id: data.message_id,
+                sender_id: {{ current_user.id }},
+                sender_name: '{{ current_user.full_name }}',
+                sender_avatar: '{{ current_user.avatar_url or "" }}',
+                message: message || data.message_text,
+                created_at: data.created_at,
+                is_mine: true,
+                read_at: null,
+                message_type: data.message_type || 'text',
+                file_url: data.file_url,
+                file_name: data.file_name,
+                file_size: data.file_size,
+                file_type: data.file_type
+            };
             
-            if (data.success) {
-                // Add message to UI
-                addMessageToUI({
-                    id: data.message_id,
-                    sender_id: {{ current_user.id }},
-                    message: message,
-                    created_at: data.created_at,
-                    is_mine: true,
-                    read_at: null
-                });
-                
-                lastMessageId = data.message_id;
-            } else {
-                alert('Mesaj gönderilemedi: ' + data.error);
-            }
+            addMessageToUI(newMessage);
+            lastMessageId = data.message_id;
+        } else {
+            alert('Mesaj gönderilemedi: ' + data.error);
         }
         
         // Clear input

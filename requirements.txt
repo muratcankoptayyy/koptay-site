@@ -21,4 +21,5 @@ Pillow>=10.3.0
 redis==5.0.1
 Flask-Caching==2.1.0
 eventlet==0.36.1
+firebase-admin==6.5.0
 

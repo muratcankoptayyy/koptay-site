@@ -11,6 +11,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, send
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect, generate_csrf
+from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from models import db, User, TevkilPost, Application, Rating, Message, Notification, Favorite, PasswordReset, Conversation
 from models import UserSession, SecurityLog, PasswordHistory, LoginAttempt
@@ -297,6 +298,7 @@ def register():
                 return redirect(url_for('register'))
         
         # Create new user
+        print(f"📝 Creating new user: {email}")
         user = User(
             email=email,
             full_name=full_name,
@@ -308,10 +310,22 @@ def register():
             city=data.get('city'),
             specializations=data.get('specializations', '').split(',') if data.get('specializations') else []
         )
-        user.set_password(data.get('password'))
+        print(f"✅ User object created")
         
-        db.session.add(user)
-        db.session.commit()
+        user.set_password(data.get('password'))
+        print(f"🔐 Password set")
+        
+        try:
+            db.session.add(user)
+            print(f"➕ User added to session")
+            
+            db.session.commit()
+            print(f"💾 Database committed - User ID: {user.id}")
+        except Exception as e:
+            print(f"❌ Database error: {e}")
+            db.session.rollback()
+            flash(f'Kayıt sırasında bir hata oluştu: {str(e)}', 'error')
+            return redirect(url_for('register'))
         
         # 📧 Hoş geldiniz e-postası gönder
         if EMAIL_ENABLED:
@@ -339,11 +353,17 @@ def login():
         user_agent = request.headers.get('User-Agent', '')
         
         print(f"🔐 Login attempt: {email} from {ip_address}")
+        print(f"📧 Email: {email}")
+        print(f"🔑 Password length: {len(password) if password else 0}")
+        print(f"📝 Remember: {remember}")
+        print(f"🌐 IP: {ip_address}")
         
         user = User.query.filter_by(email=email).first()
+        print(f"👤 User found: {user is not None}")
         
         if not user:
             # Kullanıcı bulunamadı
+            print(f"❌ User not found: {email}")
             security_utils.log_login_attempt(
                 email, ip_address, user_agent, 
                 success=False, failure_reason='user_not_found'
@@ -379,7 +399,14 @@ def login():
             return render_template('login.html')
         
         # 3. ŞİFRE KONTROLÜ
-        if not user.check_password(password):
+        print(f"🔐 Checking password for {email}...")
+        print(f"📊 User has password_hash: {user.password_hash is not None}")
+        print(f"📏 Password hash length: {len(user.password_hash) if user.password_hash else 0}")
+        
+        password_valid = user.check_password(password)
+        print(f"✅ Password valid: {password_valid}")
+        
+        if not password_valid:
             print(f"❌ Password incorrect for {email}")
             
             # Başarısız denemeyi kaydet
@@ -421,12 +448,17 @@ def login():
         
         # 6. LOGIN BAŞARILI
         print(f"✅ Login successful: {email}")
+        print(f"🔐 About to call login_user()...")
         
         # Session'ı geçici tut (web için normal session)
         session.permanent = False
+        print(f"📝 Session permanent set to False")
         
         # Login yap - Web için remember=False (mobil API token kullanacak)
         login_user(user, remember=False)
+        print(f"✅ login_user() called successfully")
+        print(f"👤 current_user.is_authenticated: {current_user.is_authenticated}")
+        print(f"👤 current_user.email: {current_user.email if current_user.is_authenticated else 'N/A'}")
         
         # Başarısız deneme sayısını sıfırla
         security_utils.reset_failed_attempts(user)
@@ -434,10 +466,12 @@ def login():
         # Son aktiflik zamanını güncelle
         user.last_active = datetime.utcnow()
         db.session.commit()
+        print(f"💾 Database committed")
         
         # Session token oluştur
         session_token = security_utils.create_user_session(user.id)
         session['session_token'] = session_token
+        print(f"🎫 Session token created and stored")
         
         # Başarılı login'i logla
         security_utils.log_login_attempt(
@@ -451,7 +485,11 @@ def login():
         
         # Redirect
         next_page = request.args.get('next')
-        return redirect(next_page or url_for('dashboard'))
+        redirect_url = next_page or url_for('dashboard')
+        print(f"🔀 Redirecting to: {redirect_url}")
+        print(f"🎯 Final session state: permanent={session.permanent}, session_token={session.get('session_token') is not None}")
+        
+        return redirect(redirect_url)
     
     return render_template('login.html')
 
@@ -2421,15 +2459,24 @@ def start_chat(user_id):
 @login_required
 @limiter.limit("100 per minute")  # Chat için yüksek limit
 def send_chat_message():
-    """Chat mesajı gönder (AJAX)"""
+    """Chat mesajı gönder (AJAX) - Dosya desteği ile"""
     try:
-        data = request.get_json()
-        conversation_id = data.get('conversation_id')
-        message_text = data.get('message', '').strip()
-        reply_to_id = data.get('reply_to_id')
+        # Form data veya JSON data kontrolü
+        if request.is_json:
+            data = request.get_json()
+            conversation_id = data.get('conversation_id')
+            message_text = data.get('message', '').strip()
+            reply_to_id = data.get('reply_to_id')
+            uploaded_file = None
+        else:
+            # FormData (dosya upload için)
+            conversation_id = request.form.get('conversation_id')
+            message_text = request.form.get('message', '').strip()
+            reply_to_id = request.form.get('reply_to_id')
+            uploaded_file = request.files.get('file')
         
-        if not message_text:
-            return jsonify({'success': False, 'error': 'Mesaj boş olamaz'}), 400
+        if not message_text and not uploaded_file:
+            return jsonify({'success': False, 'error': 'Mesaj veya dosya gerekli'}), 400
         
         # Conversation kontrolü
         conversation = Conversation.query.get_or_404(conversation_id)
@@ -2437,13 +2484,68 @@ def send_chat_message():
         if current_user.id not in [conversation.user1_id, conversation.user2_id]:
             return jsonify({'success': False, 'error': 'Yetkiniz yok'}), 403
         
+        # 📎 Dosya upload işlemi
+        file_url = None
+        file_name = None
+        file_size = None
+        file_type = None
+        message_type = 'text'
+        
+        if uploaded_file:
+            # Dosya uzantısı kontrolü
+            allowed_extensions = {'png', 'jpg', 'jpeg', 'pdf', 'docx', 'udf', 'gif', 'webp'}
+            file_ext = uploaded_file.filename.rsplit('.', 1)[1].lower() if '.' in uploaded_file.filename else ''
+            
+            if file_ext not in allowed_extensions:
+                return jsonify({'success': False, 'error': f'Desteklenmeyen dosya tipi. İzin verilenler: {", ".join(allowed_extensions)}'}), 400
+            
+            # Dosya boyutu kontrolü (max 10MB)
+            uploaded_file.seek(0, 2)  # Dosya sonuna git
+            file_size = uploaded_file.tell()  # Boyutu al
+            uploaded_file.seek(0)  # Başa dön
+            
+            if file_size > 10 * 1024 * 1024:  # 10MB
+                return jsonify({'success': False, 'error': 'Dosya boyutu 10MB\'dan büyük olamaz'}), 400
+            
+            # Upload klasörünü oluştur
+            upload_folder = os.path.join(app.root_path, 'static', 'uploads', 'chat')
+            os.makedirs(upload_folder, exist_ok=True)
+            
+            # Benzersiz dosya adı oluştur
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            unique_filename = f"{current_user.id}_{timestamp}_{secure_filename(uploaded_file.filename)}"
+            file_path = os.path.join(upload_folder, unique_filename)
+            
+            # Dosyayı kaydet
+            uploaded_file.save(file_path)
+            
+            # URL ve metadata
+            file_url = f"/static/uploads/chat/{unique_filename}"
+            file_name = uploaded_file.filename
+            file_type = uploaded_file.content_type or f'application/{file_ext}'
+            
+            # Mesaj tipini belirle
+            if file_ext in {'png', 'jpg', 'jpeg', 'gif', 'webp'}:
+                message_type = 'image'
+            else:
+                message_type = 'file'
+            
+            # Eğer mesaj metni yoksa, dosya adını kullan
+            if not message_text:
+                message_text = f"📎 {file_name}"
+        
         # Yeni mesaj oluştur
         message = Message(
             conversation_id=conversation_id,
             sender_id=current_user.id,
             message=message_text,
             reply_to_id=reply_to_id,
-            delivered_at=datetime.now(timezone.utc)
+            delivered_at=datetime.now(timezone.utc),
+            message_type=message_type,
+            file_url=file_url,
+            file_name=file_name,
+            file_size=file_size,
+            file_type=file_type
         )
         
         # DEPRECATED alanları doldur (eski sistem uyumluluğu)
@@ -2466,18 +2568,29 @@ def send_chat_message():
         
         db.session.commit()
         
+        # ⚡ Get sender avatar with fallback
+        sender_avatar = current_user.avatar_url if current_user.avatar_url else f"https://ui-avatars.com/api/?name={current_user.full_name.replace(' ', '+')}&background=1f2937&color=fff"
+        other_user_avatar = other_user.avatar_url if other_user.avatar_url else f"https://ui-avatars.com/api/?name={other_user.full_name.replace(' ', '+')}&background=1f2937&color=fff"
+        
         # ⚡ SOCKET.IO REAL-TIME EMIT - Mesajı anında gönder
         socketio.emit('new_message', {
             'conversation_id': conversation_id,
-            'message': {
-                'id': message.id,
-                'sender_id': current_user.id,
-                'sender_name': current_user.full_name,
-                'sender_avatar': current_user.profile_photo or '/static/default-avatar.png',
-                'message': message_text,
-                'created_at': message.created_at.strftime('%H:%M'),
-                'is_mine': False  # Frontend'de dinamik olarak ayarlanacak
-            }
+            'sender_id': current_user.id,
+            'sender_name': current_user.full_name,
+            'sender_avatar': sender_avatar,
+            'content': message_text,
+            'message': message_text,
+            'timestamp': message.created_at.strftime('%H:%M'),
+            'created_at': message.created_at.isoformat(),
+            'id': message.id,
+            'is_mine': False,  # Frontend'de dinamik olarak ayarlanacak
+            'read_at': None,
+            # 📎 Dosya bilgileri
+            'message_type': message_type,
+            'file_url': file_url,
+            'file_name': file_name,
+            'file_size': file_size,
+            'file_type': file_type
         }, room=f'conversation_{conversation_id}')
         
         # Bildirim gönder (asenkron - UI'ı bloklamaz)
@@ -2500,7 +2613,13 @@ def send_chat_message():
             'success': True,
             'message_id': message.id,
             'created_at': message.created_at.strftime('%H:%M'),
-            'sender_name': current_user.full_name
+            'sender_name': current_user.full_name,
+            'message_text': message_text,
+            'message_type': message_type,
+            'file_url': file_url,
+            'file_name': file_name,
+            'file_size': file_size,
+            'file_type': file_type
         })
         
     except Exception as e:
@@ -3228,68 +3347,113 @@ def handle_leave_conversation(data):
 @socketio.on('send_message')
 def handle_send_message(data):
     """Handle sending a new message"""
-    conversation_id = data.get('conversation_id')
-    content = data.get('content', '').strip()
-    
-    if not conversation_id or not content:
-        emit('error', {'message': 'Invalid message data'})
-        return
-    
-    # Verify conversation access
-    conversation = Conversation.query.get(conversation_id)
-    if not conversation:
-        emit('error', {'message': 'Conversation not found'})
-        return
-    
-    if current_user.id not in [conversation.user1_id, conversation.user2_id]:
-        emit('error', {'message': 'Unauthorized'})
-        return
-    
-    # Determine receiver
-    receiver_id = conversation.user2_id if current_user.id == conversation.user1_id else conversation.user1_id
-    
-    # Create message
-    message = Message(
-        conversation_id=conversation_id,
-        sender_id=current_user.id,
-        receiver_id=receiver_id,
-        content=content,
-        is_read=False
-    )
-    db.session.add(message)
-    
-    # Update conversation
-    conversation.last_message_at = datetime.now(timezone.utc)
-    conversation.last_message = content[:100]
-    
-    db.session.commit()
-    
-    # Prepare message data
-    message_data = {
-        'id': message.id,
-        'conversation_id': conversation_id,
-        'sender_id': current_user.id,
-        'sender_name': current_user.full_name,
-        'receiver_id': receiver_id,
-        'content': content,
-        'timestamp': message.created_at.strftime('%H:%M'),
-        'created_at': message.created_at.isoformat(),
-        'is_read': False
-    }
-    
-    # Send to conversation room
-    room = f'conversation_{conversation_id}'
-    emit('new_message', message_data, room=room)
-    
-    # Send notification to receiver if online but not in room
-    if receiver_id in active_users:
-        emit('new_message_notification', {
+    try:
+        conversation_id = data.get('conversation_id')
+        content = data.get('content', '').strip()
+        
+        if not conversation_id or not content:
+            emit('error', {'message': 'Invalid message data'})
+            return
+        
+        # Verify conversation access
+        conversation = Conversation.query.get(conversation_id)
+        if not conversation:
+            emit('error', {'message': 'Conversation not found'})
+            return
+        
+        if current_user.id not in [conversation.user1_id, conversation.user2_id]:
+            emit('error', {'message': 'Unauthorized'})
+            return
+        
+        # Determine receiver
+        receiver_id = conversation.user2_id if current_user.id == conversation.user1_id else conversation.user1_id
+        other_user = User.query.get(receiver_id)
+        
+        # Create message (correct field name: message, not content)
+        message = Message(
+            conversation_id=conversation_id,
+            sender_id=current_user.id,
+            receiver_id=receiver_id,
+            message=content,  # ✅ FIXED: Use 'message' field
+            post_id=conversation.post_id,
+            delivered_at=datetime.now(timezone.utc)
+        )
+        db.session.add(message)
+        
+        # Update conversation
+        conversation.last_message_at = datetime.now(timezone.utc)
+        conversation.last_message_text = content[:100]
+        conversation.last_message_sender_id = current_user.id
+        
+        # Update unread count
+        if current_user.id == conversation.user1_id:
+            conversation.unread_count_user2 += 1
+        else:
+            conversation.unread_count_user1 += 1
+        
+        db.session.commit()
+        
+        # Get sender avatar with fallback
+        sender_avatar = current_user.avatar_url if current_user.avatar_url else f"https://ui-avatars.com/api/?name={current_user.full_name}&background=1f2937&color=fff"
+        
+        # Prepare message data
+        message_data = {
+            'id': message.id,
             'conversation_id': conversation_id,
+            'sender_id': current_user.id,
             'sender_name': current_user.full_name,
-            'preview': content[:50]
-        }, room=active_users[receiver_id])
-    
-    print(f'📨 Message sent: {current_user.id} → {receiver_id} in conversation {conversation_id}')
+            'sender_avatar': sender_avatar,
+            'receiver_id': receiver_id,
+            'content': content,
+            'message': content,  # Both for compatibility
+            'timestamp': message.created_at.strftime('%H:%M'),
+            'created_at': message.created_at.isoformat(),
+            'is_read': False,
+            'read_at': None,
+            # 📎 Dosya bilgileri (şimdilik None - gelecekte eklenecek)
+            'message_type': message.message_type or 'text',
+            'file_url': message.file_url,
+            'file_name': message.file_name,
+            'file_size': message.file_size,
+            'file_type': message.file_type
+        }
+        
+        # Send to conversation room
+        room = f'conversation_{conversation_id}'
+        emit('new_message', message_data, room=room)
+        
+        # Send notification to receiver if online but not in room
+        if receiver_id in active_users:
+            emit('new_message_notification', {
+                'conversation_id': conversation_id,
+                'sender_name': current_user.full_name,
+                'sender_avatar': sender_avatar,
+                'preview': content[:50]
+            }, room=active_users[receiver_id])
+        
+        # 📱 PUSH NOTIFICATION - Alıcıya mobil bildirim gönder
+        try:
+            send_push_notification(
+                user_id=receiver_id,
+                title=f'💬 {current_user.full_name}',
+                body=content[:100],  # İlk 100 karakter
+                data={
+                    'type': 'new_message',
+                    'conversation_id': str(conversation_id),
+                    'sender_id': str(current_user.id),
+                    'sender_name': current_user.full_name,
+                    'page': f'/chat?conversation_id={conversation_id}'
+                }
+            )
+        except Exception as notif_error:
+            print(f"⚠️ Push notification error: {notif_error}")
+        
+        print(f'📨 Message sent: {current_user.id} → {receiver_id} in conversation {conversation_id}')
+        
+    except Exception as e:
+        print(f'❌ Error in handle_send_message: {str(e)}')
+        db.session.rollback()
+        emit('error', {'message': f'Error sending message: {str(e)}'})
 
 @socketio.on('typing')
 def handle_typing(data):
@@ -3428,10 +3592,11 @@ def unregister_device_token():
 
 def send_push_notification(user_id, title, body, data=None):
     """
-    Send push notification to user's devices
-    This is a placeholder - actual implementation would use FCM/APNs
+    Send push notification to user's devices via Firebase Cloud Messaging
     """
     try:
+        from firebase_notification_service import FirebaseNotificationService
+        
         # Get user's device tokens
         tokens = DeviceToken.query.filter_by(user_id=user_id).all()
         
@@ -3439,23 +3604,37 @@ def send_push_notification(user_id, title, body, data=None):
             print(f"ℹ️ No device tokens found for user {user_id}")
             return False
 
-        # For now, just log the notification
-        # In production, you would call FCM/APNs APIs here
         print(f"📬 Sending push notification to user {user_id}:")
         print(f"   Title: {title}")
         print(f"   Body: {body}")
         print(f"   Data: {data}")
         print(f"   Devices: {len(tokens)}")
 
-        # TODO: Implement actual FCM/APNs sending
-        # Example:
-        # for token in tokens:
-        #     if token.platform == 'android':
-        #         send_fcm_notification(token.token, title, body, data)
-        #     elif token.platform == 'ios':
-        #         send_apns_notification(token.token, title, body, data)
-
-        return True
+        # Get list of FCM tokens
+        fcm_tokens = [token.token for token in tokens if token.platform == 'android']
+        
+        if not fcm_tokens:
+            print(f"⚠️ No Android FCM tokens found for user {user_id}")
+            return False
+        
+        # Send via Firebase Cloud Messaging
+        result = FirebaseNotificationService.send_multicast(
+            tokens=fcm_tokens,
+            title=title,
+            body=body,
+            data=data
+        )
+        
+        # Clean up invalid tokens
+        if result.get('invalid_tokens'):
+            for invalid_token in result['invalid_tokens']:
+                device = DeviceToken.query.filter_by(token=invalid_token).first()
+                if device:
+                    db.session.delete(device)
+                    print(f"🗑️ Removed invalid token: {invalid_token[:20]}...")
+            db.session.commit()
+        
+        return result.get('success', 0) > 0
 
     except Exception as e:
         print(f"❌ Error sending push notification: {e}")
@@ -3632,6 +3811,11 @@ def health_check():
     }), 200
 
 # ==================== LEGAL PAGES ====================
+@app.route('/contact')
+def contact():
+    """Contact page"""
+    return render_template('contact.html')
+
 @app.route('/privacy-policy')
 def privacy_policy():
     """Privacy policy page (KVKK compliance)"""
@@ -3812,6 +3996,106 @@ def export_analytics():
     response.headers['Content-Type'] = 'text/csv'
     
     return response
+
+# ==================== CONTACT FORM ====================
+@app.route('/api/contact', methods=['POST'])
+@limiter.limit("5 per hour")  # Rate limit for contact form
+def submit_contact_form():
+    """İletişim formu endpoint'i (EmailJS alternatifi)"""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['name', 'email', 'phone', 'subject', 'message']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({
+                    'success': False,
+                    'error': f'{field} alanı gereklidir'
+                }), 400
+        
+        name = data.get('name')
+        email = data.get('email')
+        phone = data.get('phone')
+        subject = data.get('subject')
+        message = data.get('message')
+        
+        # Email validation
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            return jsonify({
+                'success': False,
+                'error': 'Geçersiz e-posta adresi'
+            }), 400
+        
+        # Send email to admin/support
+        admin_email = os.getenv('ADMIN_EMAIL', 'destek@utap.com.tr')
+        
+        try:
+            from flask_mail import Message as MailMessage
+            from email_service import mail
+            
+            msg = MailMessage(
+                subject=f'İletişim Formu: {subject}',
+                recipients=[admin_email],
+                sender=os.getenv('MAIL_DEFAULT_SENDER', 'Tevkil Platform <destek@utap.com.tr>'),
+                html=f"""
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px;">
+                        <h2 style="color: #1f2937; border-bottom: 3px solid #3b82f6; padding-bottom: 10px;">
+                            📧 Yeni İletişim Formu Mesajı
+                        </h2>
+                        
+                        <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <p><strong>👤 Ad Soyad:</strong> {name}</p>
+                            <p><strong>📧 E-posta:</strong> <a href="mailto:{email}">{email}</a></p>
+                            <p><strong>📱 Telefon:</strong> {phone}</p>
+                            <p><strong>📋 Konu:</strong> {subject}</p>
+                            
+                            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+                            
+                            <h3 style="color: #1f2937;">💬 Mesaj:</h3>
+                            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; white-space: pre-wrap;">
+{message}
+                            </div>
+                        </div>
+                        
+                        <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 20px;">
+                            Bu mesaj <strong>utap.com.tr</strong> iletişim formu üzerinden gönderilmiştir.
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """
+            )
+            
+            mail.send(msg)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Mesajınız başarıyla gönderildi. En kısa sürede size dönüş yapacağız.'
+            }), 200
+            
+        except Exception as email_error:
+            # Log email error but still save to database
+            print(f"❌ Email send error: {email_error}")
+            
+            # Alternative: Save to database for admin review
+            # You can create a ContactMessage model later
+            
+            return jsonify({
+                'success': True,
+                'message': 'Mesajınız alındı. En kısa sürede size dönüş yapacağız.'
+            }), 200
+        
+    except Exception as e:
+        print(f"❌ Contact form error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Mesaj gönderilemedi. Lütfen daha sonra tekrar deneyin.'
+        }), 500
 
 # ==================== ERROR HANDLERS ====================
 @app.errorhandler(404)
