@@ -286,36 +286,36 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
-                    <span class="text-sm font-medium">WhatsApp Ayarları</span>
+                    <span class="text-sm font-light">WhatsApp Ayarları</span>
                 </a>
                 {% endif %}
                 
                 <a href="{{ url_for('chat') }}" class="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-900 transition-colors mb-1">
                     <span class="material-symbols-outlined">chat</span>
-                    <span class="text-sm font-medium">Sohbetler</span>
+                    <span class="text-sm font-light">Sohbetler</span>
                 </a>
                 
                 <a href="{{ url_for('favorites') }}" class="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-900 transition-colors mb-1">
                     <span class="material-symbols-outlined">favorite</span>
-                    <span class="text-sm font-medium">Favorilerim</span>
+                    <span class="text-sm font-light">Favorilerim</span>
                 </a>
                 
                 <a href="{{ url_for('settings') }}" class="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-900 transition-colors mb-1">
                     <span class="material-symbols-outlined">settings</span>
-                    <span class="text-sm font-medium">Ayarlar</span>
+                    <span class="text-sm font-light">Ayarlar</span>
                 </a>
                 
                 {% if current_user.is_admin %}
                 <a href="{{ url_for('admin_analytics') }}" class="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mb-1 border border-purple-200 dark:border-purple-800">
                     <span class="material-symbols-outlined">analytics</span>
-                    <span class="text-sm font-medium">Admin Analytics</span>
+                    <span class="text-sm font-light">Admin Analytics</span>
                 </a>
                 {% endif %}
                 
                 <a href="{{ url_for('notifications') }}" class="flex items-center justify-between gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-900 transition-colors mb-1">
                     <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined">notifications</span>
-                        <span class="text-sm font-medium">Bildirimler</span>
+                        <span class="text-sm font-light">Bildirimler</span>
                     </div>
                     {% set unread_notif_count = current_user.notifications_unread_count if current_user.is_authenticated else 0 %}
                     {% if unread_notif_count > 0 %}
@@ -329,7 +329,7 @@
                 
                 <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-900 transition-colors mb-1">
                     <span class="material-symbols-outlined">person</span>
-                    <span class="text-sm font-medium">Profilim</span>
+                    <span class="text-sm font-light">Profilim</span>
                 </a>
             </nav>
             
