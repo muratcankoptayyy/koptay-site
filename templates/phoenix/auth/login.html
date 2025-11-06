@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Giriş Yap - Ulusal Tevkil Ağı Projesi{% endblock %}
+
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<section class="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-50 via-white to-slate-50 py-16 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+    <div class="absolute inset-0 bg-grid opacity-30"></div>
+    
+    <div class="relative w-full max-w-5xl mx-4 rounded-3xl border border-slate-200 bg-white/70 shadow-2xl backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/70">
+        <div class="grid gap-0 md:grid-cols-2">
+            <!-- Sol Panel - Marketing İçeriği -->
+            <div class="hidden flex-col justify-between border-r border-slate-200 bg-brand-600 px-10 py-12 text-white dark:border-brand-400/20 md:flex">
+                <div class="space-y-5">
+                    <a href="{{ url_for('index') }}" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-white/20 transition">
+                        <span class="material-symbols-rounded text-base">arrow_back</span>
+                        Ana Sayfa
+                    </a>
+                    <h1 class="font-heading text-3xl leading-snug">Güvenli giriş ile tevkil süreçlerini tek panelde yönet.</h1>
+                    <p class="text-sm text-brand-100/80">Çift faktörlü doğrulama, audit log ve API anahtarları ile profesyonel kurumsal güvenlik standartlarını karşılar.</p>
+                </div>
+                
+                <ul class="space-y-3 text-sm text-brand-100/80">
+                    <li class="flex items-center gap-2">
+                        <span class="material-symbols-rounded text-base text-brand-200">check_circle</span>
+                        KVKK uyumlu veri politikası
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="material-symbols-rounded text-base text-brand-200">check_circle</span>
+                        %100 mobil uyumlu arayüz
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="material-symbols-rounded text-base text-brand-200">check_circle</span>
+                        7/24 destek hattı
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Sağ Panel - Login Formu -->
+            <div class="px-8 py-12 sm:px-12">
+                <!-- Mobil Ana Sayfa Linki -->
+                <div class="mb-6 md:hidden">
+                    <a href="{{ url_for('index') }}" class="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400">
+                        <span class="material-symbols-rounded text-base">arrow_back</span>
+                        Ana Sayfa
+                    </a>
+                </div>
+
+                <form class="space-y-6" method="POST" action="{{ url_for('login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="space-y-2">
+                        <h2 class="font-heading text-2xl text-slate-900 dark:text-white">Tekrar hoş geldin 👋</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Lütfen kayıt olurken kullandığın e-posta adresini gir.</p>
+                    </div>
+                    
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="flex items-start gap-2 rounded-2xl border px-4 py-3 text-sm
+                                    {% if category == 'error' %}
+                                        border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-900/20 dark:text-red-200
+                                    {% elif category == 'success' %}
+                                        border-green-200 bg-green-50 text-green-700 dark:border-green-900/60 dark:bg-green-900/20 dark:text-green-200
+                                    {% else %}
+                                        border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-900/20 dark:text-blue-200
+                                    {% endif %}">
+                                    <span class="material-symbols-rounded text-base">
+                                        {% if category == 'error' %}error{% elif category == 'success' %}check_circle{% else %}info{% endif %}
+                                    </span>
+                                    <span>{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="email" class="text-sm font-medium text-slate-700 dark:text-slate-300">E-posta</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                inputmode="email" 
+                                autocomplete="email" 
+                                required 
+                                value="{{ request.form.get('email', '') }}" 
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-brand-400 dark:focus:ring-brand-900"
+                                placeholder="ornek@email.com">
+                        </div>
+                        
+                        <div>
+                            <label for="password" class="flex items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-300">
+                                <span>Şifre</span>
+                                <a href="{{ url_for('forgot_password') }}" class="text-brand-600 hover:underline dark:text-brand-400">Şifremi unuttum?</a>
+                            </label>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                autocomplete="current-password"
+                                required 
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-brand-400 dark:focus:ring-brand-900"
+                                placeholder="••••••••">
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-slate-500">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    name="remember"
+                                    class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800">
+                                <span class="dark:text-slate-400">Beni hatırla</span>
+                            </label>
+                            <span class="inline-flex items-center gap-1 text-xs text-slate-400">
+                                <span class="material-symbols-rounded text-sm">lock</span>
+                                KVKK uyumlu giriş
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-full py-3 text-base font-semibold shadow-lg shadow-brand-500/20 hover:shadow-xl hover:shadow-brand-500/30 transition-all">
+                        Giriş Yap
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                    Hesabın yok mu? 
+                    <a href="{{ url_for('register') }}" class="font-semibold text-brand-600 hover:underline dark:text-brand-400">Hemen kaydol</a>
+                </div>
+
+                <!-- Test Account Info -->
+                {% if config.get('ENV') == 'development' or config.get('DEBUG') %}
+                <div class="mt-10 space-y-4 rounded-2xl bg-slate-100/80 px-5 py-4 text-xs text-slate-500 dark:bg-slate-800/80">
+                    <p class="font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                        <span class="material-symbols-rounded text-base">bug_report</span>
+                        Test Hesabı (Development Mode)
+                    </p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="rounded-xl bg-white p-3 shadow-sm dark:bg-slate-900">
+                            <p class="text-[11px] uppercase text-slate-400">E-posta</p>
+                            <p class="font-mono text-sm text-slate-700 dark:text-slate-300">demo@tevkil.com</p>
+                        </div>
+                        <div class="rounded-xl bg-white p-3 shadow-sm dark:bg-slate-900">
+                            <p class="text-[11px] uppercase text-slate-400">Şifre</p>
+                            <p class="font-mono text-sm text-slate-700 dark:text-slate-300">Test123!</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.bg-grid {
+    background-image: 
+        linear-gradient(to right, rgb(148 163 184 / 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgb(148 163 184 / 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+</style>
+{% endblock %}

@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="mb-8">
         <div class="flex items-center gap-3 mb-2">
-            <a href="{{ url_for('notifications') }}" class="text-gray-600 dark:text-gray-400 hover:text-primary">
+            <a href="{{ url_for('notifications') }}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900">
                 <span class="material-symbols-outlined">arrow_back</span>
             </a>
             <h1 class="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">Bildirim Ayarları</h1>
@@ -20,19 +20,19 @@
     <form method="POST" action="{{ url_for('update_notification_settings') }}" class="space-y-6">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <!-- Platform İçi Bildirimler -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-6 border border-gray-200 dark:border-gray-700">
+        <div class="bg-white dark:bg-gray-800 p-3 md:p-6 border border-gray-300 dark:border-gray-700">
             <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-primary">notifications</span>
+                <div class="w-10 h-10 rounded-full bg-gray-900/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-gray-900">notifications</span>
                 </div>
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">Platform İçi Bildirimler</h2>
             </div>
             
             <div class="space-y-4">
                 <!-- Yeni Başvuru -->
-                <label class="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+                <label class="flex items-center justify-between p-4 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
                     <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">description</span>
+                        <span class="material-symbols-outlined text-gray-900 dark:text-blue-400">description</span>
                         <div>
                             <div class="font-medium text-gray-900 dark:text-white">Yeni Başvurular</div>
                             <div class="text-sm text-gray-600 dark:text-gray-400">İlanınıza yeni başvuru geldiğinde</div>
@@ -40,11 +40,11 @@
                     </div>
                     <input type="checkbox" name="notify_new_application" 
                            {{ 'checked' if user.notify_new_application }}
-                           class="w-5 h-5 text-primary rounded focus:ring-primary">
+                           class="w-5 h-5 text-gray-900 focus:ring-primary">
                 </label>
                 
                 <!-- Başvuru Durumu -->
-                <label class="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+                <label class="flex items-center justify-between p-4 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
                     <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
                         <div>
@@ -54,11 +54,11 @@
                     </div>
                     <input type="checkbox" name="notify_application_status" 
                            {{ 'checked' if user.notify_application_status }}
-                           class="w-5 h-5 text-primary rounded focus:ring-primary">
+                           class="w-5 h-5 text-gray-900 focus:ring-primary">
                 </label>
                 
                 <!-- Yeni Mesaj -->
-                <label class="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+                <label class="flex items-center justify-between p-4 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
                     <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined text-purple-600 dark:text-purple-400">mail</span>
                         <div>
@@ -68,11 +68,11 @@
                     </div>
                     <input type="checkbox" name="notify_new_message" 
                            {{ 'checked' if user.notify_new_message }}
-                           class="w-5 h-5 text-primary rounded focus:ring-primary">
+                           class="w-5 h-5 text-gray-900 focus:ring-primary">
                 </label>
                 
                 <!-- Yeni Değerlendirme -->
-                <label class="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+                <label class="flex items-center justify-between p-4 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
                     <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400">star</span>
                         <div>
@@ -82,11 +82,11 @@
                     </div>
                     <input type="checkbox" name="notify_new_rating" 
                            {{ 'checked' if user.notify_new_rating }}
-                           class="w-5 h-5 text-primary rounded focus:ring-primary">
+                           class="w-5 h-5 text-gray-900 focus:ring-primary">
                 </label>
                 
                 <!-- İlan Sona Erme -->
-                <label class="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+                <label class="flex items-center justify-between p-4 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
                     <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined text-red-600 dark:text-red-400">schedule</span>
                         <div>
@@ -96,11 +96,11 @@
                     </div>
                     <input type="checkbox" name="notify_post_expiring" 
                            {{ 'checked' if user.notify_post_expiring }}
-                           class="w-5 h-5 text-primary rounded focus:ring-primary">
+                           class="w-5 h-5 text-gray-900 focus:ring-primary">
                 </label>
                 
                 <!-- Sistem Bildirimleri -->
-                <label class="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+                <label class="flex items-center justify-between p-4 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
                     <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined text-gray-600 dark:text-gray-400">info</span>
                         <div>
@@ -110,13 +110,13 @@
                     </div>
                     <input type="checkbox" name="notify_system" 
                            {{ 'checked' if user.notify_system }}
-                           class="w-5 h-5 text-primary rounded focus:ring-primary">
+                           class="w-5 h-5 text-gray-900 focus:ring-primary">
                 </label>
             </div>
         </div>
         
         <!-- Email Bildirimleri -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-6 border border-gray-200 dark:border-gray-700">
+        <div class="bg-white dark:bg-gray-800 p-3 md:p-6 border border-gray-300 dark:border-gray-700">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                     <span class="material-symbols-outlined text-purple-600 dark:text-purple-400">email</span>
@@ -124,14 +124,14 @@
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">Email Bildirimleri</h2>
             </div>
             
-            <label class="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+            <label class="flex items-center justify-between p-4 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
                 <div>
                     <div class="font-medium text-gray-900 dark:text-white">Email Bildirimleri Gönder</div>
                     <div class="text-sm text-gray-600 dark:text-gray-400">Önemli güncellemeleri email ile de alın</div>
                 </div>
                 <input type="checkbox" name="notify_email" 
                        {{ 'checked' if user.notify_email }}
-                       class="w-5 h-5 text-primary rounded focus:ring-primary">
+                       class="w-5 h-5 text-gray-900 focus:ring-primary">
             </label>
         </div>
         

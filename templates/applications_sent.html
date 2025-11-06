@@ -8,7 +8,7 @@
         <!-- Page Header -->
         <div class="flex items-center justify-between pb-6">
             <div>
-                <h1 class="text-xl md:text-3xl font-black text-gray-900 dark:text-white">
+                <h1 class="text-xl md:text-3xl font-light text-gray-900 dark:text-white">
                     <span class="material-symbols-outlined align-middle text-purple-600 dark:text-purple-400 mr-2">send</span>
                     Başvurularım
                 </h1>
@@ -25,21 +25,21 @@
         {% if applications %}
         <div class="space-y-4">
             {% for app in applications %}
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
+            <div class="bg-white dark:bg-gray-800 p-3 md:p-6 border border-gray-300 dark:border-gray-700 hover: transition-shadow">
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <!-- İlan Başlığı -->
-                        <a href="{{ url_for('post_detail', post_id=app.post.id) }}" class="text-xl font-bold text-primary hover:underline">
+                        <a href="{{ url_for('post_detail', post_id=app.post.id) }}" class="text-xl font-bold text-gray-900 hover:underline">
                             {{ app.post.title }}
                         </a>
                         
                         <!-- İlan Sahibi Bilgisi -->
                         <div class="flex items-center gap-3 mt-3">
-                            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+                            <div class="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
                                 {{ app.post.user.full_name[0] }}
                             </div>
                             <div>
-                                <a href="{{ url_for('user_profile', user_id=app.post.user.id) }}" class="font-semibold text-gray-900 dark:text-white hover:text-primary">
+                                <a href="{{ url_for('user_profile', user_id=app.post.user.id) }}" class="font-semibold text-gray-900 dark:text-white hover:text-gray-900">
                                     {{ app.post.user.full_name }}
                                 </a>
                                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -50,7 +50,7 @@
 
                         <!-- Başvuru Mesajınız -->
                         {% if app.message %}
-                        <div class="mt-4 bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                        <div class="mt-4 bg-gray-50 dark:bg-gray-900 p-4">
                             <p class="text-xs text-gray-500 dark:text-gray-500 mb-1">Mesajınız:</p>
                             <p class="text-sm text-gray-700 dark:text-gray-300">{{ app.message }}</p>
                         </div>
@@ -106,7 +106,7 @@
             <p class="text-gray-600 dark:text-gray-400 text-center max-w-full mx-4 sm:max-w-md">
                 İlanlara başvuru yaptığınızda burada göreceksiniz.
             </p>
-            <a href="{{ url_for('list_posts') }}" class="mt-6 bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2">
+            <a href="{{ url_for('list_posts') }}" class="mt-6 bg-gray-900 text-white px-6 py-3 font-semibold hover:bg-gray-900/90 transition-colors flex items-center gap-2">
                 <span class="material-symbols-outlined">search</span>
                 İlanları Görüntüle
             </a>

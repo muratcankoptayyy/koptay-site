@@ -1,0 +1,720 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Ulusal Tevkil Ağı Projesi{% endblock %}
+
+{% block content %}
+<div class="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-3 pb-20 md:pb-5">
+    <div class="max-w-7xl mx-auto w-full">
+        <!-- Welcome Header -->
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+            <div>
+                <p class="text-gray-900 dark:text-white text-xl sm:text-2xl md:text-3xl font-black leading-tight">
+                    Hoş Geldiniz, {{ current_user.full_name.split()[0] }}!
+                </p>
+                <p class="text-gray-600 dark:text-gray-400 text-sm sm:text-base mt-1">
+                    İşte hesabınızın genel durumu
+                </p>
+            </div>
+            <a href="{{ url_for('create_post') }}" class="flex items-center justify-center gap-2 rounded-lg h-11 sm:h-12 px-4 sm:px-5 bg-primary text-white text-sm sm:text-base font-bold hover:bg-primary/90 transition-colors whitespace-nowrap">
+                <span class="material-symbols-outlined text-lg sm:text-xl">add</span>
+                <span>Yeni İlan</span>
+            </a>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4"
+            <!-- Aktif İlanlarım -->
+            <a href="{{ url_for('list_posts', filter='my_active') }}" class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-primary transition-all duration-200 cursor-pointer">
+                <div class="flex gap-4">
+                    <div class="flex items-start justify-center">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-2xl">list_alt</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1 flex-1">
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Aktif İlanlarım</p>
+                        <p class="text-3xl font-black text-gray-900 dark:text-white">
+                            {{ my_posts|selectattr('status', 'equalto', 'active')|list|length }}
+                        </p>
+                    </div>
+                </div>
+            </a>
+            
+            <!-- Gelen Başvurular -->
+            <a href="{{ url_for('applications_received') }}" class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-green-500 transition-all duration-200 cursor-pointer">
+                <div class="flex gap-4">
+                    <div class="flex items-start justify-center">
+                        <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-2xl">inbox</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1 flex-1">
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Gelen Başvurular</p>
+                        <p class="text-3xl font-black text-gray-900 dark:text-white">
+                            {{ incoming_applications|length }}
+                        </p>
+                    </div>
+                </div>
+            </a>
+            
+            <!-- Başvurularım -->
+            <a href="{{ url_for('applications_sent') }}" class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-purple-500 transition-all duration-200 cursor-pointer">
+                <div class="flex gap-4">
+                    <div class="flex items-start justify-center">
+                        <div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-2xl">send</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1 flex-1">
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Başvurularım</p>
+                        <p class="text-3xl font-black text-gray-900 dark:text-white">
+                            {{ my_applications|length }}
+                        </p>
+                    </div>
+                </div>
+            </a>
+            
+            <!-- Tamamlanan -->
+            <a href="{{ url_for('list_posts', filter='my_completed') }}" class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-yellow-500 transition-all duration-200 cursor-pointer">
+                <div class="flex gap-4">
+                    <div class="flex items-start justify-center">
+                        <div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-2xl">check_circle</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1 flex-1">
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Tamamlanan</p>
+                        <p class="text-3xl font-black text-gray-900 dark:text-white">
+                            {{ my_posts|selectattr('status', 'equalto', 'completed')|list|length }}
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <!-- Charts Section -->
+        <div class="px-4 py-3">
+            <!-- Applications Trend Chart -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 md:p-6 border border-gray-200 dark:border-gray-700 mb-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">trending_up</span>
+                    Başvuru Trendi (Son 6 Ay)
+                </h3>
+                <canvas id="applicationsChart" class="h-64"></canvas>
+            </div>
+        
+        <!-- Performance Stats Carousel -->
+        <div class="px-4 py-3">
+            <div class="relative overflow-hidden rounded-xl">
+                <!-- Carousel Container -->
+                <div id="statsCarousel" class="flex transition-transform duration-700 ease-in-out">
+                    <!-- Slide 1: İlan Kategorileri -->
+                    <div class="min-w-full">
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 md:p-6 border border-gray-200 dark:border-gray-700">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">pie_chart</span>
+                                İlan Kategorileri Dağılımı
+                            </h3>
+                            <div class="h-64">
+                                <canvas id="categoriesChartCarousel"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Slide 2: Tamamlanan İş -->
+                    <div class="min-w-full">
+                        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 md:p-8 text-white h-full flex flex-col justify-center">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="material-symbols-outlined text-6xl opacity-80">emoji_events</span>
+                                <span class="text-lg opacity-80">Bu Ay</span>
+                            </div>
+                            <p class="text-6xl font-black mb-2">{{ monthly_completed }}</p>
+                            <p class="text-xl opacity-90">Tamamlanan İş</p>
+                            <div class="mt-4 pt-4 border-t border-white/30">
+                                <p class="text-sm opacity-80">🎯 Hedefin %{{ ((monthly_completed / 10.0) * 100)|int }} tamamlandı</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Slide 3: Tahmini Kazanç -->
+                    <div class="min-w-full">
+                        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 md:p-8 text-white h-full flex flex-col justify-center">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="material-symbols-outlined text-6xl opacity-80">currency_lira</span>
+                                <span class="text-lg opacity-80">Toplam</span>
+                            </div>
+                            <p class="text-6xl font-black mb-2">{{ total_earnings|default(0)|int }} TL</p>
+                            <p class="text-xl opacity-90">Tahmini Kazanç</p>
+                            <div class="mt-4 pt-4 border-t border-white/30">
+                                <p class="text-sm opacity-80">💰 Ortalama iş başı: {{ (total_earnings / (monthly_completed if monthly_completed > 0 else 1))|int }} TL</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Slide 4: Değerlendirme -->
+                    <div class="min-w-full">
+                        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 md:p-8 text-white h-full flex flex-col justify-center">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="material-symbols-outlined text-6xl opacity-80">star</span>
+                                <span class="text-lg opacity-80">Ortalama</span>
+                            </div>
+                            <p class="text-6xl font-black mb-2">{{ avg_rating|default(0)|round(1) }}</p>
+                            <p class="text-xl opacity-90">Değerlendirme Puanı</p>
+                            <div class="mt-4 pt-4 border-t border-white/30">
+                                <div class="flex gap-1">
+                                    {% for i in range(5) %}
+                                        {% if i < (avg_rating|default(0))|int %}
+                                            <span class="material-symbols-outlined text-yellow-300">star</span>
+                                        {% else %}
+                                            <span class="material-symbols-outlined text-white/30">star</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Carousel Indicators -->
+                <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                    <button onclick="goToSlide(0)" class="carousel-indicator w-2 h-2 rounded-full bg-white/50 hover:bg-white transition-colors" data-slide="0"></button>
+                    <button onclick="goToSlide(1)" class="carousel-indicator w-2 h-2 rounded-full bg-white/50 hover:bg-white transition-colors" data-slide="1"></button>
+                    <button onclick="goToSlide(2)" class="carousel-indicator w-2 h-2 rounded-full bg-white/50 hover:bg-white transition-colors" data-slide="2"></button>
+                    <button onclick="goToSlide(3)" class="carousel-indicator w-2 h-2 rounded-full bg-white/50 hover:bg-white transition-colors" data-slide="3"></button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Achievement Badges Section -->
+        <div class="px-4 py-3">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">military_tech</span>
+                    Başarı Rozetleri
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- İlk İlan Rozeti -->
+                    <div class="flex flex-col items-center p-4 rounded-lg {% if my_posts|length > 0 %}bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-2 border-blue-300 dark:border-blue-700{% else %}bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 opacity-50{% endif %} transition-all">
+                        <span class="material-symbols-outlined text-2xl md:text-4xl mb-2 {% if my_posts|length > 0 %}text-blue-600 dark:text-blue-400{% else %}text-gray-400{% endif %}">rocket_launch</span>
+                        <p class="text-xs font-semibold text-center {% if my_posts|length > 0 %}text-blue-900 dark:text-blue-300{% else %}text-gray-500{% endif %}">İlk İlan</p>
+                        {% if my_posts|length > 0 %}
+                        <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">✓ Kazanıldı</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 5 İlan Rozeti -->
+                    <div class="flex flex-col items-center p-4 rounded-lg {% if my_posts|length >= 5 %}bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-2 border-green-300 dark:border-green-700{% else %}bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 opacity-50{% endif %} transition-all">
+                        <span class="material-symbols-outlined text-2xl md:text-4xl mb-2 {% if my_posts|length >= 5 %}text-green-600 dark:text-green-400{% else %}text-gray-400{% endif %}">workspace_premium</span>
+                        <p class="text-xs font-semibold text-center {% if my_posts|length >= 5 %}text-green-900 dark:text-green-300{% else %}text-gray-500{% endif %}">5 İlan</p>
+                        {% if my_posts|length >= 5 %}
+                        <p class="text-xs text-green-600 dark:text-green-400 mt-1">✓ Kazanıldı</p>
+                        {% else %}
+                        <p class="text-xs text-gray-500 mt-1">{{ my_posts|length }}/5</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 10 Başvuru Rozeti -->
+                    <div class="flex flex-col items-center p-4 rounded-lg {% if my_applications|length >= 10 %}bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-2 border-purple-300 dark:border-purple-700{% else %}bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 opacity-50{% endif %} transition-all">
+                        <span class="material-symbols-outlined text-2xl md:text-4xl mb-2 {% if my_applications|length >= 10 %}text-purple-600 dark:text-purple-400{% else %}text-gray-400{% endif %}">send</span>
+                        <p class="text-xs font-semibold text-center {% if my_applications|length >= 10 %}text-purple-900 dark:text-purple-300{% else %}text-gray-500{% endif %}">10 Başvuru</p>
+                        {% if my_applications|length >= 10 %}
+                        <p class="text-xs text-purple-600 dark:text-purple-400 mt-1">✓ Kazanıldı</p>
+                        {% else %}
+                        <p class="text-xs text-gray-500 mt-1">{{ my_applications|length }}/10</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- İlk İş Tamamlama Rozeti -->
+                    <div class="flex flex-col items-center p-4 rounded-lg {% if my_posts|selectattr('status', 'equalto', 'completed')|list|length > 0 %}bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border-2 border-yellow-300 dark:border-yellow-700{% else %}bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 opacity-50{% endif %} transition-all">
+                        <span class="material-symbols-outlined text-2xl md:text-4xl mb-2 {% if my_posts|selectattr('status', 'equalto', 'completed')|list|length > 0 %}text-yellow-600 dark:text-yellow-400{% else %}text-gray-400{% endif %}">check_circle</span>
+                        <p class="text-xs font-semibold text-center {% if my_posts|selectattr('status', 'equalto', 'completed')|list|length > 0 %}text-yellow-900 dark:text-yellow-300{% else %}text-gray-500{% endif %}">İlk İş</p>
+                        {% if my_posts|selectattr('status', 'equalto', 'completed')|list|length > 0 %}
+                        <p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">✓ Tamamlandı</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Erken Kuş Rozeti (sabah 8'den önce ilan) -->
+                    <div class="flex flex-col items-center p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 opacity-50 transition-all">
+                        <span class="material-symbols-outlined text-2xl md:text-4xl mb-2 text-gray-400">light_mode</span>
+                        <p class="text-xs font-semibold text-center text-gray-500">Erken Kuş</p>
+                        <p class="text-xs text-gray-400 mt-1">Yakında</p>
+                    </div>
+                    
+                    <!-- Gece Kuşu Rozeti (gece 22'den sonra ilan) -->
+                    <div class="flex flex-col items-center p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 opacity-50 transition-all">
+                        <span class="material-symbols-outlined text-2xl md:text-4xl mb-2 text-gray-400">dark_mode</span>
+                        <p class="text-xs font-semibold text-center text-gray-500">Gece Kuşu</p>
+                        <p class="text-xs text-gray-400 mt-1">Yakında</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity Timeline -->
+        <div class="px-4 py-3">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">history</span>
+                    Son Aktiviteler
+                </h3>
+                <div class="relative">
+                    <!-- Timeline Line -->
+                    <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+                    
+                    <div class="space-y-6">
+                        {% set recent_activities = [] %}
+                        
+                        {% for post in my_posts[:3] %}
+                            {% set _ = recent_activities.append({
+                                'type': 'post',
+                                'icon': 'add_circle',
+                                'color': 'blue',
+                                'title': 'Yeni ilan oluşturdunuz',
+                                'description': post.title,
+                                'time': post.created_at,
+                                'link': url_for('post_detail', post_id=post.id)
+                            }) %}
+                        {% endfor %}
+                        
+                        {% for app in my_applications[:3] %}
+                            {% set _ = recent_activities.append({
+                                'type': 'application',
+                                'icon': 'send',
+                                'color': 'purple',
+                                'title': 'Başvuru yaptınız',
+                                'description': app.post.title if app.post else 'Bir ilana',
+                                'time': app.created_at,
+                                'link': url_for('post_detail', post_id=app.post_id)
+                            }) %}
+                        {% endfor %}
+                        
+                        {% for app in incoming_applications[:3] %}
+                            {% set _ = recent_activities.append({
+                                'type': 'incoming',
+                                'icon': 'inbox',
+                                'color': 'green',
+                                'title': 'Yeni başvuru aldınız',
+                                'description': app.applicant.full_name + ' başvurdu',
+                                'time': app.created_at,
+                                'link': url_for('applications_received')
+                            }) %}
+                        {% endfor %}
+                        
+                        {% for activity in (recent_activities | sort(attribute='time', reverse=True))[:8] %}
+                        <div class="relative flex items-start gap-4 pl-12">
+                            <div class="absolute left-0 w-8 h-8 rounded-full bg-{{ activity.color }}-100 dark:bg-{{ activity.color }}-900/30 flex items-center justify-center border-2 border-white dark:border-gray-800">
+                                <span class="material-symbols-outlined text-{{ activity.color }}-600 dark:text-{{ activity.color }}-400 text-sm">{{ activity.icon }}</span>
+                            </div>
+                            <div class="flex-1">
+                                <a href="{{ activity.link }}" class="block hover:bg-gray-50 dark:hover:bg-gray-900/50 -m-2 p-2 rounded-lg transition-colors">
+                                    <p class="font-semibold text-gray-900 dark:text-white text-sm">{{ activity.title }}</p>
+                                    <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">{{ activity.description }}</p>
+                                    <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">
+                                        {{ activity.time.strftime('%d %B %Y, %H:%M') }}
+                                    </p>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        {% if not recent_activities %}
+                        <div class="text-center py-4 md:py-8">
+                            <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-700 mb-4">inbox</span>
+                            <p class="text-gray-500 dark:text-gray-400">Henüz aktivite yok</p>
+                            <a href="{{ url_for('create_post') }}" class="inline-block mt-4 text-primary hover:underline">İlk ilanınızı oluşturun</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="px-4 py-3">
+            <div class="bg-gradient-to-br from-primary/10 to-blue-500/10 dark:from-primary/20 dark:to-blue-500/20 rounded-xl p-3 md:p-6 border border-primary/30">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">bolt</span>
+                    Hızlı Eylemler
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <a href="{{ url_for('create_post') }}" class="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200 border border-gray-200 dark:border-gray-700">
+                        <span class="material-symbols-outlined text-primary text-xl md:text-3xl mb-2">add_circle</span>
+                        <span class="text-sm font-semibold text-gray-900 dark:text-white text-center">Yeni İlan</span>
+                    </a>
+                    
+                    <a href="{{ url_for('list_posts') }}" class="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200 border border-gray-200 dark:border-gray-700">
+                        <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-xl md:text-3xl mb-2">search</span>
+                        <span class="text-sm font-semibold text-gray-900 dark:text-white text-center">İlan Ara</span>
+                    </a>
+                    
+                    <a href="{{ url_for('chat') }}" class="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200 border border-gray-200 dark:border-gray-700">
+                        <span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-xl md:text-3xl mb-2">chat</span>
+                        <span class="text-sm font-semibold text-gray-900 dark:text-white text-center">Mesajlar</span>
+                    </a>
+                    
+                    <a href="{{ url_for('map_view') }}" class="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200 border border-gray-200 dark:border-gray-700">
+                        <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-xl md:text-3xl mb-2">map</span>
+                        <span class="text-sm font-semibold text-gray-900 dark:text-white text-center">Harita</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="px-4 py-3">
+            <div class="flex border-b border-gray-200 dark:border-gray-700">
+                <button onclick="showTab('my-posts')" id="tab-my-posts" class="tab-button border-b-2 border-primary text-primary px-4 py-3 font-semibold">
+                    Benim İlanlarım
+                </button>
+                <button onclick="showTab('incoming')" id="tab-incoming" class="tab-button border-b-2 border-transparent text-gray-600 dark:text-gray-400 px-4 py-3 font-semibold hover:text-primary">
+                    Gelen Başvurular
+                </button>
+                <button onclick="showTab('my-applications')" id="tab-my-applications" class="tab-button border-b-2 border-transparent text-gray-600 dark:text-gray-400 px-4 py-3 font-semibold hover:text-primary">
+                    Başvurularım
+                </button>
+            </div>
+        </div>
+        
+        <!-- My Posts Tab -->
+        <div id="content-my-posts" class="tab-content px-4 py-3">
+            {% if my_posts %}
+            <div class="space-y-4">
+                {% for post in my_posts %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ post.title }}</h3>
+                                {% if post.urgency_level == 'urgent' %}
+                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">ACİL</span>
+                                {% endif %}
+                                {% if post.status == 'active' %}
+                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">AKTİF</span>
+                                {% elif post.status == 'assigned' %}
+                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">ATANDI</span>
+                                {% elif post.status == 'completed' %}
+                                <span class="px-2 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">TAMAMLANDI</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-4 mt-3 text-sm text-gray-600 dark:text-gray-400">
+                                <span class="flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-base">location_on</span>
+                                    {{ post.location }}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-base">work</span>
+                                    {{ post.category }}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-base">visibility</span>
+                                    {{ post.views }} görüntüleme
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-base">person</span>
+                                    {{ post.applications_count }} başvuru
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                                <span class="material-symbols-outlined">visibility</span>
+                            </a>
+                            <a href="{{ url_for('edit_post', post_id=post.id) }}" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                <span class="material-symbols-outlined">edit</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <span class="material-symbols-outlined text-gray-400 text-6xl mb-4">post_add</span>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Henüz İlan Oluşturmadınız</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">İlk ilanınızı oluşturun ve başvuruları almaya başlayın</p>
+                <a href="{{ url_for('create_post') }}" class="inline-flex items-center justify-center px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90">
+                    <span class="material-symbols-outlined mr-2">add</span>
+                    İlan Oluştur
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Incoming Applications Tab -->
+        <div id="content-incoming" class="tab-content hidden px-4 py-3">
+            {% if incoming_applications %}
+            <div class="space-y-4">
+                {% for app in incoming_applications %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-6 border border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-900 dark:text-white">{{ app.post.title }}</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ app.applicant.full_name }} - {{ app.applicant.city }}</p>
+                            {% if app.message %}
+                            <p class="text-sm text-gray-700 dark:text-gray-300 mt-3 p-3 bg-gray-50 dark:bg-gray-900 rounded">{{ app.message }}</p>
+                            {% endif %}
+                            {% if app.proposed_price %}
+                            <p class="text-primary font-bold mt-2">Teklif: {{ app.proposed_price }} TL</p>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-2">{{ app.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+                        </div>
+                        
+                        {% if app.status == 'pending' %}
+                        <div class="flex gap-2 ml-4">
+                            <form method="POST" action="{{ url_for('accept_application', app_id=app.id) }}" class="inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="px-4 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors">
+                                    Kabul Et
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('reject_application', app_id=app.id) }}" class="inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="px-4 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors">
+                                    Reddet
+                                </button>
+                            </form>
+                        </div>
+                        {% elif app.status == 'accepted' %}
+                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-600">KABUL EDİLDİ</span>
+                        {% else %}
+                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-600">REDDEDİLDİ</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <span class="material-symbols-outlined text-gray-400 text-6xl mb-4">inbox</span>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Henüz Başvuru Yok</h3>
+                <p class="text-gray-600 dark:text-gray-400">İlanlarınıza başvurular gelmeye başladığında burada görünecek</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- My Applications Tab -->
+        <div id="content-my-applications" class="tab-content hidden px-4 py-3">
+            {% if my_applications %}
+            <div class="space-y-4">
+                {% for app in my_applications %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-6 border border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-900 dark:text-white">{{ app.post.title }}</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ app.post.location }} - {{ app.post.user.full_name }}</p>
+                            {% if app.message %}
+                            <p class="text-sm text-gray-700 dark:text-gray-300 mt-3 p-3 bg-gray-50 dark:bg-gray-900 rounded">{{ app.message }}</p>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-2">{{ app.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+                        </div>
+                        
+                        {% if app.status == 'pending' %}
+                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-yellow-100 text-yellow-600">BEKLİYOR</span>
+                        {% elif app.status == 'accepted' %}
+                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-600">KABUL EDİLDİ</span>
+                        {% else %}
+                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-600">REDDEDİLDİ</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <span class="material-symbols-outlined text-gray-400 text-6xl mb-4">send</span>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Henüz Başvuru Yapmadınız</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">İlanlara göz atın ve ilginizi çeken işlere başvurun</p>
+                <a href="{{ url_for('list_posts') }}" class="inline-flex items-center justify-center px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90">
+                    İlanları İncele
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active state from all tabs
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('border-primary', 'text-primary');
+        button.classList.add('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+    });
+    
+    // Show selected tab content
+    document.getElementById('content-' + tabName).classList.remove('hidden');
+    
+    // Add active state to selected tab
+    const activeTab = document.getElementById('tab-' + tabName);
+    activeTab.classList.remove('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+    activeTab.classList.add('border-primary', 'text-primary');
+}
+</script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Dark mode detection
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    const textColor = isDarkMode ? '#e5e7eb' : '#374151';
+    const gridColor = isDarkMode ? '#374151' : '#e5e7eb';
+    
+    // Applications Trend Chart
+    const applicationsCtx = document.getElementById('applicationsChart').getContext('2d');
+    new Chart(applicationsCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_months|tojson }},
+            datasets: [{
+                label: 'Gelen Başvurular',
+                data: {{ chart_incoming|tojson }},
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Yaptığım Başvurular',
+                data: {{ chart_outgoing|tojson }},
+                borderColor: 'rgb(168, 85, 247)',
+                backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        color: textColor,
+                        font: {
+                            family: 'Manrope',
+                            size: 12
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: textColor,
+                        stepSize: 1
+                    },
+                    grid: {
+                        color: gridColor
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: textColor
+                    },
+                    grid: {
+                        color: gridColor
+                    }
+                }
+            }
+        }
+    });
+    
+    // Categories Distribution Chart (for carousel)
+    const categoriesCarouselCtx = document.getElementById('categoriesChartCarousel').getContext('2d');
+    new Chart(categoriesCarouselCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ category_labels|tojson }},
+            datasets: [{
+                data: {{ category_counts|tojson }},
+                backgroundColor: [
+                    'rgb(59, 130, 246)',
+                    'rgb(168, 85, 247)',
+                    'rgb(34, 197, 94)',
+                    'rgb(251, 146, 60)',
+                    'rgb(239, 68, 68)',
+                    'rgb(236, 72, 153)',
+                    'rgb(14, 165, 233)'
+                ],
+                borderWidth: 2,
+                borderColor: isDarkMode ? '#1f2937' : '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        color: textColor,
+                        font: {
+                            family: 'Manrope',
+                            size: 11
+                        },
+                        padding: 10
+                    }
+                }
+            }
+        }
+    });
+    
+    // Carousel Functionality
+    let currentSlide = 0;
+    const totalSlides = 4;
+    const carousel = document.getElementById('statsCarousel');
+    const indicators = document.querySelectorAll('.carousel-indicator');
+    
+    function updateCarousel() {
+        const offset = -currentSlide * 100;
+        carousel.style.transform = `translateX(${offset}%)`;
+        
+        // Update indicators
+        indicators.forEach((indicator, index) => {
+            if (index === currentSlide) {
+                indicator.classList.add('bg-white');
+                indicator.classList.remove('bg-white/50');
+            } else {
+                indicator.classList.add('bg-white/50');
+                indicator.classList.remove('bg-white');
+            }
+        });
+    }
+    
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        updateCarousel();
+    }
+    
+    function goToSlide(index) {
+        currentSlide = index;
+        updateCarousel();
+    }
+    
+    // Auto-advance carousel every 4 seconds
+    let carouselInterval = setInterval(nextSlide, 4000);
+    
+    // Pause on hover
+    const carouselContainer = carousel.parentElement;
+    carouselContainer.addEventListener('mouseenter', () => {
+        clearInterval(carouselInterval);
+    });
+    
+    carouselContainer.addEventListener('mouseleave', () => {
+        carouselInterval = setInterval(nextSlide, 4000);
+    });
+    
+    // Initialize
+    updateCarousel();
+</script>
+{% endblock %}
+
+

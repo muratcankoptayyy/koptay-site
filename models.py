@@ -102,6 +102,11 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_active = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # 📱 MOBILE API TOKEN - Persistent authentication for mobile apps
+    api_token = db.Column(db.String(64), unique=True, index=True)  # Unique token for mobile auth
+    api_token_created_at = db.Column(db.DateTime)  # Token creation time
+    api_token_last_used = db.Column(db.DateTime)  # Last time token was used
+    
     # Relationships
     posts = db.relationship('TevkilPost', backref='user', lazy='dynamic', foreign_keys='TevkilPost.user_id')
     applications = db.relationship('Application', backref='applicant', lazy='dynamic', foreign_keys='Application.applicant_id')
@@ -130,6 +135,27 @@ class User(UserMixin, db.Model):
     
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def generate_api_token(self):
+        """Generate a unique API token for mobile authentication"""
+        import secrets
+        self.api_token = secrets.token_urlsafe(48)  # 64 characters base64url
+        self.api_token_created_at = datetime.utcnow()
+        self.api_token_last_used = datetime.utcnow()
+        return self.api_token
+    
+    def verify_api_token(self, token):
+        """Verify API token and update last used timestamp"""
+        if self.api_token and self.api_token == token:
+            self.api_token_last_used = datetime.utcnow()
+            return True
+        return False
+    
+    def revoke_api_token(self):
+        """Revoke API token (for logout)"""
+        self.api_token = None
+        self.api_token_created_at = None
+        self.api_token_last_used = None
     
     def __repr__(self):
         return f'<User {self.email}>'
@@ -620,7 +646,7 @@ class PasswordHistory(db.Model):
 
 
 class LoginAttempt(db.Model):
-    """Login denemeleri takibi (rate limiting için)"""
+    """Track login attempts for security monitoring"""
     __tablename__ = 'login_attempts'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -637,3 +663,43 @@ class LoginAttempt(db.Model):
     
     def __repr__(self):
         return f'<LoginAttempt {self.email} - {"Success" if self.success else "Failed"}>'
+
+class Report(db.Model):
+    """User reports for spam, inappropriate content, or abuse"""
+    __tablename__ = 'reports'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Reporter
+    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    reporter = db.relationship('User', foreign_keys=[reporter_id], backref='reports_made')
+    
+    # Reported
+    reported_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    reported_post_id = db.Column(db.Integer, db.ForeignKey('tevkil_posts.id'), index=True)
+    reported_message_id = db.Column(db.Integer, db.ForeignKey('messages.id'), index=True)
+    
+    reported_user = db.relationship('User', foreign_keys=[reported_user_id], backref='reports_received')
+    reported_post = db.relationship('TevkilPost', backref='reports')
+    reported_message = db.relationship('Message', backref='reports')
+    
+    # Report Details
+    report_type = db.Column(db.String(50), nullable=False)  # 'spam', 'inappropriate', 'abuse', 'fake', 'other'
+    description = db.Column(db.Text)
+    
+    # Status
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'reviewed', 'resolved', 'dismissed'
+    admin_note = db.Column(db.Text)  # Admin açıklaması
+    
+    # Action Taken
+    action_taken = db.Column(db.String(50))  # 'none', 'warning', 'content_removed', 'user_banned'
+    actioned_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    actioned_by = db.relationship('User', foreign_keys=[actioned_by_id])
+    actioned_at = db.Column(db.DateTime)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    def __repr__(self):
+        return f'<Report {self.id} - {self.report_type} by User {self.reporter_id}>'

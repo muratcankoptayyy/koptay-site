@@ -5,12 +5,12 @@
 {% block content %}
 <div class="w-full max-w-full mx-4 sm:max-w-md mx-auto bg-white dark:bg-background-dark flex flex-col flex-1 pb-24">
     <!-- Sticky Header -->
-    <header class="sticky top-0 z-10 flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 dark:border-gray-700 px-4 py-3 bg-white dark:bg-background-dark">
+    <header class="sticky top-0 z-10 flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-300 dark:border-gray-700 px-4 py-3 bg-white dark:bg-background-dark">
         <div class="flex items-center gap-2 text-gray-900 dark:text-white">
-            <span class="material-symbols-outlined text-primary text-xl md:text-3xl">gavel</span>
+            <span class="material-symbols-outlined text-gray-900 text-xl md:text-3xl">gavel</span>
             <h1 class="text-xl font-bold leading-tight tracking-tighter">Ulusal Tevkil Ağı Projesi</h1>
         </div>
-        <a href="{{ url_for('create_post') }}" class="flex min-w-[36px] max-w-[36px] h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]">
+        <a href="{{ url_for('create_post') }}" class="flex min-w-[36px] max-w-[36px] h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-gray-900 text-white text-sm font-bold leading-normal tracking-[0.015em]">
             <span class="material-symbols-outlined">add</span>
         </a>
     </header>
@@ -19,18 +19,18 @@
     <form method="GET" action="{{ url_for('list_posts') }}" class="px-4 py-3 space-y-3 sticky top-[65px] z-10 bg-white dark:bg-background-dark">
         <div class="relative">
             <label class="flex flex-col min-w-40 h-12 w-full">
-                <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
-                    <div class="text-gray-500 dark:text-gray-400 flex border-none bg-background-light dark:bg-gray-800 items-center justify-center pl-4 rounded-l-lg border-r-0">
+                <div class="flex w-full flex-1 items-stretch h-full">
+                    <div class="text-gray-500 dark:text-gray-400 flex border-none bg-background-light dark:bg-gray-800 items-center justify-center pl-4 -l-lg border-r-0">
                         <span class="material-symbols-outlined">search</span>
                     </div>
-                    <input name="search" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-0 border-none bg-background-light dark:bg-gray-800 focus:border-none h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 pl-2 text-base font-normal leading-normal" placeholder="Şehir, adliye veya anahtar kelime ara..." value="{{ request.args.get('search', '') }}"/>
+                    <input name="search" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden -r-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-0 border-none bg-background-light dark:bg-gray-800 focus:border-none h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 pl-2 text-base font-normal leading-normal" placeholder="Şehir, adliye veya anahtar kelime ara..." value="{{ request.args.get('search', '') }}"/>
                 </div>
             </label>
         </div>
         
         <div class="flex gap-3 overflow-x-auto pb-2">
             <!-- Şehir Filtresi -->
-            <select name="city" class="flex h-8 shrink-0 items-center rounded-lg bg-background-light dark:bg-gray-800 px-3 text-gray-800 dark:text-gray-300 text-sm font-medium border-none" onchange="this.form.submit()">
+            <select name="city" class="flex h-8 shrink-0 items-center bg-background-light dark:bg-gray-800 px-3 text-gray-800 dark:text-gray-300 text-sm font-medium border-none" onchange="this.form.submit()">
                 <option value="">Tüm Şehirler</option>
                 <option value="İstanbul" {% if request.args.get('city') == 'İstanbul' %}selected{% endif %}>İstanbul</option>
                 <option value="Ankara" {% if request.args.get('city') == 'Ankara' %}selected{% endif %}>Ankara</option>
@@ -40,7 +40,7 @@
             </select>
             
             <!-- Kategori Filtresi -->
-            <select name="category" class="flex h-8 shrink-0 items-center rounded-lg bg-background-light dark:bg-gray-800 px-3 text-gray-800 dark:text-gray-300 text-sm font-medium border-none" onchange="this.form.submit()">
+            <select name="category" class="flex h-8 shrink-0 items-center bg-background-light dark:bg-gray-800 px-3 text-gray-800 dark:text-gray-300 text-sm font-medium border-none" onchange="this.form.submit()">
                 <option value="">Tüm Kategoriler</option>
                 <option value="durusma" {% if request.args.get('category') == 'durusma' %}selected{% endif %}>Duruşma</option>
                 <option value="kesif" {% if request.args.get('category') == 'kesif' %}selected{% endif %}>Keşif</option>
@@ -52,7 +52,7 @@
             </select>
             
             <!-- Aciliyet Filtresi -->
-            <select name="urgency" class="flex h-8 shrink-0 items-center rounded-lg bg-background-light dark:bg-gray-800 px-3 text-gray-800 dark:text-gray-300 text-sm font-medium border-none" onchange="this.form.submit()">
+            <select name="urgency" class="flex h-8 shrink-0 items-center bg-background-light dark:bg-gray-800 px-3 text-gray-800 dark:text-gray-300 text-sm font-medium border-none" onchange="this.form.submit()">
                 <option value="">Tüm Aciliyetler</option>
                 <option value="very_urgent" {% if request.args.get('urgency') == 'very_urgent' %}selected{% endif %}>Çok Acil</option>
                 <option value="urgent" {% if request.args.get('urgency') == 'urgent' %}selected{% endif %}>Acil</option>
@@ -60,7 +60,7 @@
             </select>
             
             {% if request.args.get('search') or request.args.get('city') or request.args.get('category') or request.args.get('urgency') %}
-            <a href="{{ url_for('list_posts') }}" class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-red-100 dark:bg-red-900/30 px-3">
+            <a href="{{ url_for('list_posts') }}" class="flex h-8 shrink-0 items-center justify-center gap-x-2 bg-red-100 dark:bg-red-900/30 px-3">
                 <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-base">close</span>
                 <p class="text-red-600 dark:text-red-400 text-sm font-medium leading-normal">Temizle</p>
             </a>
@@ -73,11 +73,11 @@
         {% if posts %}
             {% for post in posts %}
             <div class="p-2">
-                <div class="flex flex-col items-stretch justify-start rounded-xl shadow-sm bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                <div class="flex flex-col items-stretch justify-start bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
                     <div class="flex w-full grow flex-col items-stretch justify-center gap-2 p-4">
                         <div class="flex justify-between items-center">
                             {% if post.urgency_level == 'urgent' %}
-                            <p class="text-red-500 dark:text-red-400 text-xs font-bold uppercase tracking-wider bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded">ACİL</p>
+                            <p class="text-red-500 dark:text-red-400 text-xs font-bold uppercase tracking-wider bg-red-100 dark:bg-red-900/30 px-2 py-1">ACİL</p>
                             {% else %}
                             <div></div>
                             {% endif %}
@@ -124,7 +124,7 @@
                                 </span>
                             </div>
                             
-                            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90">
+                            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden h-10 px-4 bg-gray-900 text-white text-sm font-bold hover:bg-gray-900/90">
                                 {% if post.price_max %}
                                 <span class="truncate">{{ post.price_max }} TL</span>
                                 {% else %}
@@ -142,7 +142,7 @@
                 <span class="material-symbols-outlined text-gray-400 text-6xl mb-4">post_add</span>
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Henüz İlan Yok</h3>
                 <p class="text-gray-600 dark:text-gray-400 mb-4">İlk ilanı siz oluşturun!</p>
-                <a href="{{ url_for('create_post') }}" class="inline-flex items-center justify-center px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90">
+                <a href="{{ url_for('create_post') }}" class="inline-flex items-center justify-center px-6 py-3 bg-gray-900 text-white font-semibold hover:bg-gray-900/90">
                     <span class="material-symbols-outlined mr-2">add</span>
                     Yeni İlan Oluştur
                 </a>
@@ -152,15 +152,15 @@
         <!-- Loading Skeleton (for demonstration) -->
         {% if posts|length > 0 %}
         <div class="p-2 animate-pulse">
-            <div class="flex flex-col items-stretch justify-start rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div class="flex flex-col items-stretch justify-start bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
                 <div class="flex w-full grow flex-col items-stretch justify-center gap-3 p-4">
-                    <div class="h-5 bg-gray-300 dark:bg-gray-700 rounded w-3/4"></div>
+                    <div class="h-5 bg-gray-300 dark:bg-gray-700 w-3/4"></div>
                     <div class="space-y-2 mt-2">
-                        <div class="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/2"></div>
-                        <div class="h-4 bg-gray-300 dark:bg-gray-700 rounded w-2/3"></div>
+                        <div class="h-4 bg-gray-300 dark:bg-gray-700 w-1/2"></div>
+                        <div class="h-4 bg-gray-300 dark:bg-gray-700 w-2/3"></div>
                     </div>
                     <div class="flex items-center justify-end mt-3">
-                        <div class="h-10 w-24 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
+                        <div class="h-10 w-24 bg-gray-300 dark:bg-gray-700"></div>
                     </div>
                 </div>
             </div>
@@ -202,20 +202,20 @@
     </script>
     
     <!-- Bottom Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 w-full max-w-full mx-4 sm:max-w-md mx-auto h-14 md:h-16 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center">
-        <a class="flex flex-col items-center justify-center text-primary dark:text-primary" href="{{ url_for('list_posts') }}">
+    <nav class="fixed bottom-0 left-0 right-0 w-full max-w-full mx-4 sm:max-w-md mx-auto h-14 md:h-16 bg-white dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 flex justify-around items-center">
+        <a class="flex flex-col items-center justify-center text-gray-900 dark:text-gray-900" href="{{ url_for('list_posts') }}">
             <span class="material-symbols-outlined text-lg md:text-2xl">list_alt</span>
             <span class="text-xs font-medium">İlanlar</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors" href="{{ url_for('dashboard') }}">
+        <a class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-900 transition-colors" href="{{ url_for('dashboard') }}">
             <span class="material-symbols-outlined text-lg md:text-2xl">dashboard</span>
             <span class="text-xs">Başvurularım</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+        <a class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-900 transition-colors" href="#">
             <span class="material-symbols-outlined text-lg md:text-2xl">chat_bubble</span>
             <span class="text-xs">Mesajlar</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors" href="{{ url_for('user_profile', user_id=current_user.id) if current_user.is_authenticated else url_for('login') }}">
+        <a class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-900 transition-colors" href="{{ url_for('user_profile', user_id=current_user.id) if current_user.is_authenticated else url_for('login') }}">
             <span class="material-symbols-outlined text-lg md:text-2xl">person</span>
             <span class="text-xs">Profilim</span>
         </a>

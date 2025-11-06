@@ -3,13 +3,13 @@
 {% block title %}Mesajlar - Ulusal Tevkil Ağı Projesi{% endblock %}
 
 {% block content %}
-<div class="layout-content-container flex flex-col max-w-6xl mx-auto flex-1">
-    <div class="flex flex-wrap justify-between gap-3 p-4">
-        <div class="flex items-center gap-4">
-            <span class="material-symbols-outlined text-primary text-2xl md:text-4xl">mail</span>
-            <div>
-                <p class="text-gray-900 dark:text-white tracking-light text-[32px] font-bold leading-tight">Mesajlar</p>
-                <p class="text-gray-600 dark:text-gray-300 text-sm font-normal leading-normal">
+<div class="layout-content-container flex flex-col w-full max-w-6xl mx-auto flex-1 px-3 sm:px-4">
+    <div class="flex flex-wrap justify-between gap-3 p-3 sm:p-4">
+        <div class="flex items-center gap-3 sm:gap-4 min-w-0 overflow-hidden">
+            <span class="material-symbols-outlined text-gray-900 text-2xl sm:text-3xl md:text-4xl flex-shrink-0">mail</span>
+            <div class="min-w-0 overflow-hidden">
+                <p class="text-gray-900 dark:text-white tracking-light text-xl sm:text-2xl md:text-[32px] font-bold leading-tight truncate">Mesajlar</p>
+                <p class="text-gray-600 dark:text-gray-300 text-xs sm:text-sm font-normal leading-normal truncate">
                     {% if unread_count > 0 %}
                     <span class="text-red-600 dark:text-red-400 font-bold">{{ unread_count }} okunmamış mesaj</span>
                     {% else %}
@@ -21,58 +21,59 @@
     </div>
     
     <!-- Tabs -->
-    <div class="border-b border-gray-200 dark:border-gray-700 px-4">
-        <div class="flex gap-4 md:gap-8">
-            <button onclick="switchTab('received')" id="tab-received" class="tab-button py-3 px-1 border-b-2 border-primary text-primary font-semibold w-full sm:w-auto">
+    <div class="border-b border-gray-300 dark:border-gray-700 px-3 sm:px-4 overflow-x-auto">
+        <div class="flex gap-3 sm:gap-4 md:gap-8 min-w-max">
+            <button onclick="switchTab('received')" id="tab-received" class="tab-button py-2 sm:py-3 px-1 border-b-2 border-primary text-gray-900 font-semibold text-sm sm:text-base whitespace-nowrap">
                 Gelen Kutusu ({{ received|length }})
             </button>
-            <button onclick="switchTab('sent')" id="tab-sent" class="tab-button py-3 px-1 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-semibold w-full sm:w-auto">
+            <button onclick="switchTab('sent')" id="tab-sent" class="tab-button py-2 sm:py-3 px-1 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-semibold text-sm sm:text-base whitespace-nowrap">
                 Gönderilmiş ({{ sent|length }})
             </button>
         </div>
     </div>
     
     <!-- Received Messages -->
-    <div id="content-received" class="tab-content p-4">
+    <div id="content-received" class="tab-content p-3 sm:p-4">
         {% if received %}
             <div class="space-y-3">
                 {% for msg in received %}
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 {% if not msg.read_at %}border-l-4 border-l-primary{% endif %}">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 border border-gray-300 dark:border-gray-700 {% if not msg.read_at %}border-l-4 border-l-primary{% endif %}">
+                    <div class="flex justify-between items-start mb-3 gap-3">
+                        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center text-white font-bold text-sm sm:text-base flex-shrink-0">
                                 {{ msg.sender.full_name[0] }}
                             </div>
-                            <div>
-                                <p class="font-semibold text-gray-900 dark:text-white">{{ msg.sender.full_name }}</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ msg.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+                            <div class="min-w-0 overflow-hidden">
+                                <p class="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate">{{ msg.sender.full_name }}</p>
+                                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{{ msg.created_at.strftime('%d %b %Y, %H:%M') }}</p>
                             </div>
                         </div>
                         {% if not msg.read_at %}
-                        <span class="px-2 py-1 text-xs font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded-full">YENİ</span>
+                        <span class="px-2 py-1 text-xs font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded-full flex-shrink-0">YENİ</span>
                         {% endif %}
                     </div>
                     
                     {% if msg.post_id %}
-                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-3">
-                        <p class="text-sm text-blue-600 dark:text-blue-400 font-medium mb-1">İlan Hakkında:</p>
-                        <a href="{{ url_for('post_detail', post_id=msg.post_id) }}" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-2 sm:p-3 mb-3">
+                        <p class="text-xs sm:text-sm text-gray-900 dark:text-blue-400 font-medium mb-1">İlan Hakkında:</p>
+                        <a href="{{ url_for('post_detail', post_id=msg.post_id) }}" class="text-xs sm:text-sm text-gray-900 dark:text-blue-400 hover:underline font-medium break-words">
                             {{ msg.post.title if msg.post else 'İlan' }}
                         </a>
                     </div>
                     {% endif %}
                     
-                    <p class="text-gray-700 dark:text-gray-300 mb-4">{{ msg.message }}</p>
+                    <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-3 sm:mb-4 break-words">{{ msg.message }}</p>
                     
-                    <div class="flex gap-2">
-                        <a href="{{ url_for('send_message', receiver_id=msg.sender_id, post_id=msg.post_id if msg.post_id else '') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-blue-600 transition-colors text-sm font-medium">
-                            <span class="material-symbols-outlined text-lg">reply</span>
-                            Yanıtla
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ url_for('send_message', receiver_id=msg.sender_id, post_id=msg.post_id if msg.post_id else '') }}" class="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-gray-900 text-white hover:bg-gray-900 transition-colors text-xs sm:text-sm font-medium">
+                            <span class="material-symbols-outlined text-base sm:text-lg">reply</span>
+                            <span>Yanıtla</span>
                         </a>
                         {% if msg.post_id %}
-                        <a href="{{ url_for('post_detail', post_id=msg.post_id) }}" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium">
-                            <span class="material-symbols-outlined text-lg">open_in_new</span>
-                            İlana Git
+                        <a href="{{ url_for('post_detail', post_id=msg.post_id) }}" class="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-xs sm:text-sm font-medium">
+                            <span class="material-symbols-outlined text-base sm:text-lg">open_in_new</span>
+                            <span class="hidden sm:inline">İlana Git</span>
+                            <span class="sm:hidden">İlan</span>
                         </a>
                         {% endif %}
                     </div>
@@ -80,53 +81,53 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="text-center py-12">
-                <span class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-6xl mb-4">inbox</span>
-                <p class="text-gray-500 dark:text-gray-400 text-lg">Henüz gelen mesajınız yok</p>
+            <div class="text-center py-8 sm:py-12">
+                <span class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-5xl sm:text-6xl mb-4">inbox</span>
+                <p class="text-gray-500 dark:text-gray-400 text-base sm:text-lg">Henüz gelen mesajınız yok</p>
             </div>
         {% endif %}
     </div>
     
     <!-- Sent Messages -->
-    <div id="content-sent" class="tab-content hidden p-4">
+    <div id="content-sent" class="tab-content hidden p-3 sm:p-4">
         {% if sent %}
             <div class="space-y-3">
                 {% for msg in sent %}
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center text-white font-bold">
+                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 border border-gray-300 dark:border-gray-700">
+                    <div class="flex justify-between items-start mb-3 gap-3">
+                        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center text-white font-bold text-sm sm:text-base flex-shrink-0">
                                 {{ msg.receiver.full_name[0] }}
                             </div>
-                            <div>
-                                <p class="font-semibold text-gray-900 dark:text-white">{{ msg.receiver.full_name }}</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ msg.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+                            <div class="min-w-0 overflow-hidden">
+                                <p class="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate">{{ msg.receiver.full_name }}</p>
+                                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{{ msg.created_at.strftime('%d %b %Y, %H:%M') }}</p>
                             </div>
                         </div>
                         {% if msg.read_at %}
-                        <span class="px-2 py-1 text-xs font-bold bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 rounded-full">OKUNDU</span>
+                        <span class="px-2 py-1 text-xs font-bold bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 rounded-full flex-shrink-0">OKUNDU</span>
                         {% else %}
-                        <span class="px-2 py-1 text-xs font-bold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded-full">GÖNDERİLDİ</span>
+                        <span class="px-2 py-1 text-xs font-bold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded-full flex-shrink-0">GÖNDERİLDİ</span>
                         {% endif %}
                     </div>
                     
                     {% if msg.post_id %}
-                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-3">
-                        <p class="text-sm text-blue-600 dark:text-blue-400 font-medium mb-1">İlan Hakkında:</p>
-                        <a href="{{ url_for('post_detail', post_id=msg.post_id) }}" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-2 sm:p-3 mb-3">
+                        <p class="text-xs sm:text-sm text-gray-900 dark:text-blue-400 font-medium mb-1">İlan Hakkında:</p>
+                        <a href="{{ url_for('post_detail', post_id=msg.post_id) }}" class="text-xs sm:text-sm text-gray-900 dark:text-blue-400 hover:underline font-medium break-words">
                             {{ msg.post.title if msg.post else 'İlan' }}
                         </a>
                     </div>
                     {% endif %}
                     
-                    <p class="text-gray-700 dark:text-gray-300">{{ msg.message }}</p>
+                    <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300 break-words">{{ msg.message }}</p>
                 </div>
                 {% endfor %}
             </div>
         {% else %}
-            <div class="text-center py-12">
-                <span class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-6xl mb-4">send</span>
-                <p class="text-gray-500 dark:text-gray-400 text-lg">Henüz mesaj göndermediniz</p>
+            <div class="text-center py-8 sm:py-12">
+                <span class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-5xl sm:text-6xl mb-4">send</span>
+                <p class="text-gray-500 dark:text-gray-400 text-base sm:text-lg">Henüz mesaj göndermediniz</p>
             </div>
         {% endif %}
     </div>

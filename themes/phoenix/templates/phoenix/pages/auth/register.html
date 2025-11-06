@@ -1,0 +1,70 @@
+{% extends 'phoenix/layouts/base.html' %}
+{% block title %}Kayıt Ol - Tevkil Phoenix{% endblock %}
+{% block content %}
+<section class="bg-slate-900 py-20 text-white">
+    <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div class="grid gap-10 lg:grid-cols-[1.2fr,1fr]">
+            <div class="space-y-6">
+                <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-200">Yeni nesil kayıt</span>
+                <h1 class="font-heading text-4xl leading-tight">Tevkil ağının parçası ol, işleri dakikalar içinde devret.</h1>
+                <p class="text-lg text-brand-100/90">Baro doğrulaması, uzmanlık etiketleri ve güven puanı ile doğru avukat profillerine eriş.</p>
+                <div class="flex flex-wrap gap-4 text-sm text-brand-100/80">
+                    <span class="rounded-full border border-white/20 px-4 py-2">81 ilde kayıtlı avukat</span>
+                    <span class="rounded-full border border-white/20 px-4 py-2">Yetki belgesi otomasyonu</span>
+                    <span class="rounded-full border border-white/20 px-4 py-2">7/24 bildirimler</span>
+                </div>
+            </div>
+            <div class="rounded-3xl bg-white/95 p-8 text-slate-900 shadow-2xl backdrop-blur dark:bg-slate-950/95 dark:text-slate-50">
+                <form class="space-y-5">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Ad Soyad</label>
+                            <input type="text" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-900">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Baro</label>
+                            <select class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-900">
+                                <option>İstanbul Barosu</option>
+                                <option>Ankara Barosu</option>
+                                <option>İzmir Barosu</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">E-posta</label>
+                            <input type="text" inputmode="email" autocomplete="email" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-900">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Telefon</label>
+                            <input type="tel" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-900">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Şifre</label>
+                            <input type="password" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-900">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Şifre Tekrar</label>
+                            <input type="password" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-900">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Uzmanlık Alanların</label>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            {% set tags = ['İcra ve İflas', 'Ceza Hukuku', 'İş Hukuku', 'Sigorta', 'Vergi'] %}
+                            {% for tag in tags %}
+                                <button type="button" class="rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-xs font-semibold text-brand-600 transition hover:bg-brand-100">
+                                    {{ tag }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="rounded-2xl bg-slate-100/80 px-5 py-4 text-xs text-slate-500 dark:bg-slate-800/80 dark:text-slate-400">
+                        <p class="flex items-center gap-2"><span class="material-symbols-rounded text-brand-500">verified_user</span>Baro üyeliğin 24 saat içinde doğrulanacak. KVKK kapsamındaki verileriniz güvende.</p>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full py-3 text-base">Kayıt işlemini tamamla</button>
+                </form>
+                <p class="mt-4 text-center text-xs text-slate-400">Kaydolarak <a href="{{ url_for('phoenix.policy_terms') }}" class="text-brand-500 underline">kullanım koşullarını</a> kabul etmiş olursun.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

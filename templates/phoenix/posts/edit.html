@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}İlan Düzenle - Ulusal Tevkil Ağı{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<style>
+    .material-symbols-rounded {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-brand-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+            <div class="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 p-8">
+                <div class="flex items-center gap-4">
+                    <div class="rounded-2xl bg-white/20 p-4 backdrop-blur-sm">
+                        <span class="material-symbols-rounded text-4xl text-white">edit_note</span>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white lg:text-4xl">İlan Düzenle</h1>
+                        <p class="mt-2 text-amber-100">İlan bilgilerinizi güncelleyin</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form method="POST" 
+              class="space-y-6" 
+              data-category-abbreviations='{{ category_abbreviations|tojson|safe }}' 
+              data-selected-city="{{ post.city or '' }}" 
+              data-selected-courthouse="{{ post.courthouse or '' }}" 
+              data-selected-district="{{ post.district or '' }}" 
+              data-selected-location="{{ post.location or '' }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <!-- Basic Info Card -->
+            <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+                <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white p-6 dark:border-slate-800 dark:from-slate-900 dark:to-slate-900/50">
+                    <h2 class="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+                        <span class="material-symbols-rounded text-2xl text-brand-600 dark:text-brand-400">info</span>
+                        Temel Bilgiler
+                    </h2>
+                </div>
+                <div class="p-6 space-y-6">
+                    <!-- Otomatik İlan Başlığı -->
+                    <label class="flex flex-col">
+                        <span class="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-200">
+                            <span class="material-symbols-rounded text-base text-indigo-600">title</span>
+                            İlan Başlığı
+                        </span>
+                        <input type="text" 
+                               id="title_display" 
+                               readonly 
+                               class="form-input w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400" 
+                               value="{{ post.title }}"/>
+                        <input type="hidden" name="title" id="title" value="{{ post.title }}">
+                        <span class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                            <span class="material-symbols-rounded text-xs">info</span>
+                            Başlık görev yeri ve görev türü kısaltmasına göre otomatik güncellenir.
+                        </span>
+                    </label>
+                    
+                    <div class="grid gap-6 md:grid-cols-2">
+                        <!-- Görev Türü -->
+                        <label class="flex flex-col">
+                            <span class="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-200">
+                                <span class="material-symbols-rounded text-base text-brand-600">category</span>
+                                Görev Türü
+                            </span>
+                            <select name="category" 
+                                    required 
+                                    class="form-select w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
+                                <option value="" disabled {% if not post.category %}selected{% endif %}>Görev Seçiniz</option>
+                                {% if post.category and post.category not in category_definitions %}
+                                    <option value="{{ post.category }}" selected>{{ post.category|replace('_', ' ')|title }}</option>
+                                {% endif %}
+                                {% for value, label in task_category_options %}
+                                    <option value="{{ value }}" {% if post.category == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        
+                        <!-- Aciliyet Durumu -->
+                        <label class="flex flex-col">
+                            <span class="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-200">
+                                <span class="material-symbols-rounded text-base text-rose-600">priority_high</span>
+                                Aciliyet Durumu
+                            </span>
+                            <select name="urgency_level" 
+                                    required 
+                                    class="form-select w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
+                                <option value="normal" {% if post.urgency_level == 'normal' %}selected{% endif %}>Normal</option>
+                                <option value="urgent" {% if post.urgency_level == 'urgent' %}selected{% endif %}>Acil</option>
+                                <option value="very_urgent" {% if post.urgency_level == 'very_urgent' %}selected{% endif %}>Çok Acil</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Card -->
+            <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+                <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white p-6 dark:border-slate-800 dark:from-slate-900 dark:to-slate-900/50">
+                    <h2 class="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+                        <span class="material-symbols-rounded text-2xl text-brand-600 dark:text-brand-400">location_on</span>
+                        Konum Bilgileri
+                    </h2>
+                </div>
+                <div class="p-6 space-y-6">
+                    <div class="grid gap-6 md:grid-cols-2">
+                        <!-- Şehir -->
+                        <label class="flex flex-col">
+                            <span class="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-200">
+                                <span class="material-symbols-rounded text-base text-brand-600">location_city</span>
+                                İl
+                            </span>
+                            <select name="city" 
+                                    id="city" 
+                                    required 
+                                    class="form-select w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
+                                <option value="">İl Seçiniz</option>
+                                {% for city in cities %}
+                                    <option value="{{ city }}" {% if post.city == city %}selected{% endif %}>{{ city }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        
+                        <!-- Adliye -->
+                        <label class="flex flex-col">
+                            <span class="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-200">
+                                <span class="material-symbols-rounded text-base text-indigo-600">account_balance</span>
+                                Adliye
+                            </span>
+                            {% set selected_city_courthouses = courthouses.get(post.city, []) %}
+                            <select name="courthouse" 
+                                    id="courthouse" 
+                                    class="form-select w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
+                                <option value="">Adliye Seçiniz</option>
+                                {% if selected_city_courthouses %}
+                                    {% for courthouse in selected_city_courthouses %}
+                                        <option value="{{ courthouse }}" {% if post.courthouse == courthouse %}selected{% endif %}>{{ courthouse }}</option>
+                                    {% endfor %}
+                                {% elif post.courthouse %}
+                                    <option value="{{ post.courthouse }}" selected>{{ post.courthouse }}</option>
+                                {% endif %}
+                            </select>
+                        </label>
+                    </div>
+                    
+                    <!-- Hidden fields for backward compatibility -->
+                    <input type="hidden" name="location" id="location" value="{{ post.location or '' }}">
+                    <input type="hidden" name="district" id="district" value="{{ post.district or '' }}">
+                </div>
+            </div>
+
+            <!-- Date & Time Card -->
+            <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+                <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white p-6 dark:border-slate-800 dark:from-slate-900 dark:to-slate-900/50">
+                    <h2 class="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+                        <span class="material-symbols-rounded text-2xl text-brand-600 dark:text-brand-400">schedule</span>
+                        Tarih ve Saat
+                    </h2>
+                </div>
+                <div class="p-6 space-y-6">
+                    <div class="grid gap-6 md:grid-cols-2">
+                        <!-- Görev Tarihi -->
+                        <label class="flex flex-col">
+                            <span class="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-200">
+                                <span class="material-symbols-rounded text-base text-amber-600">event</span>
+                                Görev Tarihi
+                            </span>
+                            <input name="task_date" 
+                                   type="date" 
+                                   required 
+                                   value="{{ post.court_date.strftime('%Y-%m-%d') if post.court_date else '' }}"
+                                   class="form-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200"/>
+                        </label>
+
+                        <!-- Görev Saati -->
+                        <label class="flex flex-col">
+                            <span class="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-200">
+                                <span class="material-symbols-rounded text-base text-amber-600">access_time</span>
+                                Görev Saati
+                            </span>
+                            <input name="task_time" 
+                                   type="time" 
+                                   required 
+                                   value="{{ post.court_date.strftime('%H:%M') if post.court_date else '' }}"
+                                   class="form-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200"/>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price & Options Card -->
+            <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+                <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white p-6 dark:border-slate-800 dark:from-slate-900 dark:to-slate-900/50">
+                    <h2 class="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+                        <span class="material-symbols-rounded text-2xl text-brand-600 dark:text-brand-400">payments</span>
+                        Ücret ve Seçenekler
+                    </h2>
+                </div>
+                <div class="p-6 space-y-6">
+                    <!-- Teklif Edilen Ücret -->
+                    <label class="flex flex-col">
+                        <span class="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-200">
+                            <span class="material-symbols-rounded text-base text-emerald-600">monetization_on</span>
+                            Ücret (TL)
+                        </span>
+                        <div class="relative flex w-full items-center">
+                            <input name="price" 
+                                   type="number" 
+                                   min="0" 
+                                   step="100" 
+                                   value="{{ post.price_min or '' }}"
+                                   class="form-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-slate-900 shadow-sm transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200" 
+                                   placeholder="0"/>
+                            <span class="absolute right-4 text-lg font-bold text-emerald-600 dark:text-emerald-400">₺</span>
+                        </div>
+                    </label>
+                    
+                    <!-- Uzaktan Çalışma -->
+                    <div class="flex items-start gap-3 rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-white p-4 dark:border-indigo-900/40 dark:from-indigo-950/20 dark:to-slate-900/50">
+                        <input type="checkbox" 
+                               name="remote_allowed" 
+                               id="remote_allowed"
+                               {% if post.remote_allowed %}checked{% endif %}
+                               class="mt-0.5 h-5 w-5 rounded border-indigo-300 text-indigo-600 shadow-sm focus:ring-2 focus:ring-indigo-500/20 dark:border-indigo-700 dark:bg-slate-900/50"/>
+                        <label for="remote_allowed" class="flex-1 cursor-pointer">
+                            <span class="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-200">
+                                <span class="material-symbols-rounded text-base text-indigo-600">language</span>
+                                Uzaktan (online) çalışma mümkün
+                            </span>
+                            <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Evrak teslimi, online duruşma vb.</p>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description Card -->
+            <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+                <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white p-6 dark:border-slate-800 dark:from-slate-900 dark:to-slate-900/50">
+                    <h2 class="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+                        <span class="material-symbols-rounded text-2xl text-brand-600 dark:text-brand-400">description</span>
+                        Detaylı Açıklama
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <textarea name="description" 
+                              required 
+                              rows="8"
+                              class="form-textarea w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200" 
+                              placeholder="İşin detaylarını, beklentilerinizi ve özel notlarınızı yazınız...">{{ post.description }}</textarea>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <a href="{{ url_for('post_detail', post_id=post.id) }}" 
+                   class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3 font-bold text-slate-700 shadow-sm transition-all hover:border-slate-400 hover:bg-slate-50 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300 dark:hover:bg-slate-900">
+                    <span class="material-symbols-rounded text-lg">close</span>
+                    İptal
+                </a>
+                <button type="submit" 
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-8 py-3 font-bold text-white shadow-md transition-all hover:from-amber-600 hover:to-amber-700 hover:shadow-lg">
+                    <span class="material-symbols-rounded text-lg">check_circle</span>
+                    Güncelle
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const formElement = document.querySelector('form[data-category-abbreviations]');
+const categoryAbbreviations = formElement ? JSON.parse(formElement.dataset.categoryAbbreviations || '{}') : {};
+const selectedCity = formElement ? formElement.dataset.selectedCity || '' : '';
+const selectedCourthouse = formElement ? formElement.dataset.selectedCourthouse || '' : '';
+const selectedDistrict = formElement ? formElement.dataset.selectedDistrict || '' : '';
+const selectedLocation = formElement ? formElement.dataset.selectedLocation || '' : '';
+
+const categorySelect = document.querySelector('select[name="category"]');
+const citySelect = document.getElementById('city');
+const courthouseSelect = document.getElementById('courthouse');
+const districtInput = document.getElementById('district');
+const locationInput = document.getElementById('location');
+const titleDisplayInput = document.getElementById('title_display');
+const titleHiddenInput = document.getElementById('title');
+
+function ensureSelectedCourthouseOption(value) {
+    if (!courthouseSelect || !value) return;
+    
+    const exists = Array.from(courthouseSelect.options).some(opt => opt.value === value);
+    if (!exists) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        option.selected = true;
+        courthouseSelect.appendChild(option);
+    }
+}
+
+function updateDistrictFromCourthouse() {
+    if (!courthouseSelect) return;
+    
+    const courthouse = courthouseSelect.value;
+    if (courthouse) {
+        const district = courthouse.replace(' Adliyesi', '').trim();
+        districtInput.value = district;
+        locationInput.value = courthouse;
+    } else {
+        districtInput.value = '';
+        locationInput.value = citySelect ? citySelect.value : '';
+    }
+}
+
+function generateTitle() {
+    const category = categorySelect ? categorySelect.value : '';
+    const abbreviation = categoryAbbreviations[category] || 'GEN';
+    const courthouse = courthouseSelect ? courthouseSelect.value.trim() : '';
+    const district = districtInput ? districtInput.value.trim() : '';
+    const city = citySelect ? citySelect.value.trim() : '';
+    
+    let location = '';
+    if (district) {
+        location = district;
+    } else if (city) {
+        location = city;
+    }
+    
+    const title = location ? `${location} - ${abbreviation}` : `Görev - ${abbreviation}`;
+    
+    if (titleDisplayInput) titleDisplayInput.value = title;
+    if (titleHiddenInput) titleHiddenInput.value = title;
+}
+
+// City change handler
+if (citySelect) {
+    citySelect.addEventListener('change', async function() {
+        const city = this.value;
+        if (!city || !courthouseSelect) return;
+        
+        courthouseSelect.disabled = true;
+        courthouseSelect.innerHTML = '<option value="">Yükleniyor...</option>';
+        
+        try {
+            const response = await fetch(`/api/courthouses/${encodeURIComponent(city)}`);
+            if (!response.ok) throw new Error('Failed to fetch courthouses');
+            
+            const courthouses = await response.json();
+            courthouseSelect.innerHTML = '<option value="">Adliye Seçiniz</option>';
+            courthouses.forEach(courthouse => {
+                const option = document.createElement('option');
+                option.value = courthouse;
+                option.textContent = courthouse;
+                courthouseSelect.appendChild(option);
+            });
+            courthouseSelect.disabled = false;
+        } catch (error) {
+            console.error('Error fetching courthouses:', error);
+            courthouseSelect.innerHTML = '<option value="">Hata: Tekrar deneyin</option>';
+            courthouseSelect.disabled = false;
+        }
+        
+        updateDistrictFromCourthouse();
+        generateTitle();
+    });
+}
+
+// Courthouse change handler
+if (courthouseSelect) {
+    courthouseSelect.addEventListener('change', function() {
+        updateDistrictFromCourthouse();
+        generateTitle();
+    });
+}
+
+// Category change handler
+if (categorySelect) {
+    categorySelect.addEventListener('change', generateTitle);
+}
+
+// Initialize
+if (selectedCourthouse) {
+    ensureSelectedCourthouseOption(selectedCourthouse);
+}
+updateDistrictFromCourthouse();
+generateTitle();
+</script>
+{% endblock %}

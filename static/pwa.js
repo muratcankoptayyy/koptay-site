@@ -11,8 +11,12 @@ function isAppInstalled() {
 // Show install banner
 function showInstallBanner() {
   const banner = document.getElementById('pwa-install-banner');
+  // Sadece banner elementi varsa göster (giriş yapmış kullanıcılar için)
   if (banner && !isAppInstalled()) {
     banner.style.display = 'block';
+    console.log('[PWA] Install banner shown for authenticated user');
+  } else if (!banner) {
+    console.log('[PWA] Install banner not available (user not authenticated)');
   }
 }
 

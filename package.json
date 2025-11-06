@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/app": "^7.1.0",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/ios": "^7.4.4",
+    "@capacitor/keyboard": "^7.0.3",
+    "@capacitor/push-notifications": "^7.0.3",
+    "@capacitor/splash-screen": "^7.0.3"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
+  },
+  "scripts": {
+    "android:build": "npx cap sync && npx cap open android",
+    "ios:build": "npx cap sync && npx cap open ios",
+    "sync": "npx cap sync",
+    "android:run": "npx cap run android",
+    "ios:run": "npx cap run ios",
+    "build:css": "tailwindcss -i ./static/css/tailwind-input.css -o ./static/css/tailwind-output.css --minify",
+    "watch:css": "tailwindcss -i ./static/css/tailwind-input.css -o ./static/css/tailwind-output.css --watch"
+  }
+}

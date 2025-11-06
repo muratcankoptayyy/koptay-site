@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard - Admin{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-background-dark py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">Platform istatistikleri ve performans metrikleri</p>
+                </div>
+                <a href="{{ url_for('export_analytics') }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 flex items-center gap-2 transition-colors">
+                    <span class="material-symbols-outlined">download</span>
+                    CSV Export
+                </a>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Users Card -->
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Toplam Kullanıcı</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ total_users }}</p>
+                        <p class="text-sm text-green-600 dark:text-green-400 mt-2">
+                            +{{ new_users_month }} bu ay
+                        </p>
+                    </div>
+                    <div class="bg-blue-100 dark:bg-blue-900/30 p-3">
+                        <span class="material-symbols-outlined text-gray-900 dark:text-blue-400 text-3xl">people</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Posts Card -->
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Aktif İlanlar</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ active_posts }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            / {{ total_posts }} toplam
+                        </p>
+                    </div>
+                    <div class="bg-purple-100 dark:bg-purple-900/30 p-3">
+                        <span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-3xl">article</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Applications Card -->
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Bekleyen Başvurular</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ pending_applications }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            / {{ total_applications }} toplam
+                        </p>
+                    </div>
+                    <div class="bg-orange-100 dark:bg-orange-900/30 p-3">
+                        <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-3xl">pending</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Average Rating Card -->
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Ortalama Puan</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ avg_rating }}/5.0</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            {{ total_ratings }} değerlendirme
+                        </p>
+                    </div>
+                    <div class="bg-yellow-100 dark:bg-yellow-900/30 p-3">
+                        <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-3xl">star</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- User Registrations Chart -->
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Kullanıcı Kayıtları (Son 12 Ay)</h3>
+                <canvas id="userRegistrationsChart"></canvas>
+            </div>
+
+            <!-- Post Status Distribution -->
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">İlan Durum Dağılımı</h3>
+                <canvas id="postStatusChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Category & City Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Posts by Category -->
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Kategorilere Göre İlanlar</h3>
+                <canvas id="categoryChart"></canvas>
+            </div>
+
+            <!-- Posts by City (Top 10) -->
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Şehirlere Göre İlanlar (Top 10)</h3>
+                <canvas id="cityChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Activity Tables -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Top Post Creators -->
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">En Aktif İlan Oluşturanlar</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-300 dark:border-gray-700">
+                                <th class="text-left py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Kullanıcı</th>
+                                <th class="text-right py-3 text-sm font-medium text-gray-600 dark:text-gray-400">İlan Sayısı</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in top_post_creators %}
+                            <tr class="border-b border-gray-300 dark:border-gray-700">
+                                <td class="py-3">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ user.full_name }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ user.email }}</div>
+                                </td>
+                                <td class="text-right py-3 text-sm font-semibold text-gray-900 dark:text-white">{{ user.post_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Applicants -->
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">En Aktif Başvuru Yapanlar</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-300 dark:border-gray-700">
+                                <th class="text-left py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Kullanıcı</th>
+                                <th class="text-right py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Başvuru Sayısı</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in top_applicants %}
+                            <tr class="border-b border-gray-300 dark:border-gray-700">
+                                <td class="py-3">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ user.full_name }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ user.email }}</div>
+                                </td>
+                                <td class="text-right py-3 text-sm font-semibold text-gray-900 dark:text-white">{{ user.application_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Stats -->
+        <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Son Aktivite İstatistikleri</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Bu Hafta Aktif Kullanıcılar</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ active_users_week }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Bu Hafta Yeni İlanlar</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ posts_this_week }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Bu Hafta Başvurular</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ applications_this_week }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Bu Hafta Mesajlar</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ messages_this_week }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Chart.js Configuration
+const chartColors = {
+    primary: '#3b82f6',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    purple: '#8b5cf6',
+    gray: '#6b7280'
+};
+
+// User Registrations Chart (Line Chart)
+const userRegCtx = document.getElementById('userRegistrationsChart').getContext('2d');
+new Chart(userRegCtx, {
+    type: 'line',
+    data: {
+        labels: [
+            {% for reg in user_registrations_by_month %}
+            '{{ reg.year }}-{{ "%02d"|format(reg.month|int) }}'{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Yeni Kayıtlar',
+            data: [
+                {% for reg in user_registrations_by_month %}
+                {{ reg.count }}{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            borderColor: chartColors.primary,
+            backgroundColor: chartColors.primary + '20',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// Post Status Chart (Doughnut)
+const postStatusCtx = document.getElementById('postStatusChart').getContext('2d');
+new Chart(postStatusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Aktif', 'Tamamlandı', 'İptal Edildi'],
+        datasets: [{
+            data: [{{ active_posts }}, {{ completed_posts }}, {{ cancelled_posts }}],
+            backgroundColor: [chartColors.success, chartColors.primary, chartColors.danger]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true
+    }
+});
+
+// Category Chart (Horizontal Bar)
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+new Chart(categoryCtx, {
+    type: 'bar',
+    data: {
+        labels: [
+            {% for cat in posts_by_category %}
+            '{{ cat.category }}'{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'İlan Sayısı',
+            data: [
+                {% for cat in posts_by_category %}
+                {{ cat.count }}{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            backgroundColor: chartColors.purple
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// City Chart (Bar)
+const cityCtx = document.getElementById('cityChart').getContext('2d');
+new Chart(cityCtx, {
+    type: 'bar',
+    data: {
+        labels: [
+            {% for city in posts_by_city %}
+            '{{ city.city }}'{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'İlan Sayısı',
+            data: [
+                {% for city in posts_by_city %}
+                {{ city.count }}{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            backgroundColor: chartColors.warning
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

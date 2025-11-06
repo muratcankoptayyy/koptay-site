@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}Kayıt Ol - Ulusal Tevkil Ağı Projesi{% endblock %}
+
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<section class="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-50 via-white to-slate-50 py-16 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+    <div class="absolute inset-0 bg-grid opacity-30"></div>
+    
+    <div class="relative w-full max-w-6xl mx-4 rounded-3xl border border-slate-200 bg-white/70 shadow-2xl backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/70">
+        <div class="grid gap-0 md:grid-cols-2">
+            <!-- Sol Panel - Marketing İçeriği -->
+            <div class="hidden flex-col justify-between border-r border-slate-200 bg-brand-600 px-10 py-12 text-white dark:border-brand-400/20 md:flex">
+                <div class="space-y-5">
+                    <a href="{{ url_for('index') }}" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-white/20 transition">
+                        <span class="material-symbols-rounded text-base">arrow_back</span>
+                        Ana Sayfa
+                    </a>
+                    <h1 class="font-heading text-3xl leading-snug">Türkiye'nin en büyük avukat tevkil ağına katıl.</h1>
+                    <p class="text-sm text-brand-100/80">Binlerce meslektaşın ile bağlantı kur, yeni iş fırsatları bul, tevkil süreçlerini kolayca yönet.</p>
+                </div>
+                
+                <ul class="space-y-3 text-sm text-brand-100/80">
+                    <li class="flex items-center gap-2">
+                        <span class="material-symbols-rounded text-base text-brand-200">check_circle</span>
+                        Ücretsiz kayıt
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="material-symbols-rounded text-base text-brand-200">check_circle</span>
+                        Anında başvuru yapabilme
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="material-symbols-rounded text-base text-brand-200">check_circle</span>
+                        Güvenli mesajlaşma sistemi
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="material-symbols-rounded text-base text-brand-200">check_circle</span>
+                        Coğrafi harita üzerinden ilan görüntüleme
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Sağ Panel - Register Formu -->
+            <div class="px-8 py-12 sm:px-12 max-h-screen overflow-y-auto">
+                <!-- Mobil Ana Sayfa Linki -->
+                <div class="mb-6 md:hidden">
+                    <a href="{{ url_for('index') }}" class="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400">
+                        <span class="material-symbols-rounded text-base">arrow_back</span>
+                        Ana Sayfa
+                    </a>
+                </div>
+
+                <form class="space-y-6" method="POST" action="{{ url_for('register') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="space-y-2">
+                        <h2 class="font-heading text-2xl text-slate-900 dark:text-white">Hesap Oluştur</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">UTAP ailesine hoş geldin! Hemen ücretsiz kayıt ol.</p>
+                    </div>
+                    
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="flex items-start gap-2 rounded-2xl border px-4 py-3 text-sm
+                                    {% if category == 'error' %}
+                                        border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-900/20 dark:text-red-200
+                                    {% elif category == 'success' %}
+                                        border-green-200 bg-green-50 text-green-700 dark:border-green-900/60 dark:bg-green-900/20 dark:text-green-200
+                                    {% else %}
+                                        border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-900/20 dark:text-blue-200
+                                    {% endif %}">
+                                    <span class="material-symbols-rounded text-base">
+                                        {% if category == 'error' %}error{% elif category == 'success' %}check_circle{% else %}info{% endif %}
+                                    </span>
+                                    <span>{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div class="space-y-4">
+                        <!-- Ad Soyad -->
+                        <div>
+                            <label for="full_name" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Ad Soyad <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="full_name" 
+                                name="full_name" 
+                                required 
+                                value="{{ form_data.full_name if form_data else '' }}"
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                placeholder="Adınız ve Soyadınız">
+                        </div>
+
+                        <!-- E-posta -->
+                        <div>
+                            <label for="email" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                E-posta <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                inputmode="email"
+                                autocomplete="email"
+                                required 
+                                value="{{ form_data.email if form_data else '' }}"
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                placeholder="ornek@email.com">
+                        </div>
+
+                        <!-- Telefon -->
+                        <div>
+                            <label for="phone" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Telefon <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="tel" 
+                                id="phone" 
+                                name="phone" 
+                                inputmode="tel"
+                                required 
+                                value="{{ form_data.phone if form_data else '' }}"
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                placeholder="05XX XXX XX XX">
+                        </div>
+
+                        <!-- Avukat Tipi -->
+                        <div>
+                            <label for="lawyer_type" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Avukat Tipi <span class="text-red-500">*</span>
+                            </label>
+                            <select 
+                                id="lawyer_type" 
+                                name="lawyer_type" 
+                                required
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                                <option value="">Seçiniz</option>
+                                <option value="avukat" {% if form_data and form_data.lawyer_type == 'avukat' %}selected{% endif %}>Serbest Avukat</option>
+                                <option value="stajyer" {% if form_data and form_data.lawyer_type == 'stajyer' %}selected{% endif %}>Stajyer Avukat</option>
+                            </select>
+                        </div>
+
+                        <!-- Baro -->
+                        <div>
+                            <label for="bar" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Baro <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="bar" 
+                                name="bar" 
+                                required 
+                                value="{{ form_data.bar if form_data else '' }}"
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                placeholder="Örn: Ankara Barosu">
+                        </div>
+
+                        <!-- Şifre -->
+                        <div>
+                            <label for="password" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Şifre <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                required
+                                minlength="8"
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                placeholder="En az 8 karakter">
+                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Şifre en az 8 karakter, büyük harf, küçük harf ve rakam içermelidir</p>
+                        </div>
+
+                        <!-- Şifre Tekrar -->
+                        <div>
+                            <label for="confirm_password" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Şifre Tekrar <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="password" 
+                                id="confirm_password" 
+                                name="confirm_password" 
+                                required
+                                minlength="8"
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                placeholder="Şifrenizi tekrar girin">
+                        </div>
+
+                        <!-- Kullanım Koşulları -->
+                        <div class="flex items-start gap-2">
+                            <input 
+                                type="checkbox" 
+                                id="terms" 
+                                name="terms" 
+                                required
+                                class="mt-1 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800">
+                            <label for="terms" class="text-sm text-slate-600 dark:text-slate-400">
+                                <a href="{{ url_for('terms_of_service') }}" class="text-brand-600 hover:underline" target="_blank">Kullanım Koşulları</a>'nı ve 
+                                <a href="{{ url_for('privacy_policy') }}" class="text-brand-600 hover:underline" target="_blank">Gizlilik Politikası</a>'nı okudum ve kabul ediyorum.
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-full py-3 text-base font-semibold shadow-lg shadow-brand-500/20 hover:shadow-xl hover:shadow-brand-500/30 transition-all">
+                        Kayıt Ol
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                    Zaten hesabın var mı? 
+                    <a href="{{ url_for('login') }}" class="font-semibold text-brand-600 hover:underline dark:text-brand-400">Giriş yap</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.bg-grid {
+    background-image: 
+        linear-gradient(to right, rgb(148 163 184 / 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgb(148 163 184 / 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+</style>
+{% endblock %}

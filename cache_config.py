@@ -28,7 +28,7 @@ def init_cache(app):
             'CACHE_TYPE': 'SimpleCache',
             'CACHE_DEFAULT_TIMEOUT': 300
         }
-        print("⚠️  SimpleCache initialized (development mode - Redis not available)")
+        print("[WARNING] SimpleCache initialized (development mode - Redis not available)")
     
     cache.init_app(app, config=cache_config)
     app.cache = cache

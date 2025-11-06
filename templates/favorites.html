@@ -6,7 +6,7 @@
 <div class="layout-content-container flex flex-col max-w-6xl mx-auto flex-1">
     <div class="flex flex-wrap justify-between gap-3 p-4">
         <div class="flex items-center gap-4">
-            <span class="material-symbols-outlined text-primary text-2xl md:text-4xl">favorite</span>
+            <span class="material-symbols-outlined text-gray-900 text-2xl md:text-4xl">favorite</span>
             <div>
                 <p class="text-gray-900 dark:text-white tracking-light text-[32px] font-bold leading-tight">Favori İlanlarım</p>
                 <p class="text-gray-600 dark:text-gray-300 text-sm font-normal leading-normal">
@@ -21,7 +21,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {% for fav in favorites %}
                 {% set post = fav.post %}
-                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow">
+                <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 overflow-hidden hover: transition-shadow">
                     <div class="p-3 md:p-6">
                         <!-- Header -->
                         <div class="flex justify-between items-start mb-3">
@@ -70,7 +70,7 @@
                         </div>
                         
                         <!-- Footer -->
-                        <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-300 dark:border-gray-700">
                             <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                                 <span class="flex items-center gap-1">
                                     <span class="material-symbols-outlined text-sm">visibility</span>
@@ -81,7 +81,7 @@
                                     {{ post.applications_count }}
                                 </span>
                             </div>
-                            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="text-primary hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm">
+                            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="text-gray-900 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm">
                                 Detay →
                             </a>
                         </div>
@@ -94,7 +94,7 @@
                 <span class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-6xl mb-4">favorite_border</span>
                 <p class="text-gray-500 dark:text-gray-400 text-lg mb-2">Henüz favori ilanınız yok</p>
                 <p class="text-gray-400 dark:text-gray-500 text-sm mb-6">İlanlara kalp simgesine tıklayarak favorilere ekleyebilirsiniz</p>
-                <a href="{{ url_for('list_posts') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-white hover:bg-blue-600 transition-colors font-medium">
+                <a href="{{ url_for('list_posts') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white hover:bg-gray-900 transition-colors font-medium">
                     <span class="material-symbols-outlined">search</span>
                     İlanları İncele
                 </a>

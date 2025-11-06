@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Gizlilik Politikası - UTAP{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="bg-white dark:bg-gray-800 p-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+            🔒 Gizlilik Politikası
+        </h1>
+        
+        <p class="text-gray-600 dark:text-gray-400 mb-8">
+            Son güncelleme: {{ current_date or '2025' }}
+        </p>
+
+        <div class="prose dark:prose-invert max-w-none">
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">1. Giriş</h2>
+                <p>Ulusal Tevkil Ağı Projesi (UTAP) olarak, kişisel verilerinizin gizliliğine ve güvenliğine önem veriyoruz. Bu gizlilik politikası, platformumuz üzerinden toplanan, işlenen ve saklanan kişisel verilerinizle ilgili uygulamalarımızı açıklamaktadır.</p>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">2. Veri Sorumlusu</h2>
+                <p><strong>Veri Sorumlusu:</strong> UTAP - Ulusal Tevkil Ağı Projesi</p>
+                <p><strong>İletişim:</strong> destek@utap.com.tr</p>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">3. Toplanan Veriler</h2>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li><strong>Kimlik Bilgileri:</strong> Ad, soyad, T.C. kimlik numarası</li>
+                    <li><strong>İletişim Bilgileri:</strong> E-posta, telefon, adres</li>
+                    <li><strong>Mesleki Bilgiler:</strong> Baro sicil numarası, avukatlık bilgileri</li>
+                    <li><strong>İşlem Bilgileri:</strong> İlan, mesaj, teklif geçmişi</li>
+                    <li><strong>Teknik Veriler:</strong> IP adresi, çerez bilgileri, kullanım analitikleri</li>
+                    <li><strong>Konum Bilgileri:</strong> Hizmet sunumu için gerekli il/ilçe bilgisi</li>
+                </ul>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">4. Veri Toplama Yöntemleri</h2>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li>Üyelik kayıt formu</li>
+                    <li>Profil güncelleme sayfası</li>
+                    <li>İlan ve teklif oluşturma</li>
+                    <li>Mesajlaşma sistemi</li>
+                    <li>Çerezler ve analitik araçlar</li>
+                    <li>WhatsApp Business API entegrasyonu</li>
+                </ul>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">5. Verilerin İşlenme Amaçları</h2>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li>Hukuki yükümlülüklerin yerine getirilmesi (Avukatlık Kanunu)</li>
+                    <li>Platform hizmetlerinin sunulması</li>
+                    <li>Avukatlar arası eşleştirme ve iş devri</li>
+                    <li>Kullanıcı güvenliğinin sağlanması</li>
+                    <li>İstatistiksel analiz ve platform iyileştirme</li>
+                    <li>İletişim ve bildirim gönderimi</li>
+                    <li>Yasal yükümlülüklere uyum</li>
+                </ul>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">6. Veri Paylaşımı</h2>
+                <p>Kişisel verileriniz aşağıdaki durumlar dışında üçüncü şahıslarla paylaşılmaz:</p>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li>Yasal zorunluluklar (mahkeme kararı, resmi talep)</li>
+                    <li>Hizmet sağlayıcılar (hosting, e-posta, SMS servisleri)</li>
+                    <li>İlanları görüntüleyen diğer avukatlar (sınırlı bilgi)</li>
+                    <li>Açık rızanızın bulunduğu durumlar</li>
+                </ul>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">7. Veri Güvenliği</h2>
+                <p>Verilerinizin güvenliği için aldığımız önlemler:</p>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li>SSL/TLS şifreleme (HTTPS)</li>
+                    <li>Şifrelenmiş veri saklama</li>
+                    <li>Düzenli güvenlik güncellemeleri</li>
+                    <li>Erişim kontrol sistemleri</li>
+                    <li>Güvenlik duvarı ve DDoS koruması</li>
+                    <li>Düzenli yedekleme</li>
+                </ul>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">8. KVKK Kapsamında Haklarınız</h2>
+                <p>6698 sayılı KVKK uyarınca aşağıdaki haklara sahipsiniz:</p>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
+                    <li>İşlenmişse bilgi talep etme</li>
+                    <li>İşlenme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme</li>
+                    <li>Yurt içi/yurt dışı aktarılan üçüncü kişileri bilme</li>
+                    <li>Eksik/yanlış işlenmişse düzeltilmesini isteme</li>
+                    <li>Şartları oluştuğunda silinmesini/yok edilmesini isteme</li>
+                    <li>İşlenen verilerin münhasıran otomatik sistemler ile analiz edilmesi sonucu aleyhinize çıkan sonuca itiraz etme</li>
+                    <li>Kanuna aykırı işleme nedeniyle zarara uğramanız halinde zararın giderilmesini talep etme</li>
+                </ul>
+                <p class="mt-4"><strong>Başvuru:</strong> <a href="mailto:destek@utap.com.tr" class="text-gray-900 hover:underline">destek@utap.com.tr</a> adresine yazılı olarak başvurabilirsiniz.</p>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">9. Çerezler (Cookies)</h2>
+                <p>Platformumuz, kullanıcı deneyimini iyileştirmek için çerezler kullanmaktadır. Detaylı bilgi için <a href="{{ url_for('cookie_policy') }}" class="text-gray-900 hover:underline">Çerez Politikamızı</a> inceleyebilirsiniz.</p>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">10. Veri Saklama Süresi</h2>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li><strong>Aktif kullanıcılar:</strong> Hesap silinene kadar</li>
+                    <li><strong>Pasif kullanıcılar:</strong> Son aktiviteden 3 yıl sonra silinir</li>
+                    <li><strong>İşlem kayıtları:</strong> Yasal zorunluluk süresi (10 yıl - TTK)</li>
+                    <li><strong>Log kayıtları:</strong> 6 ay</li>
+                </ul>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">11. Değişiklikler</h2>
+                <p>Bu gizlilik politikası, yasal düzenlemeler ve platform güncellemeleri doğrultusunda değiştirilebilir. Önemli değişiklikler e-posta ile bildirilecektir.</p>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">12. İletişim</h2>
+                <p>Gizlilik politikamız hakkında sorularınız için:</p>
+                <ul class="list-none space-y-2">
+                    <li>📧 E-posta: destek@utap.com.tr</li>
+                    <li>📞 Telefon: +90 XXX XXX XX XX</li>
+                    <li>📍 Adres: [Şirket adresi girilecek]</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

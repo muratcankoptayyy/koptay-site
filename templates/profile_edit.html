@@ -8,70 +8,125 @@
         <!-- Header -->
         <div class="flex flex-wrap justify-between items-center gap-4 p-4">
             <div>
-                <h1 class="text-2xl md:text-4xl font-black text-gray-900 dark:text-white">Profil Düzenle</h1>
+                <h1 class="text-2xl md:text-4xl font-light text-gray-900 dark:text-white">Profil Düzenle</h1>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">Profil bilgilerinizi güncelleyin</p>
             </div>
-            <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+            <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-900">
                 <span class="material-symbols-outlined">arrow_back</span>
                 <span class="text-sm font-medium">Profile Dön</span>
             </a>
         </div>
         
         <!-- Edit Form -->
-        <form method="POST" action="{{ url_for('edit_profile') }}" class="bg-white dark:bg-gray-800 rounded-xl p-4 md:p-8 border border-gray-200 dark:border-gray-700">
+        <form method="POST" action="{{ url_for('edit_profile') }}" class="bg-white dark:bg-gray-800 p-4 md:p-8 border border-gray-300 dark:border-gray-700">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="space-y-6">
+                <!-- Avatar Section - NEW -->
+                <div class="pb-6 border-b border-gray-300 dark:border-gray-700">
+                    <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-gray-900">account_circle</span>
+                        Profil Fotoğrafı
+                    </h2>
+                    
+                    <div class="flex flex-col md:flex-row items-center gap-6">
+                        <div class="relative cursor-pointer" onclick="document.getElementById('avatarInput').click()" title="Fotoğraf değiştirmek için tıklayın">
+                            <img id="avatarPreview" src="{{ current_user.avatar_url if current_user.avatar_url else 'https://ui-avatars.com/api/?name=' + current_user.full_name + '&background=1661da&color=fff&size=200' }}" 
+                                 alt="Avatar" 
+                                 class="w-32 h-32 rounded-full border-4 border-primary/20 object-cover hover:opacity-80 transition-opacity">
+                            <div class="absolute bottom-0 right-0 bg-gray-900 text-white rounded-full p-2 cursor-pointer hover:bg-gray-900 transition-colors">
+                                <span class="material-symbols-outlined">photo_camera</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 w-full">
+                            <div id="avatarUploadSection" class="space-y-3">
+                                <!-- Dosya seçici - image/jpeg, image/jpg, image/png, image/gif formatları -->
+                                <input type="file" 
+                                       id="avatarInput" 
+                                       name="avatar" 
+                                       accept="image/jpeg,image/jpg,image/png,image/gif,.jpeg,.jpg,.png,.gif" 
+                                       class="hidden" 
+                                       onchange="previewAvatar(event)"
+                                       capture="environment">
+                                
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <button type="button" onclick="document.getElementById('avatarInput').click()" class="flex items-center justify-center gap-2 px-6 py-3 border-2 border-primary text-gray-900 font-semibold hover:bg-gray-900 hover:text-white transition-colors w-full sm:w-auto">
+                                        <span class="material-symbols-outlined">upload_file</span>
+                                        Fotoğraf Seç
+                                    </button>
+                                    <button type="button" id="uploadAvatarBtn" onclick="uploadAvatar()" class="hidden flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white font-semibold hover:bg-gray-900 transition-colors w-full sm:w-auto">
+                                        <span class="material-symbols-outlined">cloud_upload</span>
+                                        Yükle
+                                    </button>
+                                </div>
+                                
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    <span class="material-symbols-outlined text-sm align-middle">info</span>
+                                    JPEG, JPG, PNG veya GIF • Maksimum 2MB
+                                </p>
+                            </div>
+                            
+                            {% if current_user.avatar_url %}
+                            <button type="button" onclick="removeAvatar()" class="mt-3 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-semibold flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                                Fotoğrafı Kaldır
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Personal Info Section -->
                 <div>
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">person</span>
+                        <span class="material-symbols-outlined text-gray-900">person</span>
                         Kişisel Bilgiler
                     </h2>
                     
                     <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                         <label class="flex flex-col w-full">
                             <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">Ad Soyad *</p>
-                            <input name="full_name" type="text" required value="{{ current_user.full_name }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal"/>
+                            <input name="full_name" type="text" required value="{{ current_user.full_name }}" class="form-input flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal"/>
                         </label>
                         
                         <label class="flex flex-col w-full">
                             <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">E-posta (Değiştirilemez)</p>
-                            <input type="email" disabled value="{{ current_user.email }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 h-12 md:h-12 sm:h-14 p-4 text-base font-normal cursor-not-allowed"/>
+                            <input type="email" disabled value="{{ current_user.email }}" class="form-input flex w-full resize-none overflow-hidden text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 h-12 md:h-12 sm:h-14 p-4 text-base font-normal cursor-not-allowed"/>
                         </label>
                     </div>
                 </div>
                 
                 <!-- Contact Info Section -->
-                <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="pt-6 border-t border-gray-300 dark:border-gray-700">
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">phone</span>
+                        <span class="material-symbols-outlined text-gray-900">phone</span>
                         İletişim Bilgileri
                     </h2>
                     
                     <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                         <label class="flex flex-col w-full">
                             <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">Telefon Numarası *</p>
-                            <input name="phone" type="tel" required value="{{ current_user.phone }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="0555 123 45 67"/>
+                            <input name="phone" type="tel" required value="{{ current_user.phone }}" class="form-input flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="0555 123 45 67"/>
                         </label>
                         
                         <label class="flex flex-col w-full">
                             <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">WhatsApp Numarası</p>
-                            <input name="whatsapp_number" type="tel" value="{{ current_user.whatsapp_number or '' }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="0555 123 45 67"/>
+                            <input name="whatsapp_number" type="tel" value="{{ current_user.whatsapp_number or '' }}" class="form-input flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="0555 123 45 67"/>
                         </label>
                     </div>
                 </div>
                 
                 <!-- Location Section -->
-                <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="pt-6 border-t border-gray-300 dark:border-gray-700">
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">location_on</span>
+                        <span class="material-symbols-outlined text-gray-900">location_on</span>
                         Konum Bilgileri
                     </h2>
                     
                     <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                         <label class="flex flex-col w-full">
                             <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">Şehir *</p>
-                            <select name="city" required class="form-select flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-14 p-4 text-base font-normal">
+                            <select name="city" required class="form-select flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-14 p-4 text-base font-normal">
                                 <option value="">Şehir seçiniz</option>
                                 {% for city in ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya', 'Adana', 'Konya', 'Gaziantep', 'Şanlıurfa', 'Kocaeli', 'Diyarbakır', 'Kayseri', 'Mersin', 'Eskişehir', 'Samsun'] %}
                                 <option value="{{ city }}" {% if current_user.city == city %}selected{% endif %}>{{ city }}</option>
@@ -81,22 +136,22 @@
                         
                         <label class="flex flex-col w-full">
                             <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">İlçe</p>
-                            <input name="district" type="text" value="{{ current_user.district or '' }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="İlçe adı"/>
+                            <input name="district" type="text" value="{{ current_user.district or '' }}" class="form-input flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="İlçe adı"/>
                         </label>
                     </div>
                 </div>
                 
                 <!-- Professional Info Section -->
-                <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="pt-6 border-t border-gray-300 dark:border-gray-700">
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">badge</span>
+                        <span class="material-symbols-outlined text-gray-900">badge</span>
                         Baro Bilgileri
                     </h2>
                     
                     <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                         <label class="flex flex-col w-full">
                             <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">Bağlı Olduğunuz Baro *</p>
-                            <select name="bar_association" required class="form-select flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-14 p-4 text-base font-normal">
+                            <select name="bar_association" required class="form-select flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-14 p-4 text-base font-normal">
                                 <option value="">Baro seçiniz</option>
                                 {% for baro in ['İstanbul Barosu', 'Ankara Barosu', 'İzmir Barosu', 'Bursa Barosu', 'Antalya Barosu', 'Adana Barosu', 'Konya Barosu', 'Gaziantep Barosu', 'Şanlıurfa Barosu', 'Kocaeli Barosu', 'Diyarbakır Barosu', 'Mersin Barosu', 'Kayseri Barosu', 'Eskişehir Barosu', 'Hatay Barosu'] %}
                                 <option value="{{ baro }}" {% if current_user.bar_association == baro %}selected{% endif %}>{{ baro }}</option>
@@ -106,19 +161,19 @@
                         
                         <label class="flex flex-col w-full">
                             <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">Baro Sicil Numarası *</p>
-                            <input name="bar_registration_number" type="text" required value="{{ current_user.bar_registration_number or '' }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="Baro sicil numaranız"/>
+                            <input name="bar_registration_number" type="text" required value="{{ current_user.bar_registration_number or '' }}" class="form-input flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="Baro sicil numaranız"/>
                         </label>
                         
                         <label class="flex flex-col w-full">
                             <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">T.C. Kimlik Numarası</p>
-                            <input name="tc_number" type="text" maxlength="11" pattern="[0-9]{11}" value="{{ current_user.tc_number or '' }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="11 haneli T.C. Kimlik No"/>
+                            <input name="tc_number" type="text" maxlength="11" pattern="[0-9]{11}" value="{{ current_user.tc_number or '' }}" class="form-input flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="11 haneli T.C. Kimlik No"/>
                         </label>
                         
                         {% if current_user.is_admin %}
                         <!-- Sadece Admin için görünür -->
                         <label class="flex flex-col w-full">
                             <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">Avukat Türü <span class="text-red-500 text-xs">(ADMIN)</span></p>
-                            <select name="lawyer_type" class="form-select flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-14 p-4 text-base font-normal">
+                            <select name="lawyer_type" class="form-select flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-14 p-4 text-base font-normal">
                                 <option value="avukat" {% if current_user.lawyer_type == 'avukat' %}selected{% endif %}>Avukat</option>
                                 <option value="stajyer" {% if current_user.lawyer_type == 'stajyer' %}selected{% endif %}>Stajyer Avukat</option>
                             </select>
@@ -127,7 +182,7 @@
                         {% endif %}
                     </div>
                     
-                    <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20">
                         <p class="text-sm text-blue-800 dark:text-blue-300 flex items-start gap-2">
                             <span class="material-symbols-outlined text-lg">info</span>
                             <span>Baro ve sicil numaranızı değiştirirseniz, sistemde bu bilgilerle kayıtlı başka bir kullanıcı olmamalıdır.</span>
@@ -136,94 +191,28 @@
                 </div>
                 
                 <!-- Professional Info Section -->
-                <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="pt-6 border-t border-gray-300 dark:border-gray-700">
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">work</span>
+                        <span class="material-symbols-outlined text-gray-900">work</span>
                         Mesleki Bilgiler
                     </h2>
                     
                     <label class="flex flex-col w-full mb-6">
                         <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">Uzmanlık Alanlarınız</p>
-                        <input name="specializations" type="text" value="{{ current_user.specializations|join(', ') if current_user.specializations else '' }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="Ceza Hukuku, Aile Hukuku, İcra İflas Hukuku (virgülle ayırın)"/>
+                        <input name="specializations" type="text" value="{{ current_user.specializations|join(', ') if current_user.specializations else '' }}" class="form-input flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="Ceza Hukuku, Aile Hukuku, İcra İflas Hukuku (virgülle ayırın)"/>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Birden fazla alan varsa virgülle ayırarak yazın</p>
                     </label>
                     
                     <label class="flex flex-col w-full">
                         <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">Hakkınızda</p>
-                        <textarea name="bio" rows="6" class="form-textarea flex w-full resize-y overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white min-h-[150px] placeholder:text-gray-400 p-4 text-base font-normal" placeholder="Kendinizi tanıtın, deneyimleriniz ve uzmanlık alanlarınız hakkında bilgi verin...">{{ current_user.bio or '' }}</textarea>
+                        <textarea name="bio" rows="6" class="form-textarea flex w-full resize-y overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white min-h-[150px] placeholder:text-gray-400 p-4 text-base font-normal" placeholder="Kendinizi tanıtın, deneyimleriniz ve uzmanlık alanlarınız hakkında bilgi verin...">{{ current_user.bio or '' }}</textarea>
                     </label>
                 </div>
                 
-                <!-- Profile Photo Upload Section -->
-                <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">photo_camera</span>
-                        Profil Fotoğrafı
-                    </h2>
-                    
-                    <div class="flex items-center gap-3 md:gap-6">
-                        <!-- Current Photo -->
-                        <div class="relative group">
-                            <img id="avatar-preview" 
-                                 src="{{ current_user.avatar_url if current_user.avatar_url else 'https://ui-avatars.com/api/?name=' + current_user.full_name + '&background=1661da&color=fff&size=120' }}" 
-                                 alt="{{ current_user.full_name }}" 
-                                 class="w-32 h-auto max-h-64 sm:max-h-96 rounded-full border-4 border-primary/20 object-cover">
-                            <div class="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span class="material-symbols-outlined text-white text-xl md:text-3xl">edit</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Upload Input -->
-                        <div class="flex-1">
-                            <label class="flex flex-col w-full">
-                                <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2">Fotoğraf URL'si</p>
-                                <input name="avatar_url" 
-                                       id="avatar-url-input"
-                                       type="url" 
-                                       value="{{ current_user.avatar_url or '' }}" 
-                                       class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" 
-                                       placeholder="https://example.com/photo.jpg"/>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-start gap-2">
-                                    <span class="material-symbols-outlined text-base">info</span>
-                                    <span>Fotoğrafınızın URL adresini girin veya boş bırakın (otomatik avatar oluşturulur)</span>
-                                </p>
-                            </label>
-                            
-                            <!-- Quick Upload Buttons -->
-                            <div class="mt-4 flex gap-3">
-                                <button type="button" 
-                                        onclick="document.getElementById('avatar-url-input').value=''; updateAvatarPreview();" 
-                                        class="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2 w-full sm:w-auto">
-                                    <span class="material-symbols-outlined text-lg">delete</span>
-                                    Fotoğrafı Kaldır
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <script>
-                        // Avatar preview update
-                        function updateAvatarPreview() {
-                            const input = document.getElementById('avatar-url-input');
-                            const preview = document.getElementById('avatar-preview');
-                            const userName = "{{ current_user.full_name }}";
-                            
-                            if (input.value.trim() === '') {
-                                preview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=1661da&color=fff&size=120`;
-                            } else {
-                                preview.src = input.value;
-                            }
-                        }
-                        
-                        // Update preview on input change
-                        document.getElementById('avatar-url-input').addEventListener('input', updateAvatarPreview);
-                    </script>
-                </div>
-                
                 <!-- Social Media Section -->
-                <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="pt-6 border-t border-gray-300 dark:border-gray-700">
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">share</span>
+                        <span class="material-symbols-outlined text-gray-900">share</span>
                         Sosyal Medya Bağlantıları
                     </h2>
                     
@@ -231,12 +220,12 @@
                         <!-- LinkedIn -->
                         <label class="flex flex-col w-full">
                             <p class="text-gray-900 dark:text-white text-base font-medium leading-normal pb-2 flex items-center gap-2">
-                                <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                                 </svg>
                                 LinkedIn
                             </p>
-                            <input name="linkedin_url" type="url" value="{{ current_user.linkedin_url or '' }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="https://linkedin.com/in/kullaniciadi"/>
+                            <input name="linkedin_url" type="url" value="{{ current_user.linkedin_url or '' }}" class="form-input flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="https://linkedin.com/in/kullaniciadi"/>
                         </label>
                         
                         <!-- Twitter/X -->
@@ -247,7 +236,7 @@
                                 </svg>
                                 Twitter/X
                             </p>
-                            <input name="twitter_url" type="url" value="{{ current_user.twitter_url or '' }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="https://twitter.com/kullaniciadi"/>
+                            <input name="twitter_url" type="url" value="{{ current_user.twitter_url or '' }}" class="form-input flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="https://twitter.com/kullaniciadi"/>
                         </label>
                         
                         <!-- Instagram -->
@@ -258,7 +247,7 @@
                                 </svg>
                                 Instagram
                             </p>
-                            <input name="instagram_url" type="url" value="{{ current_user.instagram_url or '' }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="https://instagram.com/kullaniciadi"/>
+                            <input name="instagram_url" type="url" value="{{ current_user.instagram_url or '' }}" class="form-input flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="https://instagram.com/kullaniciadi"/>
                         </label>
                         
                         <!-- Website -->
@@ -267,11 +256,11 @@
                                 <span class="material-symbols-outlined text-lg">language</span>
                                 Kişisel Website
                             </p>
-                            <input name="website_url" type="url" value="{{ current_user.website_url or '' }}" class="form-input flex w-full resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="https://www.example.com"/>
+                            <input name="website_url" type="url" value="{{ current_user.website_url or '' }}" class="form-input flex w-full resize-none overflow-hidden text-gray-900 dark:text-white dark:bg-background-dark focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white h-12 md:h-12 sm:h-14 placeholder:text-gray-400 p-4 text-base font-normal" placeholder="https://www.example.com"/>
                         </label>
                     </div>
                     
-                    <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20">
                         <p class="text-sm text-blue-800 dark:text-blue-300 flex items-start gap-2">
                             <span class="material-symbols-outlined text-lg">info</span>
                             <span>Sosyal medya bağlantılarınız profilinizde görünecek ve potansiyel müşteriler size daha kolay ulaşabilecek.</span>
@@ -280,11 +269,11 @@
                 </div>
                 
                 <!-- Buttons -->
-                <div class="flex justify-end gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="px-6 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <div class="flex justify-end gap-4 pt-6 border-t border-gray-300 dark:border-gray-700">
+                    <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="px-6 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                         İptal
                     </a>
-                    <button type="submit" class="px-4 md:px-8 py-3 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2 w-full sm:w-auto">
+                    <button type="submit" class="px-4 md:px-8 py-3 bg-gray-900 text-white font-semibold hover:bg-gray-900/90 transition-colors flex items-center gap-2 w-full sm:w-auto">
                         <span class="material-symbols-outlined">save</span>
                         Değişiklikleri Kaydet
                     </button>
@@ -293,6 +282,105 @@
         </form>
     </div>
 </div>
+
+<script>
+// Avatar preview
+function previewAvatar(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Check file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Dosya boyutu 2MB\'dan küçük olmalıdır');
+            event.target.value = '';
+            return;
+        }
+        
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            alert('Lütfen bir resim dosyası seçin');
+            event.target.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('avatarPreview').src = e.target.result;
+            document.getElementById('uploadAvatarBtn').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Upload avatar
+function uploadAvatar() {
+    const fileInput = document.getElementById('avatarInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Lütfen bir dosya seçin');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
+    // Show loading state
+    const uploadBtn = document.getElementById('uploadAvatarBtn');
+    const originalText = uploadBtn.innerHTML;
+    uploadBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Yükleniyor...';
+    uploadBtn.disabled = true;
+    
+    fetch('{{ url_for("update_avatar") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Profil fotoğrafı başarıyla güncellendi!');
+            location.reload();
+        } else {
+            alert('Hata: ' + (data.error || 'Bilinmeyen hata'));
+            uploadBtn.innerHTML = originalText;
+            uploadBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        uploadBtn.innerHTML = originalText;
+        uploadBtn.disabled = false;
+    });
+}
+
+// Remove avatar
+function removeAvatar() {
+    if (confirm('Profil fotoğrafınızı kaldırmak istediğinizden emin misiniz?')) {
+        fetch('{{ url_for("remove_avatar") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Bir hata oluştu: ' + (data.error || 'Bilinmeyen hata'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        });
+    }
+}
+</script>
 {% endblock %}
 
 

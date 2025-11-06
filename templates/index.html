@@ -5,104 +5,91 @@
 {% block main_classes %}{% endblock %}
 
 {% block header %}
-<!-- Özel header - landing page için (sidebar yok) -->
-<header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 dark:border-gray-700 px-4 sm:px-6 lg:px-10 py-3 sm:py-4 bg-white dark:bg-background-dark overflow-x-auto">
-    <div class="flex items-center gap-2 sm:gap-3 text-gray-900 dark:text-white">
-        <img src="{{ url_for('static', filename='logo-icon.svg') }}" alt="Ulusal Tevkil Ağı Projesi" class="h-10 w-10 sm:h-auto max-h-64 sm:max-h-96 sm:w-12">
-        <div class="flex flex-col">
-            <span class="text-sm sm:text-base lg:text-lg font-bold">Ulusal Tevkil Ağı</span>
-            <span class="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400">Projesi</span>
-        </div>
+<!-- Minimal White Theme Header - Landing Page -->
+<header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between border-b border-gray-300 px-12 py-4 bg-white">
+    <div class="flex items-center gap-3 text-gray-900">
+        <img src="{{ url_for('static', filename='logo-icon.svg') }}" alt="UTAP" class="h-8 w-8">
+        <span class="text-lg font-light">Tevkil</span>
     </div>
-    <div class="flex gap-3 sm:gap-4 lg:gap-3 md:gap-6 items-center">
-        <a href="{{ url_for('list_posts') }}" class="text-gray-800 dark:text-gray-300 text-xs sm:text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors hidden sm:inline">İlanlar</a>
-        <a href="{{ url_for('login') }}" class="text-gray-800 dark:text-gray-300 text-xs sm:text-sm font-medium leading-normal hover:text-primary dark:hover:text-primary transition-colors">Giriş Yap</a>
-        <a href="{{ url_for('register') }}" class="flex min-w-[70px] sm:min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 sm:h-10 px-3 sm:px-5 bg-primary text-white text-xs sm:text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
-            <span class="truncate hidden sm:inline">Ücretsiz Kayıt Ol</span>
-            <span class="truncate sm:hidden">Kayıt</span>
+    <div class="flex gap-8 items-center">
+        <a href="{{ url_for('list_posts') }}" class="text-gray-400 hover:text-gray-900 text-sm font-light transition-colors">İlanlar</a>
+        <a href="{{ url_for('login') }}" class="text-gray-400 hover:text-gray-900 text-sm font-light transition-colors">Giriş</a>
+        <a href="{{ url_for('register') }}" class="px-6 py-2 bg-gray-900 text-white text-sm font-light hover:bg-gray-800 transition-colors">
+            Kayıt Ol
         </a>
     </div>
 </header>
 {% endblock %}
 
 {% block content %}
-<!-- Header için boşluk - mobilde 60px, tablette 68px, masaüstünde 76px -->
-<div class="pt-[60px] sm:pt-[68px] lg:pt-[76px]"></div>
-<!-- Hero Section -->
-<section class="bg-gradient-to-br from-blue-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-20 px-4">
-    <div class="max-w-7xl mx-auto text-center">
-        <h1 class="text-5xl md:text-6xl font-black text-gray-900 dark:text-white mb-6 tracking-tight">
+<!-- Minimal White Theme - Hero Section -->
+<div class="pt-16"></div>
+<section class="bg-white py-32 px-12">
+    <div class="max-w-5xl mx-auto text-center">
+        <h1 class="text-6xl font-light text-gray-900 mb-8 leading-tight">
             Avukatlar Arası<br/>
-            <span class="text-primary">İş Devri Platformu</span>
+            İş Devri Platformu
         </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            Ulusal Tevkil Ağı Projesi ile adliyelerdeki işlerinizi güvenilir meslektaşlarınıza devredin. 
-            Hızlı, kolay ve tamamen ücretsiz.
+        <p class="text-xl text-gray-600 mb-12 max-w-2xl mx-auto font-light">
+            Ulusal Tevkil Ağı ile adliyelerdeki işlerinizi güvenilir meslektaşlarınıza devredin.
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a href="{{ url_for('register') }}" class="flex min-w-[200px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 md:h-14 px-4 md:px-8 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 shadow-lg hover:shadow-md sm:shadow-xl transition-all">
-                <span class="truncate">Hemen Başla</span>
+        <div class="flex gap-6 justify-center">
+            <a href="{{ url_for('register') }}" class="px-12 py-4 bg-gray-900 text-white hover:bg-gray-800 transition-colors">
+                Hemen Başla
             </a>
-            <a href="{{ url_for('list_posts') }}" class="flex min-w-[200px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 md:h-14 px-4 md:px-8 border-2 border-primary text-primary text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/10 transition-all">
-                <span class="truncate">İlanları İncele</span>
+            <a href="{{ url_for('list_posts') }}" class="px-12 py-4 border border-gray-300 text-gray-900 hover:border-gray-900 transition-colors">
+                İlanları İncele
             </a>
         </div>
         
-        <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mt-16 max-w-3xl mx-auto">
+        <!-- Stats - Minimal White Theme -->
+        <div class="grid grid-cols-3 gap-16 mt-24">
             <div class="text-center">
-                <div class="text-2xl md:text-4xl font-black text-primary mb-2">1,234+</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Kayıtlı Avukat</div>
+                <div class="text-5xl font-light text-gray-900 mb-3">1,234+</div>
+                <div class="text-sm text-gray-400 uppercase tracking-wider">Kayıtlı Avukat</div>
             </div>
             <div class="text-center">
-                <div class="text-2xl md:text-4xl font-black text-primary mb-2">5,678+</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Tamamlanan İş</div>
+                <div class="text-5xl font-light text-gray-900 mb-3">5,678+</div>
+                <div class="text-sm text-gray-400 uppercase tracking-wider">Tamamlanan İş</div>
             </div>
             <div class="text-center">
-                <div class="text-2xl md:text-4xl font-black text-primary mb-2">892</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Aktif İlan</div>
+                <div class="text-5xl font-light text-gray-900 mb-3">892</div>
+                <div class="text-sm text-gray-400 uppercase tracking-wider">Aktif İlan</div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Features Section -->
-<section class="py-20 px-4 bg-white dark:bg-background-dark">
-    <div class="max-w-7xl mx-auto">
+<!-- Features Section - Minimal White Theme -->
+<section class="py-24 px-12 bg-white border-t border-gray-300">
+    <div class="max-w-5xl mx-auto">
         <div class="text-center mb-16">
-            <h2 class="text-2xl md:text-4xl font-black text-gray-900 dark:text-white mb-4">Neden Ulusal Tevkil Ağı Projesi?</h2>
-            <p class="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                Avukatlar arası iş devrini kolaylaştıran, güvenilir ve modern bir platform
-            </p>
+            <h2 class="text-3xl font-light text-gray-900 mb-8">Neden Tevkil?</h2>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+        <div class="grid grid-cols-2 gap-x-24 gap-y-16">
             <!-- Feature 1 -->
-            <div class="bg-background-light dark:bg-gray-800 rounded-xl p-4 md:p-8 text-center hover:shadow-lg transition-shadow">
-                <div class="inline-flex items-center justify-center w-16 h-14 md:h-16 rounded-full bg-primary/10 mb-4">
-                    <span class="material-symbols-outlined text-primary text-2xl md:text-4xl">security</span>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Güvenilir</h3>
-                <p class="text-gray-600 dark:text-gray-400">
+            <div>
+                <div class="text-sm text-gray-400 uppercase tracking-wider mb-3">01</div>
+                <h3 class="text-xl font-medium text-gray-900 mb-3">Güvenilir</h3>
+                <p class="text-gray-600 font-light leading-relaxed">
                     Sadece avukatlara özel platform. Tüm üyeler doğrulanmış meslektaşlarınız.
                 </p>
             </div>
             
             <!-- Feature 2 -->
-            <div class="bg-background-light dark:bg-gray-800 rounded-xl p-4 md:p-8 text-center hover:shadow-lg transition-shadow">
-                <div class="inline-flex items-center justify-center w-16 h-14 md:h-16 rounded-full bg-primary/10 mb-4">
-                    <span class="material-symbols-outlined text-primary text-2xl md:text-4xl">flash_on</span>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Hızlı</h3>
-                <p class="text-gray-600 dark:text-gray-400">
+            <div>
+                <div class="text-sm text-gray-400 uppercase tracking-wider mb-3">02</div>
+                <h3 class="text-xl font-medium text-gray-900 mb-3">Hızlı</h3>
+                <p class="text-gray-600 font-light leading-relaxed">
                     Dakikalar içinde ilan oluşturun, başvuruları alın ve işlerinizi devredin.
                 </p>
             </div>
             
             <!-- Feature 3 -->
-            <div class="bg-background-light dark:bg-gray-800 rounded-xl p-4 md:p-8 text-center hover:shadow-lg transition-shadow">
-                <div class="inline-flex items-center justify-center w-16 h-14 md:h-16 rounded-full bg-primary/10 mb-4">
-                    <span class="material-symbols-outlined text-primary text-2xl md:text-4xl">verified</span>
+            <div class="bg-background-light dark:bg-gray-800 p-4 md:p-8 text-center hover: transition-shadow">
+                <div class="inline-flex items-center justify-center w-16 h-14 md:h-16 rounded-full bg-gray-900/10 mb-4">
+                    <span class="material-symbols-outlined text-gray-900 text-2xl md:text-4xl">verified</span>
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">100% Ücretsiz</h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -111,9 +98,9 @@
             </div>
             
             <!-- Feature 4 -->
-            <div class="bg-background-light dark:bg-gray-800 rounded-xl p-4 md:p-8 text-center hover:shadow-lg transition-shadow">
-                <div class="inline-flex items-center justify-center w-16 h-14 md:h-16 rounded-full bg-primary/10 mb-4">
-                    <span class="material-symbols-outlined text-primary text-2xl md:text-4xl">location_on</span>
+            <div class="bg-background-light dark:bg-gray-800 p-4 md:p-8 text-center hover: transition-shadow">
+                <div class="inline-flex items-center justify-center w-16 h-14 md:h-16 rounded-full bg-gray-900/10 mb-4">
+                    <span class="material-symbols-outlined text-gray-900 text-2xl md:text-4xl">location_on</span>
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Tüm Türkiye</h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -122,9 +109,9 @@
             </div>
             
             <!-- Feature 5 -->
-            <div class="bg-background-light dark:bg-gray-800 rounded-xl p-4 md:p-8 text-center hover:shadow-lg transition-shadow">
-                <div class="inline-flex items-center justify-center w-16 h-14 md:h-16 rounded-full bg-primary/10 mb-4">
-                    <span class="material-symbols-outlined text-primary text-2xl md:text-4xl">star</span>
+            <div class="bg-background-light dark:bg-gray-800 p-4 md:p-8 text-center hover: transition-shadow">
+                <div class="inline-flex items-center justify-center w-16 h-14 md:h-16 rounded-full bg-gray-900/10 mb-4">
+                    <span class="material-symbols-outlined text-gray-900 text-2xl md:text-4xl">star</span>
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Değerlendirme</h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -133,9 +120,9 @@
             </div>
             
             <!-- Feature 6 -->
-            <div class="bg-background-light dark:bg-gray-800 rounded-xl p-4 md:p-8 text-center hover:shadow-lg transition-shadow">
-                <div class="inline-flex items-center justify-center w-16 h-14 md:h-16 rounded-full bg-primary/10 mb-4">
-                    <span class="material-symbols-outlined text-primary text-2xl md:text-4xl">notifications</span>
+            <div class="bg-background-light dark:bg-gray-800 p-4 md:p-8 text-center hover: transition-shadow">
+                <div class="inline-flex items-center justify-center w-16 h-14 md:h-16 rounded-full bg-gray-900/10 mb-4">
+                    <span class="material-symbols-outlined text-gray-900 text-2xl md:text-4xl">notifications</span>
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Anlık Bildirim</h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -150,7 +137,7 @@
 <section class="py-20 px-4 bg-background-light dark:bg-gray-900">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16">
-            <h2 class="text-2xl md:text-4xl font-black text-gray-900 dark:text-white mb-4">Nasıl Çalışır?</h2>
+            <h2 class="text-2xl md:text-4xl font-light text-gray-900 dark:text-white mb-4">Nasıl Çalışır?</h2>
             <p class="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
                 3 basit adımda işlerinizi devredin veya yeni işler alın
             </p>
@@ -159,7 +146,7 @@
         <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
             <!-- Step 1 -->
             <div class="text-center">
-                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary text-white text-xl md:text-3xl font-bold mb-6">1</div>
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-900 text-white text-xl md:text-3xl font-bold mb-6">1</div>
                 <h3 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-4">Kayıt Olun</h3>
                 <p class="text-gray-600 dark:text-gray-400">
                     Ücretsiz hesap oluşturun ve profilinizi tamamlayın. Sadece birkaç dakika sürer.
@@ -168,7 +155,7 @@
             
             <!-- Step 2 -->
             <div class="text-center">
-                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary text-white text-xl md:text-3xl font-bold mb-6">2</div>
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-900 text-white text-xl md:text-3xl font-bold mb-6">2</div>
                 <h3 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-4">İlan Oluşturun</h3>
                 <p class="text-gray-600 dark:text-gray-400">
                     Devretmek istediğiniz işi detaylı olarak anlatın ve ilanınızı yayınlayın.
@@ -177,7 +164,7 @@
             
             <!-- Step 3 -->
             <div class="text-center">
-                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary text-white text-xl md:text-3xl font-bold mb-6">3</div>
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-900 text-white text-xl md:text-3xl font-bold mb-6">3</div>
                 <h3 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-4">Devredin</h3>
                 <p class="text-gray-600 dark:text-gray-400">
                     Başvuruları inceleyin, uygun avukatı seçin ve işinizi güvenle devredin.
@@ -192,15 +179,15 @@
 <section class="py-20 px-4 bg-white dark:bg-background-dark">
     <div class="max-w-7xl mx-auto">
         <div class="flex justify-between items-center mb-6 sm:mb-12">
-            <h2 class="text-2xl md:text-4xl font-black text-gray-900 dark:text-white">Son İlanlar</h2>
-            <a href="{{ url_for('list_posts') }}" class="text-primary hover:underline font-semibold">
+            <h2 class="text-2xl md:text-4xl font-light text-gray-900 dark:text-white">Son İlanlar</h2>
+            <a href="{{ url_for('list_posts') }}" class="text-gray-900 hover:underline font-semibold">
                 Tümünü Gör →
             </a>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
             {% for post in posts[:6] %}
-            <div class="bg-background-light dark:bg-gray-800 rounded-xl p-3 md:p-6 hover:shadow-md sm:shadow-xl transition-shadow border border-gray-200 dark:border-gray-700">
+            <div class="bg-background-light dark:bg-gray-800 p-3 md:p-6 hover: sm: transition-shadow border border-gray-300 dark:border-gray-700">
                 {% if post.urgency_level == 'urgent' %}
                 <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 mb-3">ACİL</span>
                 {% endif %}
@@ -218,7 +205,7 @@
                     </div>
                 </div>
                 
-                <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between pt-4 border-t border-gray-300 dark:border-gray-700">
                     <div class="flex items-center gap-4 text-xs text-gray-500">
                         <span class="flex items-center gap-1">
                             <span class="material-symbols-outlined text-sm">visibility</span>
@@ -229,7 +216,7 @@
                             {{ post.applications_count }}
                         </span>
                     </div>
-                    <a href="{{ url_for('post_detail', post_id=post.id) }}" class="text-primary font-semibold text-sm hover:underline">
+                    <a href="{{ url_for('post_detail', post_id=post.id) }}" class="text-gray-900 font-semibold text-sm hover:underline">
                         Detaylar →
                     </a>
                 </div>
@@ -241,13 +228,13 @@
 {% endif %}
 
 <!-- CTA Section -->
-<section class="py-20 px-4 bg-primary text-white">
+<section class="py-20 px-4 bg-gray-900 text-white">
     <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-4xl md:text-5xl font-black mb-6">Hemen Başlayın</h2>
+        <h2 class="text-4xl md:text-5xl font-light mb-6">Hemen Başlayın</h2>
         <p class="text-xl mb-8 opacity-90">
             Ulusal Tevkil Ağı Projesi'na katılın, işlerinizi kolayca devredin veya yeni işler alın
         </p>
-        <a href="{{ url_for('register') }}" class="inline-flex min-w-[200px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 md:h-14 px-4 md:px-8 bg-white text-primary text-base font-bold leading-normal tracking-[0.015em] hover:bg-gray-100 shadow-lg hover:shadow-md sm:shadow-xl transition-all">
+        <a href="{{ url_for('register') }}" class="inline-flex min-w-[200px] cursor-pointer items-center justify-center overflow-hidden h-12 md:h-14 px-4 md:px-8 bg-white text-gray-900 text-base font-bold leading-normal tracking-[0.015em] hover:bg-gray-100 hover: sm: transition-all">
             <span class="truncate">Ücretsiz Kayıt Ol</span>
         </a>
         <p class="mt-6 text-sm opacity-75">
