@@ -21,5 +21,5 @@ COPY . .
 
 EXPOSE 8080
 
-# Use gunicorn instead of flask run
-CMD ["gunicorn", "--worker-class", "eventlet", "--workers", "1", "--bind", "0.0.0.0:8080", "--timeout", "120", "--keep-alive", "5", "--access-logfile", "-", "--error-logfile", "-", "app:app"]
+# Use gunicorn with eventlet for Socket.IO support
+CMD ["gunicorn", "--worker-class", "eventlet", "--workers", "1", "--bind", "0.0.0.0:8080", "--timeout", "120", "--keep-alive", "5", "--log-level", "info", "app:app"]
