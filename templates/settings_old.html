@@ -1,0 +1,922 @@
+{% extends "base.html" %}
+
+{% block title %}Ayarlar - Ulusal Tevkil Ağı Projesi{% endblock %}
+
+{% block content %}
+<div class="px-4 md:px-8 lg:px-20 flex flex-1 justify-center py-5">
+    <div class="layout-content-container flex flex-col w-full max-w-6xl">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl md:text-2xl md:text-4xl font-light text-gray-900 dark:text-white mb-2">Ayarlar</h1>
+                <p class="text-gray-600 dark:text-gray-400">Hesabınızı ve tercihlerinizi yönetin</p>
+            </div>
+            <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 transition-colors">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span>Profile Dön</span>
+            </a>
+        </div>
+
+        <!-- Settings Tabs -->
+        <div class="mb-6 border-b border-gray-300 dark:border-gray-700">
+            <nav class="flex gap-1 sm:gap-2 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Ayarlar sekmeleri">
+                <button type="button" id="tab-profile" data-settings-tab-target="profile" class="settings-tab active px-3 sm:px-6 py-3 font-semibold text-gray-900 border-b-2 border-primary whitespace-nowrap text-xs sm:text-sm md:text-base flex-shrink-0" role="tab" aria-controls="content-profile" aria-selected="true">
+                    <span class="flex items-center gap-1 sm:gap-2">
+                        <span class="material-symbols-outlined text-base sm:text-xl">person</span>
+                        <span>Profil Bilgileri</span>
+                    </span>
+                </button>
+                <button type="button" id="tab-privacy" data-settings-tab-target="privacy" class="settings-tab px-3 sm:px-6 py-3 font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 transition-colors whitespace-nowrap text-xs sm:text-sm md:text-base flex-shrink-0" role="tab" aria-controls="content-privacy" aria-selected="false">
+                    <span class="flex items-center gap-1 sm:gap-2">
+                        <span class="material-symbols-outlined text-base sm:text-xl">lock</span>
+                        <span>Gizlilik</span>
+                    </span>
+                </button>
+                <button type="button" id="tab-security" data-settings-tab-target="security" class="settings-tab px-3 sm:px-6 py-3 font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 transition-colors whitespace-nowrap text-xs sm:text-sm md:text-base flex-shrink-0" role="tab" aria-controls="content-security" aria-selected="false">
+                    <span class="flex items-center gap-1 sm:gap-2">
+                        <span class="material-symbols-outlined text-base sm:text-xl">shield</span>
+                        <span>Güvenlik</span>
+                    </span>
+                </button>
+                <button type="button" id="tab-notifications" data-settings-tab-target="notifications" class="settings-tab px-3 sm:px-6 py-3 font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 transition-colors whitespace-nowrap text-xs sm:text-sm md:text-base flex-shrink-0" role="tab" aria-controls="content-notifications" aria-selected="false">
+                    <span class="flex items-center gap-1 sm:gap-2">
+                        <span class="material-symbols-outlined text-base sm:text-xl">notifications</span>
+                        <span>Bildirimler</span>
+                    </span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Profile Tab -->
+        <div id="content-profile" class="settings-content" role="tabpanel" aria-labelledby="tab-profile" data-settings-tab="profile">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6">
+                <!-- Profile Info -->
+                <div class="lg:col-span-2">
+                    <form method="POST" action="{{ url_for('update_profile') }}" class="space-y-6" data-loading="true">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="bg-white dark:bg-gray-800 sm:-2xl p-3 md:p-6 border border-gray-300 dark:border-gray-700">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-gray-900">badge</span>
+                                Kişisel Bilgiler
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Ad Soyad</label>
+                                    <input type="text" name="full_name" value="{{ current_user.full_name }}" required
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">E-posta</label>
+                                    <input type="email" value="{{ current_user.email }}" disabled
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed">
+                                    <p class="text-xs text-gray-500 mt-1">E-posta değiştirmek için destek ile iletişime geçin</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Telefon</label>
+                                    <input type="tel" name="phone" value="{{ current_user.phone or '' }}"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">WhatsApp</label>
+                                    <input type="tel" name="whatsapp_number" value="{{ current_user.whatsapp_number or '' }}"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">İl</label>
+                                    <input type="text" name="city" value="{{ current_user.city or '' }}"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">İlçe</label>
+                                    <input type="text" name="district" value="{{ current_user.district or '' }}"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Hakkımda</label>
+                                <textarea name="bio" rows="4" 
+                                          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary resize-none">{{ current_user.bio or '' }}</textarea>
+                                <p class="text-xs text-gray-500 mt-1">Kendinizi, deneyimlerinizi ve uzmanlık alanlarınızı kısaca tanıtın</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-gray-800 sm:-2xl p-3 md:p-6 border border-gray-300 dark:border-gray-700">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-gray-900">share</span>
+                                Sosyal Medya
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                                        <svg class="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                                        LinkedIn
+                                    </label>
+                                    <input type="url" name="linkedin_url" value="{{ current_user.linkedin_url or '' }}" placeholder="https://linkedin.com/in/username"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                        Twitter/X
+                                    </label>
+                                    <input type="url" name="twitter_url" value="{{ current_user.twitter_url or '' }}" placeholder="https://twitter.com/username"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                                        <svg class="w-5 h-5 text-pink-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                                        Instagram
+                                    </label>
+                                    <input type="url" name="instagram_url" value="{{ current_user.instagram_url or '' }}" placeholder="https://instagram.com/username"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-indigo-600">language</span>
+                                        Website
+                                    </label>
+                                    <input type="url" name="website_url" value="{{ current_user.website_url or '' }}" placeholder="https://example.com"
+                                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3">
+                            <a href="{{ url_for('user_profile', user_id=current_user.id) }}"
+                               class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto text-center">
+                                İptal
+                            </a>
+                            <button type="submit" 
+                                    class="px-6 py-3 bg-gray-900 text-white font-semibold hover:bg-gray-900 transition-colors flex items-center gap-2 w-full sm:w-auto">
+                                <span class="material-symbols-outlined">save</span>
+                                Değişiklikleri Kaydet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy Tab -->
+        <div id="content-privacy" class="settings-content hidden" role="tabpanel" aria-labelledby="tab-privacy" data-settings-tab="privacy">
+            <div class="bg-white dark:bg-gray-800 sm:-2xl p-3 md:p-6 border border-gray-300 dark:border-gray-700">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Gizlilik Ayarları</h3>
+                
+                <form method="POST" action="{{ url_for('update_privacy_settings') }}" class="space-y-6" data-loading="true">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="flex items-center justify-between py-4 border-b border-gray-300 dark:border-gray-700">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Profil Görünürlüğü</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Profilinizi herkes görebilir</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="profile_visible" {{ 'checked' if current_user.profile_visible else '' }} class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-gray-900"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between py-4 border-b border-gray-300 dark:border-gray-700">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Telefon Numarasını Göster</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Profilinizde telefon numaranız görünsün</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="show_phone" {{ 'checked' if current_user.show_phone else '' }} class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-gray-900"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between py-4 border-b border-gray-300 dark:border-gray-700">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">E-posta Adresini Göster</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Profilinizde e-posta adresiniz görünsün</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="show_email" {{ 'checked' if current_user.show_email else '' }} class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-gray-900"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between py-4">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Son Görülme</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Son aktiflik zamanınızı göster</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="show_last_active" {{ 'checked' if current_user.show_last_active else '' }} class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-gray-900"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-6 py-3 bg-gray-900 text-white font-semibold hover:bg-gray-900 transition-colors flex items-center gap-2 w-full sm:w-auto">
+                            <span class="material-symbols-outlined">save</span>
+                            Kaydet
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Security Tab -->
+        <div id="content-security" class="settings-content hidden" role="tabpanel" aria-labelledby="tab-security" data-settings-tab="security">
+            <div class="space-y-6">
+                <!-- Two-Factor Authentication -->
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-3 md:p-6 border border-gray-300 dark:border-gray-700">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-gray-900">security</span>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">İki Faktörlü Kimlik Doğrulama (2FA)</h3>
+                        </div>
+                        {% if current_user.two_factor_enabled %}
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-full text-sm font-semibold flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">verified_user</span>
+                            Aktif
+                        </span>
+                        {% else %}
+                        <span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm font-semibold">
+                            Devre Dışı
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        Hesabınızı ek bir güvenlik katmanıyla koruyun. Giriş yaparken şifrenize ek olarak 
+                        telefonunuzdaki bir uygulamadan alacağınız 6 haneli kod gerekecek.
+                    </p>
+
+                    {% if current_user.two_factor_enabled %}
+                    <!-- 2FA Enabled -->
+                    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 p-4 mb-4">
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-green-600">check_circle</span>
+                            <div class="flex-1">
+                                <p class="font-semibold text-green-900 dark:text-green-100">2FA Etkin</p>
+                                <p class="text-sm text-green-700 dark:text-green-300 mt-1">
+                                    Hesabınız iki faktörlü kimlik doğrulama ile korunuyor
+                                </p>
+                                
+                                <!-- Yedek Kodlar -->
+                                {% if backup_codes %}
+                                <div class="mt-4 pt-4 border-t border-green-200">
+                                    <button 
+                                        type="button"
+                                        data-modal-trigger
+                                        data-modal-target="backup-codes-modal"
+                                        class="text-sm text-green-700 hover:text-green-900 font-semibold flex items-center gap-1"
+                                    >
+                                        <span class="material-symbols-outlined text-base">key</span>
+                                        Yedek Kodları Göster
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('disable_2fa') }}" data-role="confirm-form" data-confirm-message="2FA devre dışı bırakıldığında hesabınız daha az güvenli olacak. Emin misiniz?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Şifrenizi Girin (Doğrulama için)</label>
+                            <input type="password" name="password" required
+                                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                        </div>
+                        <button type="submit" class="w-full bg-red-600 text-white px-6 py-3 font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">block</span>
+                            2FA'yı Devre Dışı Bırak
+                        </button>
+                    </form>
+                    {% else %}
+                    <!-- 2FA Disabled -->
+                    <a href="{{ url_for('setup_2fa') }}" class="block w-full bg-gray-900 text-white px-6 py-3 font-semibold hover:bg-gray-900 transition-colors text-center">
+                        <span class="material-symbols-outlined inline-block align-middle mr-2">shield</span>
+                        2FA'yı Etkinleştir
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Change Password -->
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-3 md:p-6 border border-gray-300 dark:border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-gray-900">key</span>
+                        Şifre Değiştir
+                    </h3>
+                    
+                    <form method="POST" action="{{ url_for('change_password') }}" class="space-y-4" data-loading="true">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Mevcut Şifre</label>
+                            <input type="password" name="current_password" required
+                                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Yeni Şifre</label>
+                            <input type="password" name="new_password" id="new_password" required minlength="8"
+                                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                            <div id="password-strength" class="mt-2 text-sm"></div>
+                            <p class="text-xs text-gray-500 mt-1">En az 8 karakter, 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Yeni Şifre (Tekrar)</label>
+                            <input type="password" name="confirm_password" required minlength="8"
+                                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-gray-900 text-white px-6 py-3 font-semibold hover:bg-gray-900 transition-colors flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">lock_reset</span>
+                            Şifreyi Değiştir
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Active Sessions -->
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-3 md:p-6 border border-gray-300 dark:border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-gray-900">devices</span>
+                        Aktif Oturumlar
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700">
+                            <div class="flex items-center gap-4">
+                                <span class="material-symbols-outlined text-green-600 text-xl md:text-3xl">computer</span>
+                                <div>
+                                    <p class="font-semibold text-gray-900 dark:text-white">Mevcut Oturum</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Windows • Chrome • Ankara, Türkiye</p>
+                                    <p class="text-xs text-green-600 dark:text-green-400 mt-1">Şimdi Aktif</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-full text-xs font-semibold">Aktif</span>
+                        </div>
+                    </div>
+                    
+                    <button type="button" data-action="terminate-sessions" class="mt-4 w-full text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-semibold py-2 text-sm">
+                        Diğer Tüm Oturumları Kapat
+                    </button>
+                </div>
+
+                <!-- Security Logs Link -->
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-3 md:p-6 border border-gray-300 dark:border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-gray-900">history</span>
+                        Güvenlik Geçmişi
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        Hesabınızdaki tüm güvenlik olaylarını görüntüleyin (giriş/çıkış, şifre değişiklikleri, vb.)
+                    </p>
+                    <a href="{{ url_for('security_logs') }}" class="inline-flex items-center gap-2 text-gray-900 hover:text-blue-700 font-semibold">
+                        Güvenlik Loglarını Görüntüle
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                </div>
+
+                <!-- Account Actions -->
+                <div class="bg-white dark:bg-gray-800 sm:-2xl p-3 md:p-6 border border-gray-300 dark:border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-red-600">warning</span>
+                        Hesap İşlemleri
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <button type="button" data-role="open-delete-modal" data-modal-trigger data-modal-target="delete-account-modal" class="w-full flex items-center justify-between p-4 border-2 border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors group">
+                            <div class="text-left">
+                                <p class="font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
+                                    <span class="material-symbols-outlined">delete_forever</span>
+                                    Hesabı Kalıcı Olarak Sil
+                                </p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Bu işlem geri alınamaz! Tüm verileriniz silinecek.</p>
+                            </div>
+                            <span class="material-symbols-outlined text-red-600">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div id="content-notifications" class="settings-content hidden" role="tabpanel" aria-labelledby="tab-notifications" data-settings-tab="notifications">
+            <div class="bg-white dark:bg-gray-800 sm:-2xl p-3 md:p-6 border border-gray-300 dark:border-gray-700">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Bildirim Tercihleri</h3>
+                
+                <form method="POST" action="{{ url_for('update_notification_settings') }}" class="space-y-6">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div>
+                        <h4 class="font-semibold text-gray-900 dark:text-white mb-4">E-posta Bildirimleri</h4>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between py-3 border-b border-gray-300 dark:border-gray-700">
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900 dark:text-white">Yeni Mesajlar</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Yeni mesaj aldığınızda e-posta gönder</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="email_new_messages" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between py-3 border-b border-gray-300 dark:border-gray-700">
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900 dark:text-white">İş Başvuruları</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">İlanlarınıza başvuru geldiğinde bildir</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="email_applications" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between py-3 border-b border-gray-300 dark:border-gray-700">
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900 dark:text-white">Değerlendirmeler</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Yeni değerlendirme aldığınızda bildir</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="email_ratings" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between py-3">
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900 dark:text-white">Haftalık Özet</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Haftalık aktivite özeti e-postası</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="email_weekly_summary" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-6 border-t border-gray-300 dark:border-gray-700">
+                        <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Push Bildirimleri</h4>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between py-3">
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900 dark:text-white">Tarayıcı Bildirimleri</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Tarayıcıda anlık bildirimler göster</p>
+                                </div>
+                                <button type="button" data-action="request-notification" class="px-4 py-2 bg-gray-900 text-white font-semibold hover:bg-gray-900 transition-colors text-sm w-full sm:w-auto">
+                                    Etkinleştir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-6 py-3 bg-gray-900 text-white font-semibold hover:bg-gray-900 transition-colors flex items-center gap-2 w-full sm:w-auto">
+                            <span class="material-symbols-outlined">save</span>
+                            Kaydet
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div id="delete-account-modal" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" data-modal-open-class="flex" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+    <div class="bg-white dark:bg-gray-800 max-w-md w-full p-6 border border-gray-300 dark:border-gray-700" role="document">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <span class="material-symbols-outlined text-red-600 text-2xl">warning</span>
+            </div>
+            <div class="flex-1">
+                <h3 id="delete-account-title" class="text-xl font-bold text-gray-900 dark:text-white">Hesabı Sil</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Bu işlem kalıcıdır ve geri alınamaz.</p>
+            </div>
+            <button type="button" class="text-gray-500 hover:text-gray-700" data-modal-close aria-label="Kapat">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+                <p class="text-sm text-red-800 dark:text-red-200 font-semibold mb-2">⚠️ DİKKAT: Bu işlem geri alınamaz!</p>
+                <ul class="text-sm text-red-700 dark:text-red-300 space-y-1 list-disc list-inside">
+                    <li>Tüm ilanlarınız silinecek</li>
+                    <li>Tüm mesajlarınız silinecek</li>
+                    <li>Tüm değerlendirmeleriniz silinecek</li>
+                    <li>Profil bilgileriniz kalıcı olarak silinecek</li>
+                </ul>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" for="delete-account-password">
+                    Şifrenizi Girin
+                </label>
+                <input type="password" id="delete-account-password" data-role="delete-password"
+                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500"
+                       placeholder="Şifreniz">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" for="delete-account-confirmation">
+                    Onaylamak için "SIL" yazın
+                </label>
+                <input type="text" id="delete-account-confirmation" data-role="delete-confirmation"
+                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500"
+                       placeholder="SIL">
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button type="button" class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-modal-close>
+                    İptal
+                </button>
+                <button type="button" class="flex-1 px-4 py-3 bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2" data-role="confirm-delete">
+                    <span class="material-symbols-outlined">delete_forever</span>
+                    Hesabı Sil
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Yedek Kodlar Modalı -->
+{% if current_user.two_factor_enabled and backup_codes %}
+<div id="backup-codes-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" data-modal-open-class="flex">
+    <div class="bg-white dark:bg-gray-800 max-w-2xl w-full p-8 border border-gray-300" role="dialog" aria-modal="true" aria-labelledby="backup-codes-title">
+        <div class="flex items-center justify-between mb-6">
+            <h3 id="backup-codes-title" class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-yellow-500">key</span>
+                Yedek Kodlarınız
+            </h3>
+            <button type="button" class="text-gray-500 hover:text-gray-700" data-modal-close aria-label="Kapat">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 p-4 mb-6">
+            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                <strong>⚠️ Önemli:</strong> Bu kodları güvenli bir yerde saklayın! Telefonunuzu kaybederseniz bu kodlarla giriş yapabilirsiniz.
+                Her kod sadece bir kez kullanılabilir.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            {% for code in backup_codes %}
+            <div class="bg-gray-100 dark:bg-gray-700 p-3 font-mono text-center text-lg font-bold">
+                {{ code }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="flex gap-3">
+            <button type="button" data-action="copy-backup-codes" class="flex-1 bg-gray-900 hover:bg-gray-900 text-white font-semibold px-6 py-3 transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">content_copy</span>
+                Kodları Kopyala
+            </button>
+            <button type="button" data-action="print-backup-codes" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-3 transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">print</span>
+                Yazdır
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+    {% block scripts %}
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const ACTIVE_TAB_CLASSES = ['active', 'text-primary', 'border-b-2', 'border-primary'];
+        const INACTIVE_TAB_CLASSES = ['text-gray-600', 'dark:text-gray-400'];
+        const tabButtons = document.querySelectorAll('[data-settings-tab-target]');
+        const tabPanels = document.querySelectorAll('[data-settings-tab]');
+        const csrfToken = '{{ csrf_token() }}';
+        const deleteAccountUrl = '{{ url_for("delete_account") }}';
+        const deleteRedirectUrl = '{{ url_for("index") }}';
+        const terminateSessionsUrl = '/security/sessions/terminate-all';
+        const backupCodesData = JSON.parse(
+            decodeURIComponent('{{ backup_codes|default([], true)|tojson|safe|urlencode }}'.replace(/\+/g, '%20'))
+        );
+        const flashMessages = JSON.parse(
+            decodeURIComponent('{{ get_flashed_messages(with_categories=true)|tojson|safe|urlencode }}'.replace(/\+/g, '%20'))
+        );
+
+        const setActiveTab = (targetId) => {
+            tabPanels.forEach((panel) => {
+                const isActive = panel.dataset.settingsTab === targetId;
+                panel.classList.toggle('hidden', !isActive);
+                panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+            });
+
+            tabButtons.forEach((button) => {
+                const isMatch = button.dataset.settingsTabTarget === targetId;
+                button.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+                button.classList.remove(...ACTIVE_TAB_CLASSES, ...INACTIVE_TAB_CLASSES);
+                if (isMatch) {
+                    button.classList.add(...ACTIVE_TAB_CLASSES, 'text-gray-900');
+                } else {
+                    button.classList.add(...INACTIVE_TAB_CLASSES);
+                }
+            });
+        };
+
+        if (tabButtons.length) {
+            tabButtons.forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const targetId = button.dataset.settingsTabTarget;
+                    if (targetId) {
+                        setActiveTab(targetId);
+                    }
+                });
+            });
+
+            const defaultTab = Array.from(tabButtons).find((button) => button.classList.contains('active')) || tabButtons[0];
+            if (defaultTab) {
+                setActiveTab(defaultTab.dataset.settingsTabTarget);
+            }
+        }
+
+        document.querySelectorAll('[data-role="confirm-form"]').forEach((form) => {
+            form.addEventListener('submit', (event) => {
+                const message = form.dataset.confirmMessage;
+                if (message && !window.confirm(message)) {
+                    event.preventDefault();
+                }
+            });
+        });
+
+        const initializeModal = (modal) => {
+            if (!modal || modal.dataset.modalInitialized === 'true') {
+                return;
+            }
+
+            const openClass = modal.dataset.modalOpenClass || 'flex';
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove(openClass);
+            };
+
+            modal.querySelectorAll('[data-modal-close]').forEach((button) => {
+                button.addEventListener('click', closeModal);
+            });
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            modal.dataset.modalInitialized = 'true';
+            modal.dataset.modalOpenClassValue = openClass;
+            modal._closeModal = closeModal;
+        };
+
+        document.querySelectorAll('[data-modal-trigger]').forEach((trigger) => {
+            const targetId = trigger.dataset.modalTarget;
+            if (!targetId) {
+                return;
+            }
+
+            const modal = document.getElementById(targetId);
+            if (!modal) {
+                return;
+            }
+
+            initializeModal(modal);
+            const openClass = modal.dataset.modalOpenClassValue || modal.dataset.modalOpenClass || 'flex';
+
+            trigger.addEventListener('click', (event) => {
+                event.preventDefault();
+                modal.classList.remove('hidden');
+                modal.classList.add(openClass);
+            });
+        });
+
+        const deleteModal = document.getElementById('delete-account-modal');
+        if (deleteModal) {
+            initializeModal(deleteModal);
+            const deletePasswordInput = deleteModal.querySelector('[data-role="delete-password"]');
+            const deleteConfirmationInput = deleteModal.querySelector('[data-role="delete-confirmation"]');
+            const confirmDeleteButton = deleteModal.querySelector('[data-role="confirm-delete"]');
+            const openDeleteButton = document.querySelector('[data-role="open-delete-modal"]');
+
+            if (openDeleteButton) {
+                openDeleteButton.addEventListener('click', () => {
+                    window.setTimeout(() => deletePasswordInput?.focus(), 120);
+                });
+            }
+
+            if (confirmDeleteButton) {
+                confirmDeleteButton.addEventListener('click', async () => {
+                    const password = deletePasswordInput?.value?.trim() || '';
+                    const confirmation = deleteConfirmationInput?.value?.trim() || '';
+
+                    if (!password) {
+                        window.alert('Lütfen şifrenizi girin');
+                        deletePasswordInput?.focus();
+                        return;
+                    }
+
+                    if (confirmation !== 'SIL') {
+                        window.alert('Onaylamak için "SIL" yazmalısınız (büyük harflerle)');
+                        deleteConfirmationInput?.focus();
+                        return;
+                    }
+
+                    if (!window.confirm('SON UYARI: Hesabınız kalıcı olarak silinecek. Emin misiniz?')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(deleteAccountUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: JSON.stringify({ password, confirmation })
+                        });
+
+                        const data = await response.json().catch(() => ({}));
+
+                        if (response.ok && (data.success !== false)) {
+                            window.alert('Hesabınız başarıyla silindi. Bizi kullandığınız için teşekkür ederiz.');
+                            window.location.href = deleteRedirectUrl;
+                        } else {
+                            const errorMessage = data.error || 'Bir hata oluştu';
+                            window.alert(`Hata: ${errorMessage}`);
+                        }
+                    } catch (error) {
+                        console.error('Delete account error:', error);
+                        window.alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                    }
+                });
+            }
+        }
+
+        const terminateSessionsButton = document.querySelector('[data-action="terminate-sessions"]');
+        if (terminateSessionsButton) {
+            terminateSessionsButton.addEventListener('click', async () => {
+                if (!window.confirm('Diğer tüm cihazlardan çıkış yapmak istediğinize emin misiniz?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(terminateSessionsUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        }
+                    });
+
+                    const data = await response.json().catch(() => ({}));
+
+                    if (response.ok && data.success) {
+                        window.alert(data.message || 'Oturumlar sonlandırıldı.');
+                        window.location.reload();
+                    } else {
+                        const errorMessage = data.error || 'Bir hata oluştu.';
+                        window.alert(errorMessage);
+                    }
+                } catch (error) {
+                    console.error('Terminate sessions error:', error);
+                    window.alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                }
+            });
+        }
+
+        const notificationButton = document.querySelector('[data-action="request-notification"]');
+        if (notificationButton) {
+            notificationButton.addEventListener('click', async () => {
+                if (!('Notification' in window)) {
+                    window.alert('Tarayıcınız push bildirimleri desteklemiyor.');
+                    return;
+                }
+
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        new Notification('Bildirimler Etkinleştirildi!', {
+                            body: 'Artık önemli güncellemeler için bildirim alacaksınız.',
+                            icon: '/static/icon-192.png'
+                        });
+                    } else if (permission === 'denied') {
+                        window.alert('Bildirim izni reddedildi. Tarayıcı ayarlarından güncelleyebilirsiniz.');
+                    }
+                } catch (error) {
+                    console.error('Notification permission error:', error);
+                    window.alert('Bildirim izni alınırken bir sorun oluştu.');
+                }
+            });
+        }
+
+        const copyBackupButton = document.querySelector('[data-action="copy-backup-codes"]');
+        if (copyBackupButton) {
+            copyBackupButton.addEventListener('click', async () => {
+                if (!backupCodesData.length) {
+                    window.alert('Kopyalanacak yedek kod bulunamadı.');
+                    return;
+                }
+
+                try {
+                    await navigator.clipboard.writeText(backupCodesData.join('\n'));
+                    window.alert('✅ Yedek kodlar kopyalandı!');
+                } catch (error) {
+                    console.error('Clipboard error:', error);
+                    window.alert('Kodlar kopyalanamadı. Lütfen manuel olarak kopyalayın.');
+                }
+            });
+        }
+
+        const printBackupButton = document.querySelector('[data-action="print-backup-codes"]');
+        if (printBackupButton) {
+            printBackupButton.addEventListener('click', () => {
+                window.print();
+            });
+        }
+
+        const passwordInput = document.getElementById('new_password');
+        const strengthDiv = document.getElementById('password-strength');
+        if (passwordInput && strengthDiv) {
+            passwordInput.addEventListener('input', () => {
+                const password = passwordInput.value || '';
+
+                if (!password.length) {
+                    strengthDiv.textContent = '';
+                    strengthDiv.className = '';
+                    return;
+                }
+
+                let strength = 0;
+                const requirements = [];
+
+                if (password.length >= 8) {
+                    strength++;
+                } else {
+                    requirements.push('En az 8 karakter');
+                }
+
+                if (/[A-Z]/.test(password)) {
+                    strength++;
+                } else {
+                    requirements.push('1 büyük harf');
+                }
+
+                if (/[a-z]/.test(password)) {
+                    strength++;
+                } else {
+                    requirements.push('1 küçük harf');
+                }
+
+                if (/\d/.test(password)) {
+                    strength++;
+                } else {
+                    requirements.push('1 rakam');
+                }
+
+                if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                    strength++;
+                } else {
+                    requirements.push('1 özel karakter');
+                }
+
+                const colors = ['text-red-600', 'text-red-500', 'text-orange-500', 'text-yellow-500', 'text-green-500'];
+                const labels = ['Çok Zayıf', 'Zayıf', 'Orta', 'İyi', 'Güçlü'];
+
+                const index = Math.max(0, Math.min(colors.length - 1, strength - 1));
+                strengthDiv.className = `${colors[index]} font-semibold`;
+                strengthDiv.textContent = `Şifre Gücü: ${labels[index]}`;
+
+                if (requirements.length) {
+                    strengthDiv.textContent += ` (Eksik: ${requirements.join(', ')})`;
+                }
+            });
+        }
+
+        if (Array.isArray(flashMessages)) {
+            flashMessages.forEach((item, index) => {
+                const message = Array.isArray(item) ? item[1] : item;
+                if (!message) {
+                    return;
+                }
+                window.setTimeout(() => window.alert(message), 500 + index * 300);
+            });
+        }
+    });
+    </script>
+    {% endblock %}
