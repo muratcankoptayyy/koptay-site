@@ -54,7 +54,7 @@ class Config:
 
     SEND_FILE_MAX_AGE_DEFAULT = 31536000
 
-    RATELIMIT_DEFAULT = ["10000 per day", "500 per hour"]
+    RATELIMIT_DEFAULT = "10000 per day;500 per hour"
     RATELIMIT_STORAGE_URI = "memory://"
     RATELIMIT_STRATEGY = "fixed-window"
 
