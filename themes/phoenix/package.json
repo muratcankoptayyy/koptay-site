@@ -1,0 +1,20 @@
+{
+  "name": "tevkil-phoenix-theme",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Next-generation Tevkil theme workspace (Tailwind CSS + PostCSS)",
+  "scripts": {
+    "clean": "rimraf static/css/main.css",
+    "dev": "cross-env TAILWIND_MODE=watch tailwindcss -c tailwind.config.cjs -i ./src/styles/input.css -o ./static/css/main.css --watch",
+    "build": "cross-env NODE_ENV=production tailwindcss -c tailwind.config.cjs -i ./src/styles/input.css -o ./static/css/main.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.9",
+    "@tailwindcss/typography": "^0.5.11",
+    "autoprefixer": "^10.4.20",
+    "cross-env": "^7.0.3",
+    "postcss": "^8.4.47",
+    "rimraf": "^5.0.5",
+    "tailwindcss": "^3.4.14"
+  }
+}

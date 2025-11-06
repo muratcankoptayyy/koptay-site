@@ -59,3 +59,12 @@ static/uploads/
 *.key
 *.cert
 secrets/
+
+# Node modules (Phoenix theme)
+node_modules/
+themes/phoenix/node_modules/
+themes/phoenix/static/css/main.css
+
+# Temporary files
+*.udf
+tmp_*.py

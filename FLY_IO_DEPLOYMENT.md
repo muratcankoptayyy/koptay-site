@@ -92,9 +92,9 @@ fly launch --no-deploy
 fly secrets set FLASK_SECRET_KEY="$(openssl rand -hex 32)"
 fly secrets set FLASK_ENV=production
 fly secrets set WHATSAPP_ENABLED=false
-fly secrets set GEMINI_API_KEY=AIzaSyCtm1otDTI_91bTFHerLA4MvE1WOrkWSfw
-fly secrets set GITHUB_TOKEN=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
-fly secrets set META_WEBHOOK_VERIFY_TOKEN=tevkil_webhook_2025
+fly secrets set GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+fly secrets set GITHUB_TOKEN=YOUR_GITHUB_TOKEN
+fly secrets set META_WEBHOOK_VERIFY_TOKEN=YOUR_WEBHOOK_TOKEN
 
 # İlk deployment
 fly deploy

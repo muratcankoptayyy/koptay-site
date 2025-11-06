@@ -1,18 +1,31 @@
-<!DOCTYPE html>
-<html class="light" lang="tr">
+﻿<!DOCTYPE html>
+<html lang="tr" class="h-full">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QRCQ663WPD"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-QRCQ663WPD', {
+            anonymize_ip: true,
+            cookie_flags: 'SameSite=None;Secure'
+        });
+    </script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Ulusal Tevkil Ağı Projesi - Avukatlar İçin Güvenli Tevkil Platformu{% endblock %}</title>
-    
+
     <!-- Primary Meta Tags -->
     <meta name="description" content="{% block description %}Türkiye'nin en güvenli avukat tevkil platformu. Duruşma temsili, iş devri ve hukuki yardımlaşma için binlerce avukatla anında bağlantı kurun. UTAP.com.tr{% endblock %}">
     <meta name="keywords" content="avukat tevkil, duruşma temsili, avukat ağı, hukuki yardım, iş devri, tevkil platformu, UTAP, avukat bul, hukukçu network, müvekkil, vekalet">
     <meta name="author" content="UTAP - Ulusal Tevkil Ağı Projesi">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ request.url }}">
-    
-    <!-- Open Graph / Facebook -->
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:title" content="{% block og_title %}Ulusal Tevkil Ağı Projesi - UTAP{% endblock %}">
@@ -20,551 +33,444 @@
     <meta property="og:image" content="{{ url_for('static', filename='logo-icon.svg', _external=True) }}">
     <meta property="og:site_name" content="UTAP">
     <meta property="og:locale" content="tr_TR">
-    
+
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="{{ request.url }}">
     <meta name="twitter:title" content="{% block twitter_title %}UTAP - Ulusal Tevkil Ağı Projesi{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}Türkiye'nin en güvenli avukat tevkil platformu{% endblock %}">
     <meta name="twitter:image" content="{{ url_for('static', filename='logo-icon.svg', _external=True) }}">
-    
-    <!-- Additional SEO -->
-    <meta name="language" content="Turkish">
-    <meta name="revisit-after" content="7 days">
-    <meta name="rating" content="General">
-    <meta name="geo.region" content="TR">
-    <meta name="geo.placename" content="Turkey">
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#3B82F6">
+
+    <!-- PWA Meta -->
+    <meta name="theme-color" content="#2563EB">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Tevkil">
-    
-    <!-- PWA Manifest -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo-icon.svg') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo-icon.svg') }}">
-    
-    <!-- Tailwind CSS - Compiled & Optimized -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind-output.css') }}">
-    
-    <!-- Material Symbols Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-    
-    <!-- Custom Animations & UI Utilities -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}"/>
-    
-    <!-- Custom Styles - Minimal White Theme -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            letter-spacing: -0.01em;
-            background-color: #ffffff;
-            /* Mobil dokunma optimizasyonu */
-            -webkit-tap-highlight-color: rgba(17, 24, 39, 0.1);
-            -webkit-touch-callout: none;
-        }
-        .material-symbols-outlined {
+        .material-symbols-outlined,
+        .material-symbols-rounded {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
         }
-        
-        /* Minimal White Theme Overrides */
-        .btn-primary {
-            background-color: #111827 !important;
-            color: white !important;
-            padding: 0.75rem 2rem !important;
-            border-radius: 0 !important;
-            font-weight: 300;
-            transition: background-color 0.2s;
-        }
-        .btn-primary:hover {
-            background-color: #1F2937 !important;
-        }
-        .btn-secondary {
-            border: 1px solid #D1D5DB !important;
-            color: #111827 !important;
-            padding: 0.75rem 2rem !important;
-            border-radius: 0 !important;
-            font-weight: 300;
-            transition: border-color 0.2s;
-        }
-        .btn-secondary:hover {
-            border-color: #111827 !important;
-        }
-        
-        /* Input minimal style */
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        input[type="tel"],
-        input[type="number"],
-        textarea,
-        select {
-            border: 0 !important;
-            border-bottom: 1px solid #E5E7EB !important;
-            border-radius: 0 !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            font-weight: 300;
-        }
-        input:focus,
-        textarea:focus,
-        select:focus {
-            border-bottom-color: #111827 !important;
-            outline: none !important;
-            box-shadow: none !important;
-        }
-        
-        /* Card minimal style */
-        .card {
-            border: 1px solid #D1D5DB !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            transition: border-color 0.2s;
-        }
-        .card:hover {
-            border-color: #111827 !important;
-        }
-        /* Mobil scroll optimizasyonu */
-        * {
-            -webkit-overflow-scrolling: touch;
-        }
-        /* Touch-friendly button sizing */
-        button, a {
-            min-height: 44px;
-            min-width: 44px;
-        }
-        /* Prevent zoom on input focus (iOS) */
-        input, select, textarea {
-            font-size: 16px !important;
-        }
-        /* Smooth scrolling */
-        html {
-            scroll-behavior: smooth;
+
+        .material-symbols-outlined.fill-icon,
+        .material-symbols-rounded.fill-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
     </style>
-    
-    <!-- Mobile Optimizations CSS -->
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='phoenix/css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-optimizations.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-fixes-targeted.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/loading-states.css') }}">
-    
-    <!-- Google Maps JavaScript API -->
-    {% if google_maps_api_key %}
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&language=tr" async defer></script>
-    {% endif %}
-    
-    <!-- Google Analytics 4 (Production only) -->
-    {% if not config.DEBUG %}
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-XXXXXXXXXX', {
-            'anonymize_ip': true,
-            'cookie_flags': 'SameSite=None;Secure'
-        });
-    </script>
-    {% endif %}
-    
+
+    {% block extra_meta %}{% endblock %}
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-background-light dark:bg-background-dark font-display">
-    <!-- PWA Install Banner - Sadece giriş yapmış kullanıcılar için -->
+
+{% set unread_notif_count = current_user.notifications_unread_count if current_user.is_authenticated else 0 %}
+
+<body class="min-h-full bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100"
+      x-data="{
+        mobileNav: false,
+        darkMode: localStorage.getItem('theme') === 'dark',
+        toggleTheme() {
+            this.darkMode = !this.darkMode;
+            localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+            document.documentElement.classList.toggle('dark', this.darkMode);
+        }
+      }"
+      x-init="document.documentElement.classList.toggle('dark', darkMode)">
+
     {% if current_user.is_authenticated %}
-    <div id="pwa-install-banner" style="display: none;" class="fixed top-0 left-0 right-0 bg-white text-white p-3 md:p-4 z-[60]">
-        <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 md:gap-4 flex-wrap">
-            <div class="flex items-center gap-2 md:gap-3 flex-1">
-                <span class="material-symbols-outlined text-xl md:text-3xl">get_app</span>
-                <div>
-                    <p class="font-semibold text-sm md:text-base">Tevkil'i Ana Ekranınıza Ekleyin</p>
-                    <p class="text-xs md:text-sm text-blue-100 hidden sm:block">Daha hızlı erişim, offline çalışma ve bildirimler</p>
+    <div id="pwa-install-banner" class="fixed top-0 left-0 right-0 z-50 hidden bg-brand-600/95 text-white shadow-lg">
+        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+            <div class="flex flex-1 items-center gap-3">
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 16v-8m0 0l-3 3m3-3l3 3m2 9H7a2 2 0 01-2-2V7a2 2 0 012-2h2l1-1h4l1 1h2a2 2 0 012 2v11a2 2 0 01-2 2z" />
+                    </svg>
+                </span>
+                <div class="flex flex-col">
+                    <p class="text-sm font-semibold tracking-tight">Tevkil'i ana ekranınıza ekleyin</p>
+                    <p class="text-xs text-white/80">Daha hızlı erişim, offline çalışma ve anlık bildirimler</p>
                 </div>
             </div>
-            <div class="flex gap-2 flex-shrink-0">
-                <button onclick="installPWA()" class="bg-white text-gray-900 px-4 md:px-6 py-2 font-semibold hover:bg-gray-800 transition text-sm md:text-base w-full sm:w-auto">
-                    Yükle
-                </button>
-                <button onclick="hideInstallBanner()" class="bg-gray-900 text-white px-3 md:px-4 py-2 hover:bg-gray-800 transition text-sm md:text-base w-full sm:w-auto">
-                    <span class="hidden sm:inline">Daha Sonra</span>
-                    <span class="sm:hidden">✕</span>
-                </button>
+            <div class="flex flex-shrink-0 gap-2">
+                <button type="button" class="btn btn-light" data-role="pwa-install">Yükle</button>
+                <button type="button" class="btn btn-ghost text-white" data-role="pwa-hide-install">Daha sonra</button>
             </div>
         </div>
     </div>
     {% endif %}
 
-    <div class="relative flex min-h-screen w-full group/design-root overflow-x-hidden">
-        
+    <div class="flex min-h-full flex-col">
         {% block header %}
-        <!-- Sidebar Navigation - Sadece giriş yapılmışsa göster -->
-        {% if current_user.is_authenticated %}
-        <!-- Mobile Menu Button - Floating, sağ tarafa taşındı -->
-        <button id="mobileMenuBtn" class="lg:hidden fixed right-3 top-1/2 -translate-y-1/2 z-50 bg-gray-900/80 backdrop-blur-sm hover:bg-gray-900 p-2.5 rounded-full border-2 border-white/20 transition-all duration-300 active:scale-95" style="width: 48px; height: 48px;">
-            <span class="material-symbols-outlined text-white text-xl">menu</span>
-        </button>
-        
-        <!-- Overlay -->
-        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
-        
-        <!-- Sidebar Navigation - Minimal White Theme -->
-        <aside id="sidebar" class="fixed left-0 top-0 h-screen w-48 bg-white border-r border-gray-300 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 pb-20 lg:pb-0">
-            <!-- Logo -->
-            <div class="flex items-center gap-3 px-6 py-5 border-b border-gray-300 flex-shrink-0">
-                <img src="{{ url_for('static', filename='logo-icon.svg') }}" alt="UTAP" class="h-8 w-8">
-                <div class="flex flex-col">
-                    <span class="text-lg font-light text-gray-900">Tevkil</span>
+        <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/90">
+            <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+                <div class="flex items-center gap-3">
+                    <button class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 lg:hidden"
+                            @click="mobileNav = !mobileNav" aria-label="Mobil menüyü aç">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                    <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('index') }}" class="flex items-center gap-2">
+                        <img src="{{ url_for('static', filename='logo-icon.svg') }}" alt="UTAP logosu" class="h-10 w-10 rounded-xl bg-brand-600/5 p-1.5 shadow-soft">
+                        <div class="hidden flex-col leading-none sm:flex">
+                            <span class="font-heading text-xl font-semibold tracking-tight text-slate-900 dark:text-white">Ulusal Tevkil Ağı</span>
+                            <span class="text-xs font-medium uppercase text-brand-500">UTAP</span>
+                        </div>
+                    </a>
+                </div>
+
+                <nav class="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('dashboard') }}" class="transition hover:text-brand-600 {% if request.endpoint == 'dashboard' %}text-brand-600{% endif %}">Panel</a>
+                        <a href="{{ url_for('list_posts') }}" class="transition hover:text-brand-600 {% if request.endpoint in ['list_posts', 'post_detail', 'view_post'] %}text-brand-600{% endif %}">İlanlar</a>
+                        <a href="{{ url_for('map_view') }}" class="transition hover:text-brand-600 {% if request.endpoint == 'map_view' %}text-brand-600{% endif %}">Harita</a>
+                        <a href="{{ url_for('chat') }}" class="transition hover:text-brand-600 {% if request.endpoint in ['chat', 'chat_conversation'] %}text-brand-600{% endif %}">Mesajlar</a>
+                        <a href="{{ url_for('applications_received') }}" class="transition hover:text-brand-600 {% if request.endpoint in ['applications_received', 'applications_sent', 'application_detail'] %}text-brand-600{% endif %}">Başvurular</a>
+                        <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="transition hover:text-brand-600 {% if request.endpoint == 'user_profile' %}text-brand-600{% endif %}">Profil</a>
+                        <a href="{{ url_for('settings') }}" class="transition hover:text-brand-600 {% if request.endpoint == 'settings' %}text-brand-600{% endif %}">Ayarlar</a>
+                        {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin_users') }}" class="transition hover:text-brand-600 {% if request.endpoint and request.endpoint.startswith('admin_') %}text-brand-600{% endif %}">Admin</a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('index') }}" class="transition hover:text-brand-600 {% if request.endpoint == 'index' %}text-brand-600{% endif %}">Ana Sayfa</a>
+                        <a href="{{ url_for('contact') }}" class="transition hover:text-brand-600 {% if request.endpoint == 'contact' %}text-brand-600{% endif %}">İletişim</a>
+                        <a href="{{ url_for('register') }}" class="transition hover:text-brand-600">Kayıt Ol</a>
+                    {% endif %}
+                </nav>
+
+                <div class="flex items-center gap-3">
+                    <button type="button" @click="toggleTheme"
+                            class="hidden h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 lg:inline-flex"
+                            aria-label="Tema değiştir">
+                        <svg x-show="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1.5M12 19.5V21M4.22 4.22l1.06 1.06M18.72 18.72l1.06 1.06M3 12h1.5M19.5 12H21M4.22 19.78l1.06-1.06M18.72 5.28l1.06-1.06M12 6.75A5.25 5.25 0 1 1 6.75 12 5.25 5.25 0 0 1 12 6.75z" />
+                        </svg>
+                        <svg x-show="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                        </svg>
+                    </button>
+
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('notifications') }}" class="relative hidden h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 lg:inline-flex">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.38 17H9.62a1 1 0 0 1-.95-.68l-1.9-5.66a1 1 0 0 1 .95-1.32h8.56a1 1 0 0 1 .95 1.32l-1.9 5.66a1 1 0 0 1-.95.68z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9V5" />
+                            </svg>
+                            {% if unread_notif_count > 0 %}
+                            <span class="absolute -top-1 -right-1 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">{{ unread_notif_count if unread_notif_count < 10 else '9+' }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="hidden h-10 w-10 items-center justify-center rounded-full bg-brand-600/10 text-sm font-semibold uppercase tracking-wide text-brand-700 hover:bg-brand-600/20 dark:text-brand-300 lg:inline-flex">
+                            {{ current_user.full_name[0] if current_user.full_name else 'U' }}
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="hidden text-sm font-semibold text-slate-600 transition hover:text-brand-600 lg:inline-flex">Giriş Yap</a>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary hidden lg:inline-flex">Kayıt Ol</a>
+                    {% endif %}
+
+                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 lg:hidden"
+                            @click="toggleTheme" aria-label="Tema değiştir">
+                        <svg x-show="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1.5M12 19.5V21M4.22 4.22l1.06 1.06M18.72 18.72l1.06 1.06M3 12h1.5M19.5 12H21M4.22 19.78l1.06-1.06M18.72 5.28l1.06-1.06M12 6.75A5.25 5.25 0 1 1 6.75 12 5.25 5.25 0 0 1 12 6.75z" />
+                        </svg>
+                        <svg x-show="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                        </svg>
+                    </button>
                 </div>
             </div>
-            
-            <!-- Search -->
-            <div class="px-4 py-3 border-b border-gray-300 dark:border-gray-700 flex-shrink-0">
-                <div class="flex items-stretch overflow-hidden">
-                    <div class="text-gray-500 dark:text-gray-400 flex bg-gray-100 dark:bg-gray-800 items-center justify-center pl-3">
-                        <span class="material-symbols-outlined text-lg">search</span>
+
+            <div class="lg:hidden" x-show="mobileNav" x-transition>
+                <div class="border-t border-slate-200 bg-white px-4 py-4 text-sm font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-900">
+                    <div class="space-y-1">
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('dashboard') }}" class="block rounded-lg px-3 py-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 {% if request.endpoint == 'dashboard' %}bg-slate-100 text-brand-600 dark:bg-slate-800/60{% endif %}">Panel</a>
+                            <a href="{{ url_for('list_posts') }}" class="block rounded-lg px-3 py-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 {% if request.endpoint in ['list_posts', 'post_detail', 'view_post'] %}bg-slate-100 text-brand-600 dark:bg-slate-800/60{% endif %}">İlanlar</a>
+                            <a href="{{ url_for('map_view') }}" class="block rounded-lg px-3 py-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 {% if request.endpoint == 'map_view' %}bg-slate-100 text-brand-600 dark:bg-slate-800/60{% endif %}">Harita</a>
+                            <a href="{{ url_for('chat') }}" class="block rounded-lg px-3 py-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 {% if request.endpoint in ['chat', 'chat_conversation'] %}bg-slate-100 text-brand-600 dark:bg-slate-800/60{% endif %}">Mesajlar</a>
+                            <a href="{{ url_for('applications_received') }}" class="block rounded-lg px-3 py-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 {% if request.endpoint in ['applications_received', 'applications_sent', 'application_detail'] %}bg-slate-100 text-brand-600 dark:bg-slate-800/60{% endif %}">Başvurular</a>
+                            <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="block rounded-lg px-3 py-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 {% if request.endpoint == 'user_profile' %}bg-slate-100 text-brand-600 dark:bg-slate-800/60{% endif %}">Profil</a>
+                            {% if current_user.is_admin %}
+                            <a href="{{ url_for('admin_users') }}" class="block rounded-lg px-3 py-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 {% if request.endpoint and request.endpoint.startswith('admin_') %}bg-slate-100 text-brand-600 dark:bg-slate-800/60{% endif %}">Admin</a>
+                            {% endif %}
+                            <div class="border-t border-slate-200 pt-3 dark:border-slate-800">
+                                <a href="{{ url_for('settings') }}" class="block rounded-lg px-3 py-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 {% if request.endpoint == 'settings' %}bg-slate-100 text-brand-600 dark:bg-slate-800/60{% endif %}">Ayarlar</a>
+                                <form method="POST" action="{{ url_for('logout') }}" class="mt-2">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="w-full flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600">Çıkış Yap</button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <a href="{{ url_for('index') }}" class="block rounded-lg px-3 py-2 transition hover:bg-slate-100 {% if request.endpoint == 'index' %}bg-slate-100 text-brand-600{% endif %}">Ana Sayfa</a>
+                            <a href="{{ url_for('contact') }}" class="block rounded-lg px-3 py-2 transition hover:bg-slate-100 {% if request.endpoint == 'contact' %}bg-slate-100 text-brand-600{% endif %}">İletişim</a>
+                            <div class="pt-3">
+                                <a href="{{ url_for('login') }}" class="block rounded-lg px-3 py-2 text-slate-600 transition hover:bg-slate-100">Giriş Yap</a>
+                                <a href="{{ url_for('register') }}" class="mt-2 flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 font-semibold text-white transition hover:bg-brand-700">Kayıt Ol</a>
+                            </div>
+                        {% endif %}
                     </div>
-                    <input class="form-input flex-1 border-none bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-0 focus:ring-0 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-3 py-2 text-sm" placeholder="İlanlarda Ara..." value=""/>
                 </div>
             </div>
-            
-            <!-- Navigation Links - Minimal White Theme - Scrollable with padding for mobile -->
-            <nav class="flex-1 px-6 py-4 overflow-y-auto pb-32 lg:pb-4">
-                <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'dashboard' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined">dashboard</span>
-                    <span class="text-sm font-medium">Dashboard</span>
-                </a>
-                
-                <a href="{{ url_for('list_posts') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'list_posts' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined">description</span>
-                    <span class="text-sm font-medium">İlanlar</span>
-                </a>
-                
-                <a href="{{ url_for('map_view') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'map_view' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined">map</span>
-                    <span class="text-sm font-medium">Harita</span>
-                </a>
-                
-                <a href="{{ url_for('create_post') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'create_post' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined">add_circle</span>
-                    <span class="text-sm font-medium">Yeni İlan</span>
-                </a>
-                
-                {% if config.WHATSAPP_ENABLED %}
-                <a href="{{ url_for('whatsapp_ilan') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'whatsapp_ilan' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined">chat</span>
-                    <span class="text-sm font-medium">WhatsApp İlan</span>
-                </a>
-                
-                <a href="{{ url_for('whatsapp_setup') }}" class="flex items-center gap-3 px-4 py-3 text-green-700 bg-green-50 dark:text-green-400 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors mb-1">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span class="text-sm font-medium">WhatsApp Ayarları</span>
-                </a>
+        </header>
+        {% endblock %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div id="flash-data" data-flash='{{ messages | tojson | safe }}'></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const holder = document.getElementById('flash-data');
+                    if (!holder || !holder.dataset.flash) {
+                        return;
+                    }
+                    let flashMessages = [];
+                    try {
+                        flashMessages = JSON.parse(holder.dataset.flash);
+                    } catch (err) {
+                        flashMessages = [];
+                    }
+                    if (!Array.isArray(flashMessages) || !window.toast) {
+                        return;
+                    }
+                    flashMessages.forEach(function (entry) {
+                        const category = entry[0];
+                        const message = entry[1];
+                        if (!message) {
+                            return;
+                        }
+                        switch (category) {
+                            case 'error':
+                                window.toast.error(message);
+                                break;
+                            case 'success':
+                                window.toast.success(message);
+                                break;
+                            case 'warning':
+                                window.toast.warning(message);
+                                break;
+                            default:
+                                window.toast.info(message);
+                        }
+                    });
+                    holder.remove();
+                });
+            </script>
+            {% endif %}
+        {% endwith %}
+
+        <main class="flex-1">
+            <div class="mx-auto w-full max-w-7xl px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+                {% if current_user.is_authenticated %}
+                <div class="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 dark:border-slate-800 md:flex-row md:items-center">
+                    <div>
+                        <h1 class="text-2xl font-semibold text-slate-900 dark:text-white">{% block page_title %}{% endblock %}</h1>
+                        {% block page_subtitle %}{% endblock %}
+                    </div>
+                    <div class="mt-2 flex gap-2 md:ml-auto md:mt-0">
+                        {% block page_actions %}{% endblock %}
+                    </div>
+                </div>
                 {% endif %}
-                
-                <a href="{{ url_for('chat') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'chat' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined">chat</span>
-                    <span class="text-sm font-medium">Sohbetler</span>
-                </a>
-                
-                <a href="{{ url_for('favorites') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'favorites' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined">favorite</span>
-                    <span class="text-sm font-medium">Favorilerim</span>
-                </a>
-                
-                <a href="{{ url_for('settings') }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'settings' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined">settings</span>
-                    <span class="text-sm font-medium">Ayarlar</span>
-                </a>
-                
-                {% if current_user.is_admin %}
-                <a href="{{ url_for('admin_analytics') }}" class="flex items-center gap-3 px-4 py-3 text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors mb-1 border border-purple-200 dark:border-purple-800">
-                    <span class="material-symbols-outlined">analytics</span>
-                    <span class="text-sm font-medium">Admin Analytics</span>
-                </a>
-                {% endif %}
-                
-                <div class="h-px bg-gray-200 dark:bg-gray-700 my-3"></div>
-                
-                <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="flex items-center gap-3 px-4 py-3 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mb-1 {% if request.endpoint == 'user_profile' %}bg-gray-100 dark:bg-gray-800 font-semibold{% endif %}">
-                    <span class="material-symbols-outlined">person</span>
-                    <span class="text-sm font-medium">Profilim</span>
-                </a>
-            </nav>
-            
-            <!-- User Info & Logout - Fixed at bottom with extra padding for mobile -->
-            <div class="px-3 py-4 border-t border-gray-300 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
-                <div class="flex items-center gap-3 px-4 py-2 mb-2">
-                    <div class="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold flex-shrink-0">
-                        {{ current_user.full_name[0] if current_user.full_name else 'U' }}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ current_user.full_name }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ current_user.email }}</p>
-                    </div>
-                </div>
-                <a href="{{ url_for('logout') }}" class="flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[44px]">
-                    <span class="material-symbols-outlined">logout</span>
-                    <span class="text-sm font-medium">Çıkış Yap</span>
-                </a>
+
+                <section class="{% block main_classes %}space-y-6{% endblock %}">
+                    {% block content %}{% endblock %}
+                </section>
             </div>
-        </aside>
+        </main>
+
+        {% block footer %}
+        {% if not current_user.is_authenticated %}
+        <footer class="bg-white py-10 dark:bg-slate-950">
+            <div class="mx-auto grid max-w-7xl gap-8 px-4 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-4 lg:px-8 dark:text-slate-300">
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                        <img src="{{ url_for('static', filename='logo-icon.svg') }}" alt="UTAP logosu" class="h-10 w-10 rounded-xl bg-brand-600/5 p-1.5 shadow-soft">
+                        <div class="flex flex-col leading-none">
+                            <span class="font-heading text-lg font-semibold text-slate-900 dark:text-white">Ulusal Tevkil Ağı</span>
+                            <span class="text-xs font-medium uppercase text-brand-500">UTAP</span>
+                        </div>
+                    </div>
+                    <p class="max-w-xs text-sm text-slate-500 dark:text-slate-400">Avukatlar arası güvenli iş devri ve duruşma temsili için modern tevkil platformu.</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Platform</h3>
+                    <ul class="mt-4 space-y-2">
+                        <li><a href="#" class="transition hover:text-brand-600">Hakkımızda</a></li>
+                        <li><a href="#" class="transition hover:text-brand-600">Nasıl Çalışır?</a></li>
+                        <li><a href="#" class="transition hover:text-brand-600">Topluluk</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Destek</h3>
+                    <ul class="mt-4 space-y-2">
+                        <li><a href="{{ url_for('contact') }}" class="transition hover:text-brand-600">İletişim</a></li>
+                        <li><a href="#" class="transition hover:text-brand-600">Yardım Merkezi</a></li>
+                        <li><a href="#" class="transition hover:text-brand-600">SSS</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Yasal</h3>
+                    <ul class="mt-4 space-y-2">
+                        <li><a href="{{ url_for('privacy_policy') }}" class="transition hover:text-brand-600">Gizlilik Politikası</a></li>
+                        <li><a href="{{ url_for('terms_of_service') }}" class="transition hover:text-brand-600">Kullanım Şartları</a></li>
+                        <li><a href="{{ url_for('cookie_policy') }}" class="transition hover:text-brand-600">Çerez Politikası</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 border-t border-slate-200 py-4 text-center text-xs text-slate-400 dark:border-slate-800">
+                 2025 Ulusal Tevkil Ağı Projesi. Tüm hakları saklıdır.
+            </div>
+        </footer>
         {% endif %}
         {% endblock %}
-        
-        <!-- Main Content Area - Minimal White Theme -->
-        <div class="flex-1 {% block main_classes %}{% if current_user.is_authenticated %}lg:ml-48{% endif %}{% endblock %}">
-            
-            <!-- Top Bar (Üst Çubuk) - Sadece giriş yapılmışsa -->
-            {% if current_user.is_authenticated %}
-            <div class="fixed top-0 {% if current_user.is_authenticated %}lg:left-48{% else %}left-0{% endif %} right-0 h-16 bg-white border-b border-gray-300 z-20 flex items-center px-12">
-                <h1 class="text-xl font-light text-gray-900">{% block page_title %}Dashboard{% endblock %}</h1>
-                <div class="ml-auto flex items-center gap-8">
-                    <!-- Bildirimler -->
-                    <a href="{{ url_for('notifications') }}" class="relative text-gray-400 hover:text-gray-900">
-                        <span class="material-symbols-outlined">notifications</span>
-                        {% set unread_notif_count = current_user.notifications_unread_count if current_user.is_authenticated else 0 %}
-                        {% if unread_notif_count > 0 %}
-                        <span class="absolute -top-1 -right-1 bg-gray-900 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">{{ unread_notif_count if unread_notif_count < 10 else '9+' }}</span>
-                        {% endif %}
-                    </a>
-                    <!-- User Avatar -->
-                    <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-700 text-xs font-light hover:bg-gray-400 transition-colors">
-                        {{ current_user.full_name[0] if current_user.full_name else 'U' }}
-                    </a>
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Flash Messages (Toast Notifications) -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <script>
-                        // Show toast notifications for flash messages
-                        document.addEventListener('DOMContentLoaded', function() {
-                            {% for category, message in messages %}
-                            {% if category == 'error' %}
-                            window.toast.error('{{ message|safe }}');
-                            {% elif category == 'success' %}
-                            window.toast.success('{{ message|safe }}');
-                            {% elif category == 'warning' %}
-                            window.toast.warning('{{ message|safe }}');
-                            {% else %}
-                            window.toast.info('{{ message|safe }}');
-                            {% endif %}
-                            {% endfor %}
-                        });
-                    </script>
-                {% endif %}
-            {% endwith %}
-            
-            <!-- Main Content - Minimal White Theme -->
-            <main class="{% if current_user.is_authenticated %}mt-16 p-12{% else %}p-6{% endif %} min-h-screen">
-                {% block content %}{% endblock %}
-            </main>
-            
-            {% block footer %}
-            <!-- Footer -->
-            {% if not current_user.is_authenticated %}
-            <footer class="bg-white dark:bg-background-dark border-t border-gray-300 dark:border-gray-700 py-4 md:py-8 px-10">
-                <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-                    <div>
-                        <div class="mb-4 flex items-center gap-3">
-                            <img src="{{ url_for('static', filename='logo-icon.svg') }}" alt="Ulusal Tevkil Ağı Projesi" class="h-14 md:h-auto max-h-64 sm:max-h-96 w-16">
-                            <div class="flex flex-col">
-                                <span class="text-base font-bold text-gray-900 dark:text-white">Ulusal Tevkil Ağı</span>
-                                <span class="text-xs text-gray-600 dark:text-gray-400">Projesi</span>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm">
-                            Avukatlar arası güvenli iş devri platformu
-                        </p>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Platform</h4>
-                        <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                            <li><a href="#" class="hover:text-gray-900">Hakkımızda</a></li>
-                            <li><a href="#" class="hover:text-gray-900">Nasıl Çalışır?</a></li>
-                            <li><a href="#" class="hover:text-gray-900">Fiyatlandırma</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Destek</h4>
-                        <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                            <li><a href="#" class="hover:text-gray-900">Yardım Merkezi</a></li>
-                            <li><a href="{{ url_for('contact') }}" class="hover:text-gray-900">İletişim</a></li>
-                            <li><a href="#" class="hover:text-gray-900">SSS</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Yasal</h4>
-                        <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                            <li><a href="{{ url_for('privacy_policy') }}" class="hover:text-gray-900">Gizlilik Politikası (KVKK)</a></li>
-                            <li><a href="{{ url_for('terms_of_service') }}" class="hover:text-gray-900">Kullanım Şartları</a></li>
-                            <li><a href="{{ url_for('cookie_policy') }}" class="hover:text-gray-900">Çerez Politikası</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="max-w-7xl mx-auto mt-8 pt-8 border-t border-gray-300 dark:border-gray-700">
-                    <p class="text-center text-sm text-gray-600 dark:text-gray-400">
-                        © 2025 Ulusal Tevkil Ağı Projesi. Tüm hakları saklıdır. | utap.com.tr
-                    </p>
-                </div>
-            </footer>
-            {% endif %}
-            {% endblock %}
-            
-        </div>
     </div>
-    
-    <!-- Mobile Bottom Navigation -->
-    {% if current_user and current_user.is_authenticated %}
-    <nav class="bottom-nav">
-        <a href="{{ url_for('dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-            <span class="material-symbols-outlined">home</span>
+
+    {% if current_user.is_authenticated %}
+    <nav class="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-slate-200 bg-white/95 px-2 text-xs font-medium text-slate-600 shadow-soft dark:border-slate-800 dark:bg-slate-950/95 md:hidden">
+        <a href="{{ url_for('dashboard') }}" class="flex w-full flex-col items-center gap-1 transition {% if request.endpoint == 'dashboard' %}text-brand-600{% else %}hover:text-brand-600{% endif %}">
+            <span class="material-symbols-outlined text-[20px]">home</span>
             <span>Ana Sayfa</span>
         </a>
-        <a href="{{ url_for('list_posts') }}" class="bottom-nav-item {% if request.endpoint == 'list_posts' %}active{% endif %}">
-            <span class="material-symbols-outlined">work</span>
+        <a href="{{ url_for('list_posts') }}" class="flex w-full flex-col items-center gap-1 transition {% if request.endpoint in ['list_posts', 'post_detail', 'view_post'] %}text-brand-600{% else %}hover:text-brand-600{% endif %}">
+            <span class="material-symbols-outlined text-[20px]">description</span>
             <span>İlanlar</span>
         </a>
-        <a href="{{ url_for('chat') }}" class="bottom-nav-item {% if request.endpoint == 'chat' or request.endpoint == 'chat_conversation' %}active{% endif %}">
-            <span class="material-symbols-outlined">chat</span>
+        <a href="{{ url_for('chat') }}" class="relative flex w-full flex-col items-center gap-1 transition {% if request.endpoint in ['chat', 'chat_conversation'] %}text-brand-600{% else %}hover:text-brand-600{% endif %}">
+            <span class="material-symbols-outlined text-[20px]">chat</span>
             <span>Mesajlar</span>
-            {% if unread_count > 0 %}
-            <span class="badge">{{ unread_count if unread_count < 10 else '9+' }}</span>
+            {% if unread_count is defined and unread_count > 0 %}
+            <span class="absolute -top-1 right-3 inline-flex min-h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold text-white">{{ unread_count if unread_count < 10 else '9+' }}</span>
             {% endif %}
         </a>
-        <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="bottom-nav-item {% if request.endpoint == 'user_profile' %}active{% endif %}">
-            <span class="material-symbols-outlined">person</span>
-            <span>Profil</span>
+        <a href="{{ url_for('applications_received') }}" class="flex w-full flex-col items-center gap-1 transition {% if request.endpoint in ['applications_received', 'applications_sent', 'application_detail'] %}text-brand-600{% else %}hover:text-brand-600{% endif %}">
+            <span class="material-symbols-outlined text-[20px]">inbox</span>
+            <span>Başvurular</span>
         </a>
-        <a href="{{ url_for('settings') }}" class="bottom-nav-item {% if request.endpoint == 'settings' %}active{% endif %}">
-            <span class="material-symbols-outlined">settings</span>
+        <a href="{{ url_for('settings') }}" class="flex w-full flex-col items-center gap-1 transition {% if request.endpoint == 'settings' %}text-brand-600{% else %}hover:text-brand-600{% endif %}">
+            <span class="material-symbols-outlined text-[20px]">settings</span>
             <span>Ayarlar</span>
         </a>
     </nav>
     {% endif %}
-    
-    <!-- Scripts -->
-    <script>
-        // Auto-hide flash messages after 5 seconds
-        setTimeout(function() {
-            const alerts = document.querySelectorAll('.animate-slide-in-right');
-            alerts.forEach(alert => {
-                alert.style.transition = 'opacity 0.5s';
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 500);
-            });
-        }, 5000);
-        
-        // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        
-        if (mobileMenuBtn && sidebar && sidebarOverlay) {
-            const toggleMenu = () => {
-                sidebar.classList.toggle('-translate-x-full');
-                sidebarOverlay.classList.toggle('hidden');
-            };
-            
-            mobileMenuBtn.addEventListener('click', toggleMenu);
-            sidebarOverlay.addEventListener('click', toggleMenu);
-            
-            // Close menu when clicking a link
-            const sidebarLinks = sidebar.querySelectorAll('a');
-            sidebarLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    if (window.innerWidth < 1024) {
-                        toggleMenu();
-                    }
-                });
-            });
-        }
-    </script>
-    
-    <!-- Mobile Helpers JS -->
-    <script src="{{ url_for('static', filename='js/mobile-helpers.js') }}"></script>
-    
-    <!-- PWA Script -->
-    <script src="{{ url_for('static', filename='pwa.js') }}"></script>
-    
-    <!-- Cookie Consent Banner -->
-    <div id="cookieConsent" class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t-2 border-primary z-50 transform translate-y-0 transition-transform duration-300" style="display: none;">
-        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="flex-1 text-sm text-gray-700 dark:text-gray-300">
-                    <p class="font-semibold mb-1">🍪 Çerez Kullanımı</p>
-                    <p>Bu web sitesi, kullanıcı deneyimini geliştirmek için çerezler kullanmaktadır. Siteyi kullanmaya devam ederek çerez kullanımını kabul etmiş olursunuz. 
-                    <a href="{{ url_for('cookie_policy') }}" class="text-gray-900 hover:underline font-medium">Çerez Politikası</a> | 
-                    <a href="{{ url_for('privacy_policy') }}" class="text-gray-900 hover:underline font-medium">Gizlilik</a></p>
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="acceptCookies()" class="px-6 py-2 bg-gray-900 text-white hover:bg-gray-900/90 transition-colors font-semibold whitespace-nowrap">
-                        ✅ Kabul Et
-                    </button>
-                    <button onclick="rejectCookies()" class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold whitespace-nowrap">
-                        ❌ Reddet
-                    </button>
-                </div>
+
+    <div id="cookieConsent" class="fixed bottom-0 left-0 right-0 z-40 hidden bg-white/95 shadow-soft dark:bg-slate-900/95">
+        <div class="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8 dark:text-slate-300">
+            <div>
+                <p class="font-semibold text-slate-900 dark:text-white"> Çerez Kullanımı</p>
+                <p class="text-xs leading-relaxed">Bu web sitesi kullanıcı deneyimini geliştirmek için çerezler kullanır. <a href="{{ url_for('cookie_policy') }}" class="font-semibold text-brand-600">Çerez Politikası</a> ve <a href="{{ url_for('privacy_policy') }}" class="font-semibold text-brand-600">Gizlilik</a> dokümanlarını inceleyebilirsiniz.</p>
+            </div>
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <button type="button" class="btn btn-primary" data-role="cookie-accept">Kabul Et</button>
+                <button type="button" class="btn btn-ghost" data-role="cookie-reject">Reddet</button>
             </div>
         </div>
     </div>
 
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="{{ url_for('static', filename='phoenix/js/interactivity.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui-utils.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mobile-helpers.js') }}"></script>
+    <script src="{{ url_for('static', filename='pwa.js') }}"></script>
+
     <script>
-        // Cookie Consent Logic
+        function revealInstallBanner() {
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) {
+                banner.classList.remove('hidden');
+            }
+        }
+
         function acceptCookies() {
             localStorage.setItem('cookieConsent', 'accepted');
-            document.getElementById('cookieConsent').style.display = 'none';
+            document.getElementById('cookieConsent')?.classList.add('hidden');
         }
 
         function rejectCookies() {
             localStorage.setItem('cookieConsent', 'rejected');
-            document.getElementById('cookieConsent').style.display = 'none';
-            // Optionally: disable analytics scripts
+            document.getElementById('cookieConsent')?.classList.add('hidden');
         }
 
         function showCookieSettings() {
             localStorage.removeItem('cookieConsent');
-            document.getElementById('cookieConsent').style.display = 'block';
+            document.getElementById('cookieConsent')?.classList.remove('hidden');
         }
 
-        // Detect if running in mobile app (Capacitor WebView)
         function isRunningInApp() {
-            // Check for Capacitor
-            if (window.Capacitor) return true;
-            // Check for common mobile app user agents
+            if (window.Capacitor) {
+                return true;
+            }
             const ua = navigator.userAgent.toLowerCase();
             return ua.includes('wv') || ua.includes('webview') || ua.includes('capacitor');
         }
 
-        // Show banner only in web browser (not in mobile app)
-        window.addEventListener('DOMContentLoaded', function() {
-            // Don't show cookie banner in mobile app
-            if (isRunningInApp()) {
-                return;
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!isRunningInApp()) {
+                const consent = localStorage.getItem('cookieConsent');
+                if (!consent) {
+                    document.getElementById('cookieConsent')?.classList.remove('hidden');
+                }
             }
-            
-            const consent = localStorage.getItem('cookieConsent');
-            if (!consent) {
-                document.getElementById('cookieConsent').style.display = 'block';
+
+            if (window.shouldDisplayPWABanner) {
+                revealInstallBanner();
+            }
+
+            const installBtn = document.querySelector('[data-role="pwa-install"]');
+            if (installBtn && installBtn.dataset.listenerAttached !== 'true') {
+                installBtn.addEventListener('click', () => {
+                    if (typeof window.installPWA === 'function') {
+                        window.installPWA();
+                    }
+                });
+                installBtn.dataset.listenerAttached = 'true';
+            }
+
+            const hideInstallBtn = document.querySelector('[data-role="pwa-hide-install"]');
+            if (hideInstallBtn && hideInstallBtn.dataset.listenerAttached !== 'true') {
+                hideInstallBtn.addEventListener('click', () => {
+                    if (typeof window.hideInstallBanner === 'function') {
+                        window.hideInstallBanner();
+                    } else {
+                        document.getElementById('pwa-install-banner')?.classList.add('hidden');
+                    }
+                });
+                hideInstallBtn.dataset.listenerAttached = 'true';
+            }
+
+            const cookieAcceptBtn = document.querySelector('[data-role="cookie-accept"]');
+            if (cookieAcceptBtn && cookieAcceptBtn.dataset.listenerAttached !== 'true') {
+                cookieAcceptBtn.addEventListener('click', acceptCookies);
+                cookieAcceptBtn.dataset.listenerAttached = 'true';
+            }
+
+            const cookieRejectBtn = document.querySelector('[data-role="cookie-reject"]');
+            if (cookieRejectBtn && cookieRejectBtn.dataset.listenerAttached !== 'true') {
+                cookieRejectBtn.addEventListener('click', rejectCookies);
+                cookieRejectBtn.dataset.listenerAttached = 'true';
             }
         });
     </script>
-    
-    <!-- UI Utilities -->
-    <script src="{{ url_for('static', filename='js/ui-utils.js') }}"></script>
-    
+
     {% block extra_js %}{% endblock %}
+    {% block scripts %}{% endblock %}
 </body>
 </html>
-
-

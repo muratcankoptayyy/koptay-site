@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - İlan Detayı{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<style>
+    .material-symbols-rounded {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .fill-icon {
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+</style>
+{% endblock %}
+
+{% set card_styles = {
+    'brand': {'bg': 'bg-brand-50/80 border-brand-100 text-brand-700', 'icon': 'text-brand-500'},
+    'rose': {'bg': 'bg-rose-50/80 border-rose-100 text-rose-700', 'icon': 'text-rose-500'},
+    'amber': {'bg': 'bg-amber-50/80 border-amber-100 text-amber-700', 'icon': 'text-amber-500'},
+    'emerald': {'bg': 'bg-emerald-50/80 border-emerald-100 text-emerald-700', 'icon': 'text-emerald-500'},
+    'indigo': {'bg': 'bg-indigo-50/80 border-indigo-100 text-indigo-700', 'icon': 'text-indigo-500'},
+    'slate': {'bg': 'bg-slate-100/80 border-slate-200 text-slate-600', 'icon': 'text-slate-500'}
+} %}
+{% set default_card_style = card_styles['slate'] %}
+{% set chip_styles = {
+    'brand': 'bg-brand-100/80 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200',
+    'emerald': 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    'indigo': 'bg-indigo-100/80 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+    'amber': 'bg-amber-100/80 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+    'rose': 'bg-rose-100/80 text-rose-700 dark:bg-rose-900/35 dark:text-rose-300',
+    'slate': 'bg-slate-200 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300'
+} %}
+{% set owner = post.user %}
+{% set user_status_labels = {'pending': 'Beklemede', 'accepted': 'Kabul edildi', 'rejected': 'Reddedildi'} %}
+{% set status_colors = {
+    'pending': 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+    'accepted': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    'rejected': 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+} %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-brand-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+            <div class="bg-gradient-to-r from-brand-50 via-white to-slate-50 p-8 dark:from-brand-950/20 dark:via-slate-900 dark:to-slate-900">
+                <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="flex-1 space-y-4">
+                        <div class="flex items-start gap-4">
+                            <a href="{{ url_for('list_posts') }}" 
+                               class="group hidden rounded-full border border-slate-200 bg-white/80 p-2.5 text-slate-500 shadow-sm transition-all hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 hover:shadow-md lg:inline-flex dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
+                                <span class="material-symbols-rounded text-xl">arrow_back</span>
+                            </a>
+                            <div class="flex-1">
+                                <p class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">{{ detail.category_label }}</p>
+                                <h1 class="mt-2 text-3xl font-bold leading-tight text-slate-900 dark:text-white lg:text-4xl">{{ post.title }}</h1>
+                                <div class="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                    <span class="inline-flex items-center gap-1">
+                                        <span class="material-symbols-rounded text-base">calendar_today</span>
+                                        {{ detail.created_display }}
+                                    </span>
+                                    <span class="text-slate-300 dark:text-slate-700">•</span>
+                                    <span class="inline-flex items-center gap-1">
+                                        <span class="material-symbols-rounded text-base">update</span>
+                                        {{ detail.created_ago }}
+                                    </span>
+                                    <span class="text-slate-300 dark:text-slate-700">•</span>
+                                    <span class="inline-flex items-center gap-1">
+                                        <span class="material-symbols-rounded text-base">location_on</span>
+                                        {{ detail.location_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Badges -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            {% set status_variant = detail.status.variant if detail.status.variant else 'slate' %}
+                            {% set status_class = chip_styles.get(status_variant, chip_styles['slate']) %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold shadow-sm {{ status_class }}">
+                                <span class="material-symbols-rounded text-sm">flag</span>
+                                {{ detail.status.label }}
+                            </span>
+                            {% set urgency_variant = detail.urgency.variant if detail.urgency.variant else 'slate' %}
+                            {% set urgency_class = chip_styles.get(urgency_variant, chip_styles['slate']) %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold shadow-sm {{ urgency_class }}">
+                                <span class="material-symbols-rounded text-sm">{{ detail.urgency.icon }}</span>
+                                {{ detail.urgency.label }}
+                            </span>
+                            {% if detail.deadline.badge %}
+                                {% if detail.deadline.state == 'overdue' %}
+                                    {% set deadline_class = 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300' %}
+                                    {% set deadline_icon = 'schedule' %}
+                                {% elif detail.deadline.state == 'soon' %}
+                                    {% set deadline_class = 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' %}
+                                    {% set deadline_icon = 'event_upcoming' %}
+                                {% else %}
+                                    {% set deadline_class = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' %}
+                                    {% set deadline_icon = 'calendar_month' %}
+                                {% endif %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold shadow-sm {{ deadline_class }}">
+                                <span class="material-symbols-rounded text-sm">{{ deadline_icon }}</span>
+                                {{ detail.deadline.badge }}
+                            </span>
+                            {% endif %}
+                            {% if detail.price_display %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-100 to-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 shadow-sm dark:from-emerald-900/40 dark:to-emerald-900/20 dark:text-emerald-300">
+                                <span class="material-symbols-rounded text-sm">payments</span>
+                                {{ detail.price_display }}
+                            </span>
+                            {% endif %}
+                            {% if detail.remote_allowed %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-100 to-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-sm dark:from-indigo-900/40 dark:to-indigo-900/20 dark:text-indigo-300">
+                                <span class="material-symbols-rounded text-sm">language</span>
+                                Uzaktan katılım uygun
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap items-center gap-3">
+                        {% if current_user.is_authenticated %}
+                        <button type="button"
+                            class="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300"
+                            data-role="favorite-toggle"
+                            data-post-id="{{ post.id }}"
+                            data-favorited="{{ 'true' if detail.favorite else 'false' }}"
+                            aria-pressed="{{ 'true' if detail.favorite else 'false' }}">
+                            <span class="material-symbols-rounded text-lg {% if detail.favorite %}fill-icon text-rose-500{% else %}text-slate-400 group-hover:text-rose-500{% endif %}" data-role="favorite-icon">{{ 'favorite' if detail.favorite else 'favorite_border' }}</span>
+                            <span data-role="favorite-label">{{ 'Favoride' if detail.favorite else 'Favorilere ekle' }}</span>
+                        </button>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('list_posts') }}" 
+                           class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 hover:shadow-md lg:hidden dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+                            <span class="material-symbols-rounded text-lg">arrow_back</span>
+                            Listeye dön
+                        </a>
+                        
+                        {% if current_user.is_authenticated and post.user_id == current_user.id %}
+                            <a href="{{ url_for('edit_post', post_id=post.id) }}" 
+                               class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-gradient-to-r from-brand-500 to-brand-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-brand-600 hover:to-brand-700 hover:shadow-lg">
+                                <span class="material-symbols-rounded text-lg">edit</span>
+                                İlanı düzenle
+                            </a>
+                            <form method="POST"
+                                action="{{ url_for('delete_post', post_id=post.id) }}"
+                                data-role="confirm-delete"
+                                data-confirm-message="Bu ilanı silmek istediğinizden emin misiniz?"
+                                class="inline-block">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <button type="submit" 
+                                        class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white/80 px-5 py-2.5 text-sm font-bold text-rose-600 shadow-sm transition-all hover:bg-rose-50 hover:shadow-md dark:border-rose-900/40 dark:bg-slate-800/50 dark:text-rose-400">
+                                    <span class="material-symbols-rounded text-lg">delete</span>
+                                    Sil
+                                </button>
+                            </form>
+                        {% elif current_user.is_authenticated and current_user.id != post.user_id and post.status == 'active' %}
+                            <a href="#apply" 
+                               class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-emerald-600 hover:to-emerald-700 hover:shadow-lg">
+                                <span class="material-symbols-rounded text-lg">send</span>
+                                Başvuru yap
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('share_post', post_id=post.id) if 'share_post' in globals() else url_for('post_detail', post_id=post.id) }}" 
+                               class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+                                <span class="material-symbols-rounded text-lg">ios_share</span>
+                                Paylaş
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        {% if stats_cards %}
+        <div class="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {% for card in stats_cards %}
+                {% set style = card_styles.get(card.variant, default_card_style) %}
+            <div class="group overflow-hidden rounded-2xl border {{ style.bg }} shadow-md transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/80">
+                <div class="bg-gradient-to-br from-white/40 to-transparent p-6 dark:from-slate-800/40">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ card.label }}</p>
+                            <p class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ card.value }}</p>
+                            {% if card.subtitle %}
+                            <p class="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">{{ card.subtitle }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="rounded-xl bg-white/60 p-2.5 shadow-sm dark:bg-slate-800/60">
+                            <span class="material-symbols-rounded text-2xl {{ style.icon }}">{{ card.icon }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Main Content Grid -->
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div class="space-y-6">
+                <!-- Task Summary -->
+                <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+                    <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white p-6 dark:border-slate-800 dark:from-slate-900 dark:to-slate-900/50">
+                        <h2 class="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+                            <span class="material-symbols-rounded text-2xl text-brand-600 dark:text-brand-400">description</span>
+                            Görev Özeti
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <p class="whitespace-pre-line text-base leading-relaxed text-slate-700 dark:text-slate-300">{{ post.description }}</p>
+                        
+                        <div class="mt-6 grid gap-3 sm:grid-cols-2">
+                            <div class="flex items-start gap-3 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm dark:border-slate-700 dark:from-slate-900/60 dark:to-slate-900/30">
+                                <div class="rounded-lg bg-brand-100 p-2 dark:bg-brand-900/40">
+                                    <span class="material-symbols-rounded text-lg text-brand-600 dark:text-brand-400">location_on</span>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Konum</p>
+                                    <p class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-200">{{ detail.location_display }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-3 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm dark:border-slate-700 dark:from-slate-900/60 dark:to-slate-900/30">
+                                <div class="rounded-lg bg-indigo-100 p-2 dark:bg-indigo-900/40">
+                                    <span class="material-symbols-rounded text-lg text-indigo-600 dark:text-indigo-400">gavel</span>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Mahkeme</p>
+                                    <p class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-200">{{ detail.courthouse or 'Belirtilmemiş' }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-3 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm dark:border-slate-700 dark:from-slate-900/60 dark:to-slate-900/30">
+                                <div class="rounded-lg bg-amber-100 p-2 dark:bg-amber-900/40">
+                                    <span class="material-symbols-rounded text-lg text-amber-600 dark:text-amber-400">event</span>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Duruşma / Deadline</p>
+                                    <p class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-200">{{ detail.deadline.display or detail.deadline_due_display or 'Belirtilmemiş' }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-3 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm dark:border-slate-700 dark:from-slate-900/60 dark:to-slate-900/30">
+                                <div class="rounded-lg bg-rose-100 p-2 dark:bg-rose-900/40">
+                                    <span class="material-symbols-rounded text-lg text-rose-600 dark:text-rose-400">calendar_month</span>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500">İlan Süresi</p>
+                                    <p class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-200">{{ detail.expires_display or 'Belirtilmemiş' }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-3 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm dark:border-slate-700 dark:from-slate-900/60 dark:to-slate-900/30">
+                                <div class="rounded-lg bg-emerald-100 p-2 dark:bg-emerald-900/40">
+                                    <span class="material-symbols-rounded text-lg text-emerald-600 dark:text-emerald-400">groups</span>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Başvurular</p>
+                                    <p class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-200">{{ detail.applications.total }} başvuru</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-3 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm dark:border-slate-700 dark:from-slate-900/60 dark:to-slate-900/30">
+                                <div class="rounded-lg bg-emerald-100 p-2 dark:bg-emerald-900/40">
+                                    <span class="material-symbols-rounded text-lg text-emerald-600 dark:text-emerald-400">payments</span>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Teklif Aralığı</p>
+                                    <p class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-200">{{ detail.price_display or 'Belirtilmedi' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Section (Rest of existing content continues...) -->
+                {% if post.status_history or post.updated_at %}
+                <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+                    <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white p-6 dark:border-slate-800 dark:from-slate-900 dark:to-slate-900/50">
+                        <h2 class="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+                            <span class="material-symbols-rounded text-2xl text-brand-600 dark:text-brand-400">event_note</span>
+                            Durum ve Zaman Çizelgesi
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 dark:border-slate-700 dark:from-slate-900/50 dark:to-slate-900/30">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">İlan Durumu</p>
+                                <p class="mt-2 text-sm font-bold text-slate-900 dark:text-slate-200">{{ detail.status.label }}</p>
+                                {% if post.updated_at %}
+                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Son güncelleme: {{ post.updated_at.strftime('%d %b %Y, %H:%M') }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 dark:border-slate-700 dark:from-slate-900/50 dark:to-slate-900/30">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Oluşturulma</p>
+                                <p class="mt-2 text-sm font-bold text-slate-900 dark:text-slate-200">{{ post.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ detail.created_ago }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Apply Section (if applicable) -->
+                {% if current_user.is_authenticated and current_user.id != post.user_id and post.status == 'active' %}
+                <div id="apply" class="overflow-hidden rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-white shadow-lg dark:border-emerald-900/40 dark:from-emerald-950/20 dark:to-slate-900/80">
+                    <div class="border-b border-emerald-200 bg-gradient-to-r from-emerald-50 to-white p-6 dark:border-emerald-900/40 dark:from-emerald-950/20 dark:to-slate-900/50">
+                        <h2 class="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+                            <span class="material-symbols-rounded text-2xl text-emerald-600 dark:text-emerald-400">send</span>
+                            Başvuru Yap
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <form method="POST" action="{{ url_for('apply_to_post', post_id=post.id) }}" class="space-y-4">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                            <div>
+                                <label class="block text-sm font-bold text-slate-900 dark:text-slate-200">Mesajınız</label>
+                                <textarea name="message" rows="4" 
+                                          class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
+                                          placeholder="Başvurunuzla ilgili notlarınızı buraya yazabilirsiniz..."></textarea>
+                            </div>
+                            <button type="submit" 
+                                    class="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-3 font-bold text-white shadow-md transition-all hover:from-emerald-600 hover:to-emerald-700 hover:shadow-lg">
+                                Başvuruyu Gönder
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="space-y-6">
+                <!-- Post Owner Card -->
+                <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+                    <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white p-6 dark:border-slate-800 dark:from-slate-900 dark:to-slate-900/50">
+                        <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
+                            <span class="material-symbols-rounded text-xl text-brand-600 dark:text-brand-400">person</span>
+                            İlan Sahibi
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-xl font-bold text-white shadow-md">
+                                {{ owner.full_name[:1] }}
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-slate-900 dark:text-white">{{ owner.full_name }}</p>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">{{ owner.email }}</p>
+                            </div>
+                        </div>
+                        {% if owner.phone %}
+                        <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/50">
+                            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Telefon</p>
+                            <p class="mt-1 text-sm font-bold text-slate-900 dark:text-slate-200">{{ owner.phone }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+                    <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white p-6 dark:border-slate-800 dark:from-slate-900 dark:to-slate-900/50">
+                        <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
+                            <span class="material-symbols-rounded text-xl text-brand-600 dark:text-brand-400">bolt</span>
+                            Hızlı İşlemler
+                        </h3>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <a href="{{ url_for('list_posts') }}" 
+                           class="flex items-center gap-3 rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-50 p-3 text-sm font-bold text-slate-700 transition-all hover:border-brand-300 hover:from-brand-50 hover:to-white hover:text-brand-600 hover:shadow-md dark:border-slate-700 dark:from-slate-900/50 dark:to-slate-900/30 dark:text-slate-300">
+                            <span class="material-symbols-rounded text-xl">list</span>
+                            Tüm İlanlar
+                        </a>
+                        <a href="{{ url_for('dashboard') }}" 
+                           class="flex items-center gap-3 rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-50 p-3 text-sm font-bold text-slate-700 transition-all hover:border-brand-300 hover:from-brand-50 hover:to-white hover:text-brand-600 hover:shadow-md dark:border-slate-700 dark:from-slate-900/50 dark:to-slate-900/30 dark:text-slate-300">
+                            <span class="material-symbols-rounded text-xl">dashboard</span>
+                            Dashboard
+                        </a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>
+
+<script>
+// Favorite toggle functionality
+document.querySelectorAll('[data-role="favorite-toggle"]').forEach(button => {
+    button.addEventListener('click', async function() {
+        const postId = this.dataset.postId;
+        const isFavorited = this.dataset.favorited === 'true';
+        
+        try {
+            const response = await fetch(`/posts/${postId}/favorite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name="csrf_token"]').value
+                }
+            });
+            
+            if (response.ok) {
+                const newFavorited = !isFavorited;
+                this.dataset.favorited = newFavorited;
+                this.setAttribute('aria-pressed', newFavorited);
+                
+                const icon = this.querySelector('[data-role="favorite-icon"]');
+                const label = this.querySelector('[data-role="favorite-label"]');
+                
+                if (newFavorited) {
+                    icon.textContent = 'favorite';
+                    icon.classList.add('fill-icon', 'text-rose-500');
+                    icon.classList.remove('text-slate-400');
+                    label.textContent = 'Favoride';
+                } else {
+                    icon.textContent = 'favorite_border';
+                    icon.classList.remove('fill-icon', 'text-rose-500');
+                    icon.classList.add('text-slate-400');
+                    label.textContent = 'Favorilere ekle';
+                }
+            }
+        } catch (error) {
+            console.error('Favori işlemi başarısız:', error);
+        }
+    });
+});
+
+// Delete confirmation
+document.querySelectorAll('[data-role="confirm-delete"]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const message = this.dataset.confirmMessage || 'Bu işlemi gerçekleştirmek istediğinizden emin misiniz?';
+        if (!confirm(message)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

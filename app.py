@@ -3,68 +3,45 @@ Tevkil Platform - Main Application
 Avukatlar arası iş devri ve tevkil platformu
 """
 import os
+import csv
 from datetime import datetime, timedelta, timezone
-from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, send_file, send_from_directory, session
+from io import StringIO
+from flask import current_app, request, jsonify, render_template, redirect, url_for, flash, send_file, send_from_directory, session, abort, make_response
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_socketio import emit, join_room, leave_room, send
 from flask_wtf.csrf import generate_csrf
 from werkzeug.utils import secure_filename
-from dotenv import load_dotenv
-from models import db, User, TevkilPost, Application, Rating, Message, Notification, Favorite, PasswordReset, Conversation
+from models import db, User, TevkilPost, Application, Rating, Message, Notification, Favorite, PasswordReset, Conversation, Report, mask_name
 from models import UserSession, SecurityLog, PasswordHistory, LoginAttempt
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, inspect, func, extract, text
+from sqlalchemy.exc import ProgrammingError
 import secrets
 import json
-from constants import CITIES, COURTHOUSES
-from sms_service import NetgsmSMSService
+from constants import (
+    CITIES,
+    COURTHOUSES,
+    POST_CATEGORIES,
+    BAR_ASSOCIATIONS,
+    TASK_CATEGORY_DEFINITIONS,
+    TASK_CATEGORY_OPTIONS,
+    CATEGORY_ABBREVIATIONS,
+)
 from geocoding_service import get_coordinates
 from functools import wraps
 import security_utils
 import input_validation  # 🔒 Input validation & sanitization
-from cache_config import init_cache
-from tevkil.config import get_config
-from tevkil.extensions import csrf, init_extensions, limiter, login_manager, socketio
+from tevkil.app_factory import create_app
+from tevkil.extensions import csrf, limiter, login_manager, socketio
 
-# Load environment variables
-load_dotenv()
+# Initialize Flask app via factory
+app = create_app()
 
-# ⚙️ Configuration / feature flags
-config_class = get_config()
-whatsapp_enabled = config_class.WHATSAPP_ENABLED
-email_enabled = config_class.EMAIL_ENABLED  # E-posta bildirimleri aktif
-
-# Initialize Flask app
-app = Flask(__name__)
-app.config.from_object(config_class)
-
-# Legacy template flags
-app.config['WHATSAPP_ENABLED'] = whatsapp_enabled
-app.config['EMAIL_ENABLED'] = email_enabled
-app.config['DEV_MODE'] = config_class.DEV_MODE
-app.config['GOOGLE_MAPS_API_KEY'] = config_class.GOOGLE_MAPS_API_KEY
-
-# Initialize extensions / database
-db.init_app(app)
-init_extensions(app)
-
-# ⚡ REDIS CACHE - 70% faster response times
-cache = init_cache(app)
-
-# � E-posta Servisi
-if email_enabled:
-    try:
-        from email_service import init_mail
-        mail = init_mail(app)
-        print("✅ E-posta servisi başlatıldı")
-    except Exception as e:
-        print(f"⚠️ E-posta servisi başlatılamadı: {e}")
-        email_enabled = False
-        app.config['EMAIL_ENABLED'] = False
+TASK_CATEGORY_LABELS = {
+    key: value.get('label', key.replace('_', ' ').title())
+    for key, value in TASK_CATEGORY_DEFINITIONS.items()
+}
 
 # Extensions already configure CORS, CSRF, Socket.IO and rate limiting
-
-# Initialize SMS service
-sms_service = NetgsmSMSService()
 
 # Development Mode: Login bypass decorator
 def dev_login_optional(f):
@@ -83,6 +60,14 @@ def dev_login_optional(f):
             # Production modunda: Normal login_required davranışı
             return login_required(f)(*args, **kwargs)
     return decorated_function
+
+
+def generate_post_title(category: str, city: str | None = None, courthouse: str | None = None, district: str | None = None) -> str:
+    """Kategori kısaltmasını ve görev yerini kullanarak otomatik başlık üretir."""
+    location_candidates = [courthouse, district, city]
+    location = next((item.strip() for item in location_candidates if item and item.strip()), 'Görev')
+    abbreviation = CATEGORY_ABBREVIATIONS.get(category, 'GEN')
+    return f"{location} - {abbreviation}"
 
 # Admin Required Decorator
 def admin_required(f):
@@ -125,167 +110,149 @@ def inject_global_vars():
     return dict(
         unread_count=unread_count,
         current_year=datetime.now().year,
-        google_maps_api_key=app.config.get('GOOGLE_MAPS_API_KEY', '')
+        google_maps_api_key=app.config.get('GOOGLE_MAPS_API_KEY', ''),
+        cities=CITIES,
+        bar_associations=BAR_ASSOCIATIONS,
     )
 
-# ============================================
-# 🔒 SECURITY HEADERS - Prevent common attacks
-# ============================================
 
-@app.after_request
-def set_security_headers(response):
-    """Add security headers to every response"""
-    # Prevent clickjacking attacks
-    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-    
-    # Prevent MIME sniffing
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    
-    # XSS Protection (legacy browsers)
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-    
-    # Referrer policy
-    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    
-    # Permissions policy (restrict browser features)
-    response.headers['Permissions-Policy'] = 'geolocation=(self), microphone=(), camera=()'
-    
-    # Content Security Policy (CSP)
-    if not app.config['DEV_MODE']:
-        csp = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
-            "https://cdn.tailwindcss.com "
-            "https://cdn.socket.io "
-            "https://cdn.jsdelivr.net "
-            "https://maps.googleapis.com "
-            "https://fonts.googleapis.com "
-            "https://www.googletagmanager.com "
-            "https://www.google-analytics.com; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; "
-            "font-src 'self' https://fonts.gstatic.com; "
-            "img-src 'self' data: https: blob:; "
-            "connect-src 'self' wss: ws: "
-            "https://maps.googleapis.com "
-            "https://www.google-analytics.com "
-            "https://cdn.socket.io; "
-            "frame-src 'self'; "
-            "object-src 'none'; "
-            "base-uri 'self';"
-        )
-        response.headers['Content-Security-Policy'] = csp
-    
-    # HSTS (HTTP Strict Transport Security) - Only in production with HTTPS
-    if not app.config['DEV_MODE']:
-        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-    
-    return response
-
-# ============================================
-# AUTHENTICATION ROUTES
-# ============================================
 
 @app.route('/register', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def register():
-    """Kullanıcı kayıt"""
+    """Yeni kullanıcı kayıt işlemi"""
     if request.method == 'POST':
-        data = request.form
+        form_values = {key: (request.form.get(key) or '').strip() for key in request.form}
+
+        full_name = input_validation.sanitize_plain_text(form_values.get('full_name'))
+        email_valid, email = input_validation.validate_email(form_values.get('email'))
+        # ✅ Email'i her zaman lowercase yap
+        email = email.lower() if email else ''
         
-        # 🔒 INPUT VALIDATION & SANITIZATION
-        email = data.get('email', '').strip()
-        full_name = input_validation.sanitize_plain_text(data.get('full_name', ''))
-        phone = data.get('phone', '').strip()
+        phone_valid, phone = input_validation.validate_phone(form_values.get('phone'))
         
-        # Email validation
-        is_valid_email, email = input_validation.validate_email(email)
-        if not is_valid_email:
-            flash('Geçerli bir e-posta adresi girin', 'error')
-            return redirect(url_for('register'))
-        
-        # Phone validation
-        is_valid_phone, phone = input_validation.validate_phone(phone)
-        if not is_valid_phone:
-            flash('Geçerli bir telefon numarası girin (05XXXXXXXXX)', 'error')
-            return redirect(url_for('register'))
-        
-        # Name validation
-        if not full_name or len(full_name) < 3:
-            flash('Geçerli bir ad soyad girin (en az 3 karakter)', 'error')
-            return redirect(url_for('register'))
-        
-        # Check if user exists
-        if User.query.filter_by(email=email).first():
-            flash('Bu e-posta adresi zaten kullanımda', 'error')
-            return redirect(url_for('register'))
-        
-        # Check if bar registration already exists
-        bar_assoc = input_validation.sanitize_plain_text(data.get('bar_association', ''))
-        bar_reg_num = input_validation.sanitize_plain_text(data.get('bar_registration_number', ''))
-        
-        if bar_assoc and bar_reg_num:
-            # Baro numarası validation
-            is_valid_baro, bar_reg_num = input_validation.validate_baro_number(bar_reg_num)
-            if not is_valid_baro:
-                flash('Geçerli bir baro sicil numarası girin', 'error')
-                return redirect(url_for('register'))
+        # TC Kimlik No - OPSIYONEL
+        tc_raw = (form_values.get('tc_number') or '').strip()
+        if tc_raw:
+            tc_valid, tc_number = input_validation.validate_tc_kimlik(tc_raw)
+        else:
+            # TC boşsa geçerli sayıyoruz (opsiyonel alan)
+            tc_valid, tc_number = True, None
             
-            existing_user = User.query.filter_by(
-                bar_association=bar_assoc,
-                bar_registration_number=bar_reg_num
-            ).first()
-            if existing_user:
-                flash(f'{bar_assoc} - {bar_reg_num} sicil numarası ile zaten kayıtlı bir kullanıcı var', 'error')
-                return redirect(url_for('register'))
-        
-        # Create new user
-        print(f"📝 Creating new user: {email}")
-        user = User(
-            email=email,
-            full_name=full_name,
-            phone=phone,
-            tc_number=data.get('tc_number'),
-            bar_association=data.get('bar_association'),
-            bar_registration_number=data.get('bar_registration_number'),
-            lawyer_type=data.get('lawyer_type', 'avukat'),  # Avukat türü (avukat veya stajyer)
-            city=data.get('city'),
-            specializations=data.get('specializations', '').split(',') if data.get('specializations') else []
+        bar_association = input_validation.sanitize_plain_text(form_values.get('bar_association'))
+        bar_no_valid, bar_registration_number = input_validation.validate_baro_number(
+            form_values.get('bar_registration_number')
         )
-        print(f"✅ User object created")
-        
-        user.set_password(data.get('password'))
-        print(f"🔐 Password set")
-        
+        lawyer_type = (form_values.get('lawyer_type') or '').lower()
+        city = input_validation.sanitize_plain_text(form_values.get('city'))
+        password = form_values.get('password') or ''
+
+        specializations_raw = form_values.get('specializations') or ''
+        specializations = []
+        for raw_value in specializations_raw.split(','):
+            sanitized_value = input_validation.sanitize_plain_text(raw_value.strip())
+            if sanitized_value:
+                specializations.append(sanitized_value)
+
+        errors = []
+        if not full_name:
+            errors.append('Ad soyad bilgisi gereklidir.')
+        if not email_valid:
+            errors.append('Geçerli bir e-posta adresi giriniz.')
+        if not phone_valid:
+            errors.append('Geçerli bir telefon numarası giriniz.')
+        # TC Kimlik sadece girilmişse kontrol et
+        if tc_raw and not tc_valid:
+            errors.append('Geçerli bir T.C. kimlik numarası giriniz ya da boş bırakınız.')
+        if not bar_association:
+            errors.append('Bağlı olduğunuz baroyu seçiniz.')
+        if not bar_no_valid:
+            errors.append('Geçerli bir baro sicil numarası giriniz.')
+        if lawyer_type not in {'avukat', 'stajyer'}:
+            errors.append('Avukat türü seçiniz.')
+        if not city:
+            errors.append('Şehir seçiniz.')
+        if len(password) < 6:
+            errors.append('Şifreniz en az 6 karakter olmalıdır.')
+
+        if errors:
+            print(f"❌ Registration validation failed for {email}: {errors}")
+            for message in errors:
+                flash(message, 'error')
+            return render_template('register.html', form_data=form_values)
+
+        # ✅ Email'i lowercase yaparak kontrol et
+        existing_user = User.query.filter(db.func.lower(User.email) == email.lower()).first()
+        if existing_user:
+            print(f"❌ Registration blocked: email already exists ({email})")
+            flash('Bu e-posta adresiyle daha önce kayıt yapılmış.', 'error')
+            return render_template('register.html', form_data=form_values)
+
+        duplicate_baro = User.query.filter_by(
+            bar_association=bar_association,
+            bar_registration_number=bar_registration_number
+        ).first()
+        if duplicate_baro:
+            print(f"❌ Registration blocked: bar number already in use - {bar_association}/{bar_registration_number}")
+            flash('Bu baro sicil numarası zaten kayıtlı.', 'error')
+            return render_template('register.html', form_data=form_values)
+
+        # ✅ User objesi oluştur - email lowercase
+        user = User(
+            full_name=full_name,
+            email=email.lower(),  # Garantiye al
+            phone=phone,
+            whatsapp_number=phone,
+            tc_number=tc_number,
+            bar_association=bar_association,
+            bar_registration_number=bar_registration_number,
+            lawyer_type=lawyer_type or 'avukat',
+            city=city,
+            specializations=specializations or None,
+        )
+        user.set_password(password)
+
         try:
             db.session.add(user)
-            print(f"➕ User added to session")
-            
             db.session.commit()
-            print(f"💾 Database committed - User ID: {user.id}")
-        except Exception as e:
-            print(f"❌ Database error: {e}")
+            print(f"✅ Yeni kullanıcı oluşturuldu: {user.email} (ID: {user.id})")
+            
+            # ✅ Veritabanına kaydedildiğini doğrula
+            verify_user = User.query.filter_by(email=email.lower()).first()
+            if verify_user:
+                print(f"✅ Kullanıcı veritabanında doğrulandı: {verify_user.email} (ID: {verify_user.id})")
+            else:
+                print(f"⚠️ UYARI: Kullanıcı commit edildi ama sorgulamada bulunamadı!")
+                
+        except Exception as exc:
             db.session.rollback()
-            flash(f'Kayıt sırasında bir hata oluştu: {str(e)}', 'error')
-            return redirect(url_for('register'))
-        
-        # 📧 Hoş geldiniz e-postası gönder
-        if email_enabled:
+            current_app.logger.error('Kayıt sırasında hata: %s', exc)
+            print(f"❌ Registration commit failed for {email}: {str(exc)}")
+            import traceback
+            traceback.print_exc()
+            flash('Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyiniz.', 'error')
+            return render_template('register.html', form_data=form_values)
+
+        if current_app.config.get('EMAIL_ENABLED'):
             try:
                 from email_service import send_welcome_email
                 send_welcome_email(user)
-            except Exception as e:
-                print(f"⚠️ Hoş geldiniz e-postası gönderilemedi: {e}")
-        
+            except Exception as email_error:  # pragma: no cover - notification best effort
+                current_app.logger.warning('Hoş geldiniz e-postası gönderilemedi: %s', email_error)
+
         flash('Kayıt başarılı! Giriş yapabilirsiniz.', 'success')
         return redirect(url_for('login'))
-    
+
     return render_template('register.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("10 per minute")  # Login rate limit
 def login():
     """Kullanıcı girişi - Güvenlik özellikleriyle"""
     if request.method == 'POST':
-        email = request.form.get('email')
+        raw_email = request.form.get('email') or ''
+        email = input_validation.sanitize_plain_text(str(raw_email)).strip().lower()
         password = request.form.get('password')
         remember = request.form.get('remember', False)
         
@@ -298,8 +265,11 @@ def login():
         print(f"📝 Remember: {remember}")
         print(f"🌐 IP: {ip_address}")
         
-        user = User.query.filter_by(email=email).first()
+        # ✅ Case-insensitive email search
+        user = User.query.filter(db.func.lower(User.email) == email.lower()).first()
         print(f"👤 User found: {user is not None}")
+        if user:
+            print(f"👤 User email in DB: {user.email}, ID: {user.id}")
         
         if not user:
             # Kullanıcı bulunamadı
@@ -309,7 +279,7 @@ def login():
                 success=False, failure_reason='user_not_found'
             )
             flash('Hatalı e-posta veya şifre', 'error')
-            return render_template('login.html')
+            return render_template('phoenix/auth/login.html')
         
         # 1. HESAP KİLİDİ KONTROLÜ
         if user.account_locked_until and datetime.utcnow() < user.account_locked_until:
@@ -319,7 +289,7 @@ def login():
                 f'Login attempt on locked account from {ip_address}'
             )
             flash(f'Hesabınız kilitli. {remaining_minutes} dakika sonra tekrar deneyin.', 'error')
-            return render_template('login.html')
+            return render_template('phoenix/auth/login.html')
         
         # Kilit süresi dolduysa kilidi kaldır
         if user.account_locked_until and datetime.utcnow() >= user.account_locked_until:
@@ -336,7 +306,7 @@ def login():
                 f'Too many failed login attempts from {ip_address}'
             )
             flash('Çok fazla başarısız deneme. 15 dakika sonra tekrar deneyin.', 'error')
-            return render_template('login.html')
+            return render_template('phoenix/auth/login.html')
         
         # 3. ŞİFRE KONTROLÜ
         print(f"🔐 Checking password for {email}...")
@@ -368,7 +338,7 @@ def login():
                 remaining_attempts = 5 - user.failed_login_attempts
                 flash(f'Hatalı şifre. Kalan deneme hakkı: {remaining_attempts}', 'error')
             
-            return render_template('login.html')
+            return render_template('phoenix/auth/login.html')
         
         # 4. HESAP AKTİFLİK KONTROLÜ
         if not user.is_active:
@@ -377,7 +347,7 @@ def login():
                 'Login attempt on inactive account'
             )
             flash('Hesabınız aktif değil. Lütfen yöneticiyle iletişime geçin.', 'error')
-            return render_template('login.html')
+            return render_template('phoenix/auth/login.html')
         
         # 5. 2FA KONTROLÜ
         if user.two_factor_enabled:
@@ -431,9 +401,9 @@ def login():
         
         return redirect(redirect_url)
     
-    return render_template('login.html')
+    return render_template('phoenix/auth/login.html')
 
-@app.route('/logout')
+@app.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
     """Çıkış - Session sonlandırma ile"""
@@ -492,7 +462,7 @@ def forgot_password():
         
         return redirect(url_for('login'))
     
-    return render_template('forgot_password.html')
+    return render_template('phoenix/auth/forgot_password.html')
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -509,11 +479,11 @@ def reset_password(token):
         
         if password != password_confirm:
             flash('Şifreler eşleşmiyor', 'error')
-            return render_template('reset_password.html', token=token)
+            return render_template('phoenix/auth/reset_password.html', token=token)
         
         if len(password) < 6:
             flash('Şifre en az 6 karakter olmalıdır', 'error')
-            return render_template('reset_password.html', token=token)
+            return render_template('phoenix/auth/reset_password.html', token=token)
         
         # Şifreyi güncelle
         user = reset.user
@@ -526,7 +496,7 @@ def reset_password(token):
         flash('Şifreniz başarıyla değiştirildi. Artık giriş yapabilirsiniz.', 'success')
         return redirect(url_for('login'))
     
-    return render_template('reset_password.html', token=token)
+    return render_template('phoenix/auth/reset_password.html', token=token)
 
 # ============================================
 # MAIN PAGES
@@ -623,40 +593,260 @@ def dashboard():
             TevkilPost.updated_at >= month_start
         ).count()
         
-        # Tahmini toplam kazanç (completed işlerin price_max toplamı)
+        # Tahmini toplam kazanç (completed işlerin ücret toplamı)
         completed_posts = TevkilPost.query.filter_by(
-            user_id=current_user.id, 
+            user_id=current_user.id,
             status='completed'
         ).all()
-        total_earnings = sum([p.price_max for p in completed_posts if p.price_max])
+        total_earnings = sum(
+            p.price_min for p in completed_posts if p.price_min is not None
+        )
         
         # Ortalama rating
         ratings = Rating.query.filter_by(reviewed_id=current_user.id).all()
         avg_rating = sum([r.rating for r in ratings]) / len(ratings) if ratings else 0
         
         # Kullanıcı istatistiklerini getir
-        user_stats = get_user_stats(current_user.id)
-        
-        return render_template('dashboard.html',
-                             my_posts=my_posts,
-                             my_applications=my_applications,
-                             incoming_applications=incoming_applications,
-                             unread_notifications=unread_notifications,
-                             chart_months=chart_months,
-                             chart_incoming=chart_incoming,
-                             chart_outgoing=chart_outgoing,
-                             category_labels=category_labels,
-                             category_counts=category_counts,
-                             monthly_completed=monthly_completed,
-                             total_earnings=total_earnings,
-                             avg_rating=avg_rating,
-                             user_stats=user_stats)
+        user_stats = get_user_stats(current_user.id) or {}
+
+        week_ago = now - timedelta(days=7)
+
+        def _to_utc(dt):
+            if not dt:
+                return None
+            if dt.tzinfo is None:
+                return dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc)
+
+        def _metric_subtitle(delta):
+            return f"Son 7 gün +{delta}" if delta else "Son 7 gün değişiklik yok"
+
+        active_posts_count = sum(1 for post in my_posts if post.status == 'active')
+        new_active_posts = sum(
+            1 for post in my_posts
+            if post.status == 'active' and (_to_utc(post.created_at) or now) >= week_ago
+        )
+
+        incoming_total = len(incoming_applications)
+        incoming_recent = sum(1 for app in incoming_applications if (_to_utc(app.created_at) or now) >= week_ago)
+
+        outgoing_total = len(my_applications)
+        outgoing_recent = sum(1 for app in my_applications if (_to_utc(app.created_at) or now) >= week_ago)
+
+        recent_notifications_count = Notification.query.filter_by(user_id=current_user.id).filter(
+            Notification.created_at >= week_ago
+        ).count()
+
+        metrics = [
+            {
+                "label": "Aktif ilanlar",
+                "icon": "work",
+                "value": active_posts_count,
+                "subtitle": _metric_subtitle(new_active_posts),
+                "url": url_for('list_posts', filter='my_active'),
+            },
+            {
+                "label": "Gelen başvurular",
+                "icon": "inbox",
+                "value": incoming_total,
+                "subtitle": _metric_subtitle(incoming_recent),
+                "url": url_for('applications_received'),
+            },
+            {
+                "label": "Başvurularım",
+                "icon": "send",
+                "value": outgoing_total,
+                "subtitle": _metric_subtitle(outgoing_recent),
+                "url": url_for('applications_sent'),
+            },
+            {
+                "label": "Okunmamış bildirim",
+                "icon": "notifications",
+                "value": unread_notifications,
+                "subtitle": _metric_subtitle(recent_notifications_count),
+                "url": url_for('notifications'),
+            },
+        ]
+
+        status_labels = {
+            'active': 'Aktif',
+            'assigned': 'Atandı',
+            'completed': 'Tamamlandı',
+            'cancelled': 'İptal edildi',
+        }
+        status_variants = {
+            'active': 'brand',
+            'assigned': 'amber',
+            'completed': 'emerald',
+            'cancelled': 'slate',
+        }
+
+        workflows = []
+        for post in sorted(my_posts, key=lambda item: _to_utc(item.updated_at) or _to_utc(item.created_at) or now, reverse=True)[:5]:
+            deadline_source = post.deadline or post.court_date
+            if deadline_source:
+                deadline_text = (_to_utc(deadline_source) or now).strftime('%d %b %Y')
+            else:
+                deadline_text = 'Takvimlenmedi'
+            workflows.append({
+                'title': post.title,
+                'category': post.category,
+                'city': post.city or post.location or 'Konum belirtilmedi',
+                'status': status_labels.get(post.status, post.status.title()),
+                'status_variant': status_variants.get(post.status, 'slate'),
+                'deadline': deadline_text,
+                'applications': post.applications_count or 0,
+                'url': url_for('post_detail', post_id=post.id),
+            })
+
+        upcoming_posts = TevkilPost.query.filter(
+            TevkilPost.user_id == current_user.id,
+            TevkilPost.court_date.isnot(None),
+            TevkilPost.court_date >= now
+        ).order_by(TevkilPost.court_date.asc()).limit(4).all()
+
+        hearings = []
+        for item in upcoming_posts:
+            court_dt = _to_utc(item.court_date) or now
+            hearings.append({
+                'date': court_dt.strftime('%d %b %Y'),
+                'time': court_dt.strftime('%H:%M'),
+                'title': item.title,
+                'court': item.courthouse or item.city or 'Mahkeme bilgisi yok',
+                'counterpart': item.category,
+                'url': url_for('post_detail', post_id=item.id),
+            })
+
+        notification_icon_map = {
+            'new_application': 'inbox',
+            'application_accepted': 'thumb_up',
+            'application_rejected': 'thumb_down',
+            'message': 'chat',
+            'post_expiring': 'schedule',
+            'system': 'notifications',
+        }
+
+        recent_notifications = Notification.query.filter_by(user_id=current_user.id).order_by(
+            Notification.created_at.desc()
+        ).limit(5).all()
+
+        notifications_feed = []
+        for notif in recent_notifications:
+            created_at = _to_utc(notif.created_at) or now
+            notifications_feed.append({
+                'icon': notification_icon_map.get(notif.type, 'notifications'),
+                'title': notif.title or notif.message or 'Bildirim',
+                'description': notif.message or '',
+                'time': notif.time_ago if hasattr(notif, 'time_ago') else created_at.strftime('%d %b %Y %H:%M'),
+                'url': notif.action_url,
+                'is_new': getattr(notif, 'is_new', False),
+            })
+
+        timeline_entries = []
+
+        for post in my_posts[:5]:
+            timeline_entries.append({
+                'timestamp': _to_utc(post.created_at) or now,
+                'icon': 'add_circle',
+                'variant': 'brand',
+                'title': 'Yeni ilan oluşturdunuz',
+                'description': post.title,
+                'url': url_for('post_detail', post_id=post.id),
+            })
+
+        for app_item in my_applications[:5]:
+            timeline_entries.append({
+                'timestamp': _to_utc(app_item.created_at) or now,
+                'icon': 'send',
+                'variant': 'purple',
+                'title': 'Başvuru yaptınız',
+                'description': app_item.post.title if app_item.post else 'Bir ilana başvuru yapıldı',
+                'url': url_for('post_detail', post_id=app_item.post_id),
+            })
+
+        for incoming in incoming_applications[:5]:
+            applicant_name = incoming.applicant.masked_full_name if incoming.applicant else 'Başvuru sahibi'
+            timeline_entries.append({
+                'timestamp': _to_utc(incoming.created_at) or now,
+                'icon': 'inbox',
+                'variant': 'emerald',
+                'title': 'Yeni başvuru aldınız',
+                'description': f"{applicant_name} başvurdu",
+                'url': url_for('applications_received'),
+            })
+
+        sorted_timeline = sorted(timeline_entries, key=lambda item: item['timestamp'], reverse=True)[:6]
+        for entry in sorted_timeline:
+            entry['time_display'] = entry['timestamp'].strftime('%d %b %Y, %H:%M')
+
+        quick_actions = [
+            {
+                'label': 'Yeni ilan',
+                'icon': 'add_circle',
+                'url': url_for('create_post'),
+                'variant': 'brand',
+            },
+            {
+                'label': 'İlan ara',
+                'icon': 'search',
+                'url': url_for('list_posts'),
+                'variant': 'emerald',
+            },
+            {
+                'label': 'Mesajlar',
+                'icon': 'forum',
+                'url': url_for('chat'),
+                'variant': 'purple',
+            },
+            {
+                'label': 'Harita',
+                'icon': 'map',
+                'url': url_for('map_view'),
+                'variant': 'amber',
+            },
+        ]
+
+        completed_posts = sum(1 for post in my_posts if post.status == 'completed')
+        pending_applications_count = sum(1 for app in my_applications if app.status == 'pending')
+
+        dashboard_stats = {
+            'rating_average': round(avg_rating or 0, 1) if avg_rating else 0,
+            'rating_count': user_stats.get('rating_count', 0),
+            'success_rate': user_stats.get('success_rate', 0),
+            'completed_jobs': completed_posts,
+            'avg_response': user_stats.get('average_response_time', 0),
+            'active_applications': pending_applications_count,
+        }
+
+        return render_template(
+            'dashboard.html',
+            metrics=metrics,
+            workflows=workflows,
+            hearings=hearings,
+            notifications_feed=notifications_feed,
+            activity_timeline=sorted_timeline,
+            quick_actions=quick_actions,
+            stats=dashboard_stats,
+            my_posts=my_posts,
+            my_applications=my_applications,
+            incoming_applications=incoming_applications,
+            chart_months=chart_months,
+            chart_incoming=chart_incoming,
+            chart_outgoing=chart_outgoing,
+            category_labels=category_labels,
+            category_counts=category_counts,
+            monthly_completed=monthly_completed,
+            total_earnings=total_earnings,
+            avg_rating=avg_rating,
+            unread_notifications=unread_notifications,
+            user_stats=user_stats,
+        )
     except Exception as e:
         print(f"❌ Dashboard error: {str(e)}")
         import traceback
         traceback.print_exc()
         # Minimal dashboard göster
-        return render_template('dashboard.html',
+        return render_template('phoenix/dashboard/overview.html',
                              my_posts=my_posts,
                              my_applications=my_applications,
                              incoming_applications=incoming_applications,
@@ -728,22 +918,350 @@ def stats_page():
 @app.route('/applications/received')
 @dev_login_optional
 def applications_received():
-    """Gelen başvurular - kullanıcının ilanlarına yapılan başvurular"""
-    # Kullanıcının ilanlarına gelen başvurular
+    """Gelen başvurular - kullanıcı ilanlarına yapılan başvurular (Phoenix görünümü)"""
     incoming_applications = db.session.query(Application).join(TevkilPost).filter(
         TevkilPost.user_id == current_user.id
     ).order_by(Application.created_at.desc()).all()
-    
-    return render_template('applications_received.html', applications=incoming_applications)
+
+    now = datetime.now(timezone.utc)
+    week_ago = now - timedelta(days=7)
+
+    def _to_utc(dt):
+        if not dt:
+            return None
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+    def _initials(name: str | None) -> str:
+        if not name:
+            return "?"
+        parts = [segment for segment in name.strip().split() if segment]
+        if not parts:
+            return "?"
+        if len(parts) == 1:
+            return parts[0][:2].upper()
+        return (parts[0][0] + parts[-1][0]).upper()
+
+    def _time_ago(dt):
+        if not dt:
+            return ""
+        delta = now - dt
+        seconds = int(delta.total_seconds())
+        if seconds < 60:
+            return "az önce"
+        minutes = seconds // 60
+        if minutes < 60:
+            return f"{minutes} dk önce"
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours} sa önce"
+        days = hours // 24
+        if days < 7:
+            return f"{days} gün önce"
+        weeks = days // 7
+        if weeks < 5:
+            return f"{weeks} hf önce"
+        months = max(days // 30, 1)
+        return f"{months} ay önce"
+
+    status_labels = {
+        'pending': 'Beklemede',
+        'accepted': 'Kabul edildi',
+        'rejected': 'Reddedildi',
+    }
+    status_variants = {
+        'pending': 'amber',
+        'accepted': 'emerald',
+        'rejected': 'rose',
+    }
+    status_icons = {
+        'pending': 'hourglass_top',
+        'accepted': 'task_alt',
+        'rejected': 'cancel',
+    }
+
+    total_count = len(incoming_applications)
+    pending_count = sum(1 for item in incoming_applications if item.status == 'pending')
+    accepted_count = sum(1 for item in incoming_applications if item.status == 'accepted')
+    rejected_count = sum(1 for item in incoming_applications if item.status == 'rejected')
+
+    recent_total = sum(1 for item in incoming_applications if (_to_utc(item.created_at) or now) >= week_ago)
+    recent_accepted = sum(1 for item in incoming_applications if item.status == 'accepted' and (_to_utc(item.updated_at) or now) >= week_ago)
+    recent_rejected = sum(1 for item in incoming_applications if item.status == 'rejected' and (_to_utc(item.updated_at) or now) >= week_ago)
+
+    decision_rate = int(((accepted_count + rejected_count) / total_count) * 100) if total_count else 0
+    pending_ratio = int((pending_count / total_count) * 100) if total_count else 0
+
+    metrics = [
+        {
+            'label': 'Toplam başvuru',
+            'icon': 'inbox',
+            'value': total_count,
+            'subtitle': f'Son 7 gün {recent_total}',
+            'variant': 'brand',
+        },
+        {
+            'label': 'Bekleyen yanıt',
+            'icon': 'hourglass_top',
+            'value': pending_count,
+            'subtitle': f'%{pending_ratio} beklemede',
+            'variant': 'amber',
+        },
+        {
+            'label': 'Kabul edilen',
+            'icon': 'task_alt',
+            'value': accepted_count,
+            'subtitle': f'Son 7 gün +{recent_accepted}',
+            'variant': 'emerald',
+        },
+        {
+            'label': 'Reddedilen',
+            'icon': 'cancel',
+            'value': rejected_count,
+            'subtitle': f'Son 7 gün +{recent_rejected}',
+            'variant': 'rose',
+        },
+    ]
+
+    filters = [
+        {'key': 'all', 'label': 'Tümü', 'count': total_count},
+        {'key': 'pending', 'label': 'Beklemede', 'count': pending_count},
+        {'key': 'accepted', 'label': 'Kabul edilen', 'count': accepted_count},
+        {'key': 'rejected', 'label': 'Reddedilen', 'count': rejected_count},
+    ]
+
+    application_cards = []
+    for item in incoming_applications:
+        post = item.post
+        applicant = item.applicant
+        created_at_utc = _to_utc(item.created_at) or now
+        updated_at_utc = _to_utc(item.updated_at) or created_at_utc
+        deadline_source = None
+        if post:
+            deadline_source = post.deadline or post.court_date
+        deadline_utc = _to_utc(deadline_source) if deadline_source else None
+        deadline_display = deadline_utc.strftime('%d %b %Y, %H:%M') if deadline_utc else 'Takvimlenmedi'
+
+        application_cards.append({
+            'id': item.id,
+            'status': item.status,
+            'status_label': status_labels.get(item.status, item.status.title()),
+            'status_variant': status_variants.get(item.status, 'slate'),
+            'status_icon': status_icons.get(item.status, 'info'),
+            'is_new': created_at_utc >= week_ago,
+            'created_display': created_at_utc.strftime('%d %b %Y, %H:%M'),
+            'updated_display': updated_at_utc.strftime('%d %b %Y, %H:%M'),
+            'time_ago': _time_ago(created_at_utc),
+            'message': item.message,
+            'proposed_price': item.proposed_price,
+            'post': {
+                'title': post.title if post else 'İlan kaldırıldı',
+                'category': post.category if post else 'Kategori yok',
+                'city': (post.city or post.location) if post else None,
+                'url': url_for('post_detail', post_id=post.id) if post else None,
+                'deadline': deadline_display,
+            },
+            'applicant': {
+                'masked_name': applicant.masked_full_name if applicant else 'Başvuru sahibi',
+                'full_name': applicant.full_name if applicant else None,
+                'initials': _initials(applicant.full_name if applicant else None),
+                'profile_url': url_for('user_profile', user_id=applicant.id) if applicant else None,
+                'city': applicant.city if applicant else None,
+                'bar': applicant.bar_association if applicant else None,
+            },
+            'can_manage': item.status == 'pending',
+        })
+
+    return render_template(
+        'applications_received.html',
+        applications=application_cards,
+        metrics=metrics,
+        filters=filters,
+        decision_rate=decision_rate,
+        counts={
+            'total': total_count,
+            'pending': pending_count,
+            'accepted': accepted_count,
+            'rejected': rejected_count,
+        },
+    )
 
 @app.route('/applications/sent')
 @dev_login_optional
 def applications_sent():
-    """Gönderilen başvurular - kullanıcının yaptığı başvurular"""
-    # Kullanıcının yaptığı başvurular
+    """Gönderilen başvurular - kullanıcı başvuruları (Phoenix görünümü)"""
     my_applications = Application.query.filter_by(applicant_id=current_user.id).order_by(Application.created_at.desc()).all()
-    
-    return render_template('applications_sent.html', applications=my_applications)
+
+    now = datetime.now(timezone.utc)
+    week_ago = now - timedelta(days=7)
+
+    def _to_utc(dt):
+        if not dt:
+            return None
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+    def _initials(name: str | None) -> str:
+        if not name:
+            return "?"
+        parts = [segment for segment in name.strip().split() if segment]
+        if not parts:
+            return "?"
+        if len(parts) == 1:
+            return parts[0][:2].upper()
+        return (parts[0][0] + parts[-1][0]).upper()
+
+    def _time_ago(dt):
+        if not dt:
+            return ""
+        delta = now - dt
+        seconds = int(delta.total_seconds())
+        if seconds < 60:
+            return "az önce"
+        minutes = seconds // 60
+        if minutes < 60:
+            return f"{minutes} dk önce"
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours} sa önce"
+        days = hours // 24
+        if days < 7:
+            return f"{days} gün önce"
+        weeks = days // 7
+        if weeks < 5:
+            return f"{weeks} hf önce"
+        months = max(days // 30, 1)
+        return f"{months} ay önce"
+
+    status_labels = {
+        'pending': 'Yanıt bekliyor',
+        'accepted': 'Kabul edildi',
+        'rejected': 'Reddedildi',
+    }
+    status_variants = {
+        'pending': 'amber',
+        'accepted': 'emerald',
+        'rejected': 'rose',
+    }
+    status_icons = {
+        'pending': 'hourglass_top',
+        'accepted': 'task_alt',
+        'rejected': 'cancel',
+    }
+
+    total_count = len(my_applications)
+    pending_count = sum(1 for item in my_applications if item.status == 'pending')
+    accepted_count = sum(1 for item in my_applications if item.status == 'accepted')
+    rejected_count = sum(1 for item in my_applications if item.status == 'rejected')
+
+    recent_sent = sum(1 for item in my_applications if (_to_utc(item.created_at) or now) >= week_ago)
+    recent_decided = sum(1 for item in my_applications if item.status != 'pending' and (_to_utc(item.updated_at) or now) >= week_ago)
+
+    acceptance_rate = int((accepted_count / total_count) * 100) if total_count else 0
+    decision_rate = int(((accepted_count + rejected_count) / total_count) * 100) if total_count else 0
+
+    metrics = [
+        {
+            'label': 'Gönderdiğim başvuru',
+            'icon': 'send',
+            'value': total_count,
+            'subtitle': f'Son 7 gün {recent_sent}',
+            'variant': 'brand',
+        },
+        {
+            'label': 'Yanıt bekliyor',
+            'icon': 'hourglass_top',
+            'value': pending_count,
+            'subtitle': f'%{decision_rate} yanıtlandı',
+            'variant': 'amber',
+        },
+        {
+            'label': 'Kabul edilen',
+            'icon': 'task_alt',
+            'value': accepted_count,
+            'subtitle': f'Oran %{acceptance_rate}',
+            'variant': 'emerald',
+        },
+        {
+            'label': 'Karara bağlanan',
+            'icon': 'insights',
+            'value': accepted_count + rejected_count,
+            'subtitle': f'Son 7 gün +{recent_decided}',
+            'variant': 'indigo',
+        },
+    ]
+
+    filters = [
+        {'key': 'all', 'label': 'Tümü', 'count': total_count},
+        {'key': 'pending', 'label': 'Beklemede', 'count': pending_count},
+        {'key': 'accepted', 'label': 'Kabul edilen', 'count': accepted_count},
+        {'key': 'rejected', 'label': 'Reddedilen', 'count': rejected_count},
+    ]
+
+    application_cards = []
+    for item in my_applications:
+        post = item.post
+        owner = post.user if post else None
+        created_at_utc = _to_utc(item.created_at) or now
+        updated_at_utc = _to_utc(item.updated_at) or created_at_utc
+        deadline_source = None
+        if post:
+            deadline_source = post.deadline or post.court_date
+        deadline_utc = _to_utc(deadline_source) if deadline_source else None
+        deadline_display = deadline_utc.strftime('%d %b %Y, %H:%M') if deadline_utc else 'Takvimlenmedi'
+
+        response_time = None
+        if item.response_time:
+            minutes = int(item.response_time)
+            if minutes >= 60:
+                hours = minutes // 60
+                response_time = f"{hours} sa"
+            else:
+                response_time = f"{minutes} dk"
+
+        application_cards.append({
+            'id': item.id,
+            'status': item.status,
+            'status_label': status_labels.get(item.status, item.status.title()),
+            'status_variant': status_variants.get(item.status, 'slate'),
+            'status_icon': status_icons.get(item.status, 'info'),
+            'created_display': created_at_utc.strftime('%d %b %Y, %H:%M'),
+            'updated_display': updated_at_utc.strftime('%d %b %Y, %H:%M'),
+            'time_ago': _time_ago(created_at_utc),
+            'message': item.message,
+            'proposed_price': item.proposed_price,
+            'response_time': response_time,
+            'post': {
+                'title': post.title if post else 'İlan kaldırıldı',
+                'category': post.category if post else 'Kategori yok',
+                'city': (post.city or post.location) if post else None,
+                'url': url_for('post_detail', post_id=post.id) if post else None,
+                'deadline': deadline_display,
+            },
+            'owner': {
+                'masked_name': owner.masked_full_name if owner else 'İlan sahibi',
+                'full_name': owner.full_name if owner else None,
+                'initials': _initials(owner.full_name if owner else None),
+                'profile_url': url_for('user_profile', user_id=owner.id) if owner else None,
+                'bar': owner.bar_association if owner else None,
+                'city': owner.city if owner else None,
+            },
+        })
+
+    return render_template(
+        'applications_sent.html',
+        applications=application_cards,
+        metrics=metrics,
+        filters=filters,
+        counts={
+            'total': total_count,
+            'pending': pending_count,
+            'accepted': accepted_count,
+            'rejected': rejected_count,
+        },
+        rates={
+            'acceptance': acceptance_rate,
+            'decision': decision_rate,
+        }
+    )
 
 # ============================================
 # TEVKIL POST ROUTES
@@ -754,30 +1272,59 @@ def applications_sent():
 def list_posts():
     """İlan listesi - Gelişmiş Filtreleme"""
     from constants import CITIES
-    
+
     # Filters
-    filter_type = request.args.get('filter')  # my_active, my_completed, all
+    user_filter = request.args.get('filter')  # legacy user-specific filters
+    filter_type = request.args.get('filter_type', 'all')
     category = request.args.get('category')
     city = request.args.get('city')
     urgency = request.args.get('urgency')
     search = request.args.get('search')
-    
+
     # 🆕 GELİŞMİŞ FİLTRELER
     price_min = request.args.get('price_min', type=int)
     price_max = request.args.get('price_max', type=int)
     hearing_date_from = request.args.get('hearing_date_from')
     hearing_date_to = request.args.get('hearing_date_to')
-    urgent_only = request.args.get('urgent_only') == 'on'
-    remote_allowed = request.args.get('remote_allowed') == 'on'
-    
+    urgent_only = request.args.get('urgent_only') in ('1', 'on', 'true', 'True')
+    remote_allowed = request.args.get('remote_allowed') in ('1', 'on', 'true', 'True')
+
+    now = datetime.now(timezone.utc)
+    week_ago = now - timedelta(days=7)
+    soon_threshold = now + timedelta(days=7)
+
+    category_label_map = TASK_CATEGORY_LABELS
+
+    urgency_variants = {
+        'very_urgent': {'label': 'Çok acil', 'variant': 'rose', 'icon': 'warning'},
+        'urgent': {'label': 'Acil', 'variant': 'amber', 'icon': 'schedule'},
+        'normal': {'label': 'Normal', 'variant': 'slate', 'icon': 'event'},
+        None: {'label': 'Normal', 'variant': 'slate', 'icon': 'event'},
+    }
+
+    status_labels = {
+        'active': 'Aktif',
+        'assigned': 'Atandı',
+        'completed': 'Tamamlandı',
+        'cancelled': 'İptal edildi',
+    }
+
+    def _slugify(value):
+        if not value:
+            return 'other'
+        cleaned = ''.join(ch.lower() if ch.isalnum() else '-' for ch in value)
+        return '-'.join(segment for segment in cleaned.split('-') if segment) or 'other'
+
+    category_slug_map = { _slugify(key): key for key in category_label_map.keys() }
+
     # Base query
-    if filter_type == 'my_active':
+    if user_filter == 'my_active':
         # Kullanıcının aktif ilanları
         query = TevkilPost.query.filter_by(user_id=current_user.id, status='active')
-    elif filter_type == 'my_completed':
+    elif user_filter == 'my_completed':
         # Kullanıcının tamamlanan ilanları
         query = TevkilPost.query.filter_by(user_id=current_user.id, status='completed')
-    elif filter_type == 'my_all':
+    elif user_filter == 'my_all':
         # Kullanıcının tüm ilanları
         query = TevkilPost.query.filter_by(user_id=current_user.id)
     else:
@@ -799,7 +1346,7 @@ def list_posts():
     
     # 🆕 FİYAT FİLTRELERİ
     if price_min is not None:
-        query = query.filter(TevkilPost.price_max >= price_min)
+        query = query.filter(TevkilPost.price_min >= price_min)
     if price_max is not None:
         query = query.filter(
             or_(
@@ -830,30 +1377,258 @@ def list_posts():
     # 🆕 UZAKTAN ÇALIŞMA FİLTRESİ
     if remote_allowed:
         query = query.filter_by(remote_allowed=True)
+
+    # Hızlı filtreler
+    if filter_type == 'urgent':
+        query = query.filter(TevkilPost.urgency_level == 'urgent')
+    elif filter_type == 'very_urgent':
+        query = query.filter(TevkilPost.urgency_level == 'very_urgent')
+    elif filter_type == 'recent':
+        query = query.filter(TevkilPost.created_at >= week_ago)
+    elif filter_type == 'remote':
+        query = query.filter(TevkilPost.remote_allowed.is_(True))
+    elif filter_type == 'upcoming':
+        query = query.filter(
+            TevkilPost.court_date.isnot(None),
+            TevkilPost.court_date <= soon_threshold
+        )
+    elif filter_type and filter_type.startswith('cat-'):
+        slug = filter_type[4:]
+        category_key = category_slug_map.get(slug)
+        if category_key:
+            query = query.filter(TevkilPost.category == category_key)
     
     # Sıralama
     query = query.order_by(TevkilPost.created_at.desc())
     
     # 🆕 PAGINATION
-    from pagination_utils import paginate_query
+    from pagination_utils import paginate_query, get_page_numbers
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
+    per_page = max(10, min(request.args.get('per_page', 20, type=int), 50))
     
-    pagination = paginate_query(query, page=page, per_page=per_page)
+    base_query = query
+    pagination = paginate_query(base_query, page=page, per_page=per_page)
     posts = pagination['items']
-    
-    # Get current user's favorites
-    current_user_favorites = []
+
+    favorite_ids = set()
     if current_user.is_authenticated:
         favorites = Favorite.query.filter_by(user_id=current_user.id).all()
-        current_user_favorites = [fav.post_id for fav in favorites]
-    
-    return render_template('posts_list.html', 
-                         posts=posts, 
-                         pagination=pagination,
-                         current_user_favorites=current_user_favorites, 
-                         cities=CITIES, 
-                         filter_type=filter_type)
+        favorite_ids = {fav.post_id for fav in favorites}
+
+    def _to_utc(dt):
+        if not dt:
+            return None
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+    def _time_ago(dt):
+        if not dt:
+            return ''
+        dt = _to_utc(dt) or datetime.now(timezone.utc)
+        delta = datetime.now(timezone.utc) - dt
+        seconds = int(delta.total_seconds())
+        if seconds < 60:
+            return 'az önce'
+        minutes = seconds // 60
+        if minutes < 60:
+            return f"{minutes} dk önce"
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours} sa önce"
+        days = hours // 24
+        if days < 7:
+            return f"{days} gün önce"
+        weeks = days // 7
+        if weeks < 5:
+            return f"{weeks} hf önce"
+        months = max(days // 30, 1)
+        return f"{months} ay önce"
+
+    post_cards = []
+    for post in posts:
+        category_key = post.category or 'diger'
+        category_label = category_label_map.get(category_key, category_key.replace('_', ' ').title())
+        category_slug = _slugify(category_key)
+
+        urgency_info = urgency_variants.get(post.urgency_level, urgency_variants[None])
+
+        deadline_source = post.court_date or post.deadline
+        deadline_utc = _to_utc(deadline_source)
+        if deadline_utc:
+            deadline_display = deadline_utc.strftime('%d %b %Y, %H:%M')
+            if deadline_utc < now:
+                deadline_state = 'overdue'
+                deadline_badge = 'Süresi doldu'
+            elif deadline_utc <= soon_threshold:
+                deadline_state = 'soon'
+                remaining = deadline_utc - now
+                days_left = max(int(remaining.total_seconds() // 86400), 0)
+                deadline_badge = 'Bugün' if days_left == 0 else f'{days_left} gün kaldı'
+            else:
+                deadline_state = 'scheduled'
+                deadline_badge = 'Takvimde'
+        else:
+            deadline_display = 'Takvimlenmedi'
+            deadline_state = 'none'
+            deadline_badge = None
+
+        price_display = None
+        if post.price_min and post.price_max:
+            price_display = f"{int(post.price_min):,} - {int(post.price_max):,} ₺".replace(',', '.')
+        elif post.price_min:
+            price_display = f"{int(post.price_min):,} ₺".replace(',', '.')
+        elif post.price_max:
+            price_display = f"{int(post.price_max):,} ₺".replace(',', '.')
+
+        created_utc = _to_utc(post.created_at) or now
+        description_text = (post.description or '').strip()
+        description_snippet = description_text[:180] + ('…' if len(description_text) > 180 else '')
+
+        application_count = post.applications_count or post.applications.count()
+
+        post_cards.append({
+            'id': post.id,
+            'title': post.title,
+            'url': url_for('post_detail', post_id=post.id),
+            'category_key': category_key,
+            'category_label': category_label,
+            'category_slug': category_slug,
+            'city': post.city or 'Belirtilmemiş',
+            'courthouse': post.courthouse,
+            'district': post.district,
+            'urgency': post.urgency_level or 'normal',
+            'urgency_label': urgency_info['label'],
+            'urgency_variant': urgency_info['variant'],
+            'urgency_icon': urgency_info['icon'],
+            'deadline_display': deadline_display,
+            'deadline_state': deadline_state,
+            'deadline_badge': deadline_badge,
+            'price_display': price_display,
+            'remote_allowed': bool(post.remote_allowed),
+            'applications': application_count,
+            'status': post.status,
+            'status_label': status_labels.get(post.status, 'Durum yok'),
+            'favorited': post.id in favorite_ids,
+            'owner': {
+                'name': post.user.masked_full_name if post.user else 'Anonim',
+                'avatar': post.user.full_name[0].upper() if post.user and post.user.full_name else 'A',
+                'bar': post.user.bar_association if post.user else None,
+            },
+            'created_display': created_utc.strftime('%d %b %Y, %H:%M'),
+            'created_ago': _time_ago(created_utc),
+            'description': description_snippet,
+            'search_text': f"{post.title} {description_text}".lower(),
+        })
+
+    total_count = pagination['total']
+    urgent_total = base_query.filter(TevkilPost.urgency_level.in_(['urgent', 'very_urgent'])).count()
+    very_urgent_total = base_query.filter(TevkilPost.urgency_level == 'very_urgent').count()
+    upcoming_total = base_query.filter(
+        TevkilPost.court_date.isnot(None),
+        TevkilPost.court_date <= soon_threshold
+    ).count()
+    remote_total = base_query.filter(TevkilPost.remote_allowed.is_(True)).count()
+    recent_total = base_query.filter(TevkilPost.created_at >= week_ago).count()
+    avg_price_value = base_query.order_by(None).with_entities(func.avg(TevkilPost.price_min)).scalar()
+
+    category_rows = (
+        base_query
+        .order_by(None)
+        .with_entities(TevkilPost.category, func.count())
+        .group_by(TevkilPost.category)
+        .all()
+    )
+
+    metrics = [
+        {
+            'label': 'Aktif ilan',
+            'icon': 'feed',
+            'value': total_count,
+            'subtitle': f'Son 7 gün +{recent_total}',
+            'variant': 'brand',
+        },
+        {
+            'label': 'Acil ilan',
+            'icon': 'priority_high',
+            'value': urgent_total,
+            'subtitle': f'Çok acil {very_urgent_total}',
+            'variant': 'rose',
+        },
+        {
+            'label': 'Yaklaşan duruşma',
+            'icon': 'event_upcoming',
+            'value': upcoming_total,
+            'subtitle': '7 gün içinde görev',
+            'variant': 'amber',
+        },
+        {
+            'label': 'Uzaktan yapılabilir',
+            'icon': 'distance',
+            'value': remote_total,
+            'subtitle': 'Uzaktan destek',
+            'variant': 'indigo',
+        },
+    ]
+
+    filters = [
+        {'key': 'all', 'label': 'Tümü', 'count': total_count},
+    ]
+    if urgent_total:
+        filters.append({'key': 'urgent', 'label': 'Acil', 'count': urgent_total})
+    if very_urgent_total:
+        filters.append({'key': 'very_urgent', 'label': 'Çok acil', 'count': very_urgent_total})
+    if upcoming_total:
+        filters.append({'key': 'upcoming', 'label': 'Yaklaşan', 'count': upcoming_total})
+    if recent_total:
+        filters.append({'key': 'recent', 'label': 'Son 7 gün', 'count': recent_total})
+    if remote_total:
+        filters.append({'key': 'remote', 'label': 'Uzaktan', 'count': remote_total})
+
+    for category_key, count in category_rows:
+        if not category_key or count == 0:
+            continue
+        filters.append({
+            'key': f'cat-{_slugify(category_key)}',
+            'label': category_label_map.get(category_key, category_key.replace('_', ' ').title()),
+            'count': count,
+        })
+
+    category_options = [
+        {'value': key, 'label': label}
+        for key, label in sorted(TASK_CATEGORY_OPTIONS, key=lambda item: item[1])
+    ]
+
+    avg_price_display = f"{int(avg_price_value):,} ₺".replace(',', '.') if avg_price_value else None
+
+    page_numbers = get_page_numbers(pagination['page'], pagination['pages']) if pagination['pages'] else []
+
+    filter_state = {
+        'search': search or '',
+        'city': city or '',
+        'category': category or '',
+        'urgency': urgency or '',
+        'price_min': price_min if price_min is not None else '',
+        'price_max': price_max if price_max is not None else '',
+        'hearing_date_from': hearing_date_from or '',
+        'hearing_date_to': hearing_date_to or '',
+        'urgent_only': urgent_only,
+        'remote_allowed': remote_allowed,
+        'filter_type': filter_type or '',
+        'user_filter': user_filter or '',
+        'per_page': per_page,
+    }
+
+    return render_template(
+        'posts_list.html',
+        post_cards=post_cards,
+        metrics=metrics,
+        filters=filters,
+        pagination=pagination,
+        page_numbers=page_numbers,
+        cities=CITIES,
+        category_options=category_options,
+        filter_state=filter_state,
+        avg_price=avg_price_display,
+    )
 
 @app.route('/map')
 @dev_login_optional
@@ -877,7 +1652,7 @@ def map_view():
                 'latitude': post.latitude,
                 'longitude': post.longitude,
                 'created_at': post.created_at.strftime('%d.%m.%Y'),
-                'user_name': post.user.full_name if post.user else 'Anonim'
+                'user_name': post.user.masked_full_name if post.user else 'Anonim'
             })
     
     # Google Maps API anahtarı (opsiyonel, fallback var)
@@ -896,16 +1671,38 @@ def create_post():
         from spam_detector import is_spam, is_inappropriate, check_flood, sanitize_text
         
         data = request.form
-        title = data.get('title', '')
+        category = (data.get('category') or '').strip()
         description = data.get('description', '')
+        task_date_raw = data.get('task_date')
+        task_time_raw = data.get('task_time')
+        city = (data.get('city') or '').strip()
+        courthouse = (data.get('courthouse') or '').strip()
+        district = (data.get('district') or '').strip()
+        location_hidden = (data.get('location') or '').strip()
+
+        if not category:
+            flash('Görev türü seçmek zorunludur.', 'error')
+            return redirect(url_for('create_post'))
+
+        if not task_date_raw or not task_time_raw:
+            flash('Görev tarihi ve saatini belirtmelisınız.', 'error')
+            return redirect(url_for('create_post'))
+
+        try:
+            task_datetime = datetime.strptime(f"{task_date_raw} {task_time_raw}", '%Y-%m-%d %H:%M')
+        except ValueError:
+            flash('Görev tarihi veya saati geçersiz. Lütfen formatı kontrol edin.', 'error')
+            return redirect(url_for('create_post'))
+
+        auto_title = generate_post_title(category, city=city, courthouse=courthouse, district=district)
         
         # 1. SPAM KONTROLÜ
-        if is_spam(title) or is_spam(description):
+        if is_spam(auto_title) or is_spam(description):
             flash('⚠️ İlanınız spam içerik tespit edildiği için oluşturulamadı. Lütfen içeriği kontrol edin.', 'danger')
             return redirect(url_for('create_post'))
         
         # 2. UYGUNSUZ İÇERİK KONTROLÜ
-        if is_inappropriate(title) or is_inappropriate(description):
+        if is_inappropriate(auto_title) or is_inappropriate(description):
             flash('⚠️ İlanınız uygunsuz içerik tespit edildiği için oluşturulamadı.', 'danger')
             return redirect(url_for('create_post'))
         
@@ -915,26 +1712,38 @@ def create_post():
             return redirect(url_for('dashboard'))
         
         # 4. METNİ TEMİZLE
-        title = sanitize_text(title, max_length=200)
         description = sanitize_text(description, max_length=5000)
+        auto_title = sanitize_text(auto_title, max_length=200)
+        category = sanitize_text(category, max_length=50)
+        city = sanitize_text(city, max_length=50) if city else None
+        district = sanitize_text(district, max_length=100) if district else None
+        courthouse = sanitize_text(courthouse, max_length=150) if courthouse else None
+        city = city or None
+        district = district or None
+        courthouse = courthouse or None
         
         # Konum bilgisini geocode et
-        location_str = data.get('location')
+        primary_location = courthouse or (f"{district} {city}".strip() if district and city else district) or city or location_hidden
+        location_str = primary_location or location_hidden
         coords = get_coordinates(location_str) if location_str else {}
         
+        price_raw = data.get('price')
+        price_value = float(price_raw) if price_raw else None
+
         post = TevkilPost(
             user_id=current_user.id,
-            title=title,
+            title=auto_title,
             description=description,
-            category=data.get('category'),
+            category=category,
             urgency_level=data.get('urgency_level', 'normal'),
             location=location_str,
-            city=data.get('city'),
-            district=data.get('district'),
-            courthouse=data.get('courthouse'),
+            city=city,
+            district=district,
+            courthouse=courthouse,
             remote_allowed=data.get('remote_allowed') == 'on',
-            price_min=float(data.get('price_min')) if data.get('price_min') else None,
-            price_max=float(data.get('price_max')) if data.get('price_max') else None,
+            price_min=price_value,
+            price_max=price_value,
+            court_date=task_datetime,
             expires_at=datetime.now(timezone.utc) + timedelta(days=30),
             latitude=coords.get('latitude'),
             longitude=coords.get('longitude'),
@@ -947,13 +1756,20 @@ def create_post():
         flash('İlan başarıyla oluşturuldu!', 'success')
         return redirect(url_for('post_detail', post_id=post.id))
     
-    return render_template('post_create.html', cities=CITIES, courthouses=COURTHOUSES)
+    return render_template(
+        'post_create.html',
+        cities=CITIES,
+        courthouses=COURTHOUSES,
+        task_category_options=TASK_CATEGORY_OPTIONS,
+        category_definitions=TASK_CATEGORY_DEFINITIONS,
+        category_abbreviations=CATEGORY_ABBREVIATIONS,
+    )
 
 @app.route('/whatsapp-ilan')
 @login_required
 def whatsapp_ilan():
     """WhatsApp ile ilan oluşturma bilgilendirmesi"""
-    if not whatsapp_enabled:
+    if not current_app.config.get('WHATSAPP_ENABLED'):
         abort(404)
     return render_template('whatsapp_ilan.html')
 
@@ -961,7 +1777,7 @@ def whatsapp_ilan():
 @login_required
 def whatsapp_setup():
     """WhatsApp entegrasyon kurulum ve test sayfası"""
-    if not whatsapp_enabled:
+    if not current_app.config.get('WHATSAPP_ENABLED'):
         abort(404)
     return render_template('whatsapp_setup.html')
 
@@ -982,14 +1798,170 @@ def post_detail(post_id):
         is_favorited = Favorite.query.filter_by(user_id=current_user.id, post_id=post_id).first() is not None
     
     # İlan istatistiklerini getir
-    post_stats = get_post_stats(post_id)
-    
+    post_stats = get_post_stats(post_id) or {}
+
+    now = datetime.now(timezone.utc)
+    soon_threshold = now + timedelta(days=3)
+
+    urgency_variants = {
+        'very_urgent': {'label': 'Çok acil', 'variant': 'rose', 'icon': 'warning'},
+        'urgent': {'label': 'Acil', 'variant': 'amber', 'icon': 'priority_high'},
+        'normal': {'label': 'Normal', 'variant': 'slate', 'icon': 'schedule'},
+        None: {'label': 'Normal', 'variant': 'slate', 'icon': 'schedule'},
+    }
+
+    status_variants = {
+        'active': {'label': 'Aktif', 'variant': 'emerald'},
+        'assigned': {'label': 'Atandı', 'variant': 'indigo'},
+        'completed': {'label': 'Tamamlandı', 'variant': 'slate'},
+        'cancelled': {'label': 'İptal edildi', 'variant': 'rose'},
+    }
+
+    def _to_utc(dt):
+        if not dt:
+            return None
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+    def _format_datetime(dt, fmt='%d %b %Y, %H:%M'):
+        dt = _to_utc(dt)
+        if not dt:
+            return None
+        return dt.strftime(fmt)
+
+    def _time_ago(dt):
+        dt = _to_utc(dt)
+        if not dt:
+            return ''
+        delta = now - dt
+        seconds = int(delta.total_seconds())
+        if seconds < 60:
+            return 'az önce'
+        minutes = seconds // 60
+        if minutes < 60:
+            return f"{minutes} dk önce"
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours} sa önce"
+        days = hours // 24
+        if days < 7:
+            return f"{days} gün önce"
+        weeks = days // 7
+        if weeks < 5:
+            return f"{weeks} hf önce"
+        months = max(days // 30, 1)
+        return f"{months} ay önce"
+
+    def _format_currency(value):
+        try:
+            return f"{int(value):,}".replace(',', '.')
+        except (TypeError, ValueError):
+            return None
+
+    price_display = None
+    if post.price_min and post.price_max and post.price_min != post.price_max:
+        price_display = f"{_format_currency(post.price_min)} - {_format_currency(post.price_max)} ₺"
+    elif post.price_min:
+        price_display = f"{_format_currency(post.price_min)} ₺"
+    elif post.price_max:
+        price_display = f"{_format_currency(post.price_max)} ₺"
+
+    deadline_info = {'display': None, 'state': 'none', 'badge': None}
+    deadline_source = post.court_date or post.deadline or post.expires_at
+    deadline_dt = _to_utc(deadline_source)
+    if deadline_dt:
+        deadline_info['display'] = deadline_dt.strftime('%d %b %Y, %H:%M')
+        if deadline_dt < now:
+            deadline_info['state'] = 'overdue'
+            deadline_info['badge'] = 'Süresi doldu'
+        elif deadline_dt <= soon_threshold:
+            deadline_info['state'] = 'soon'
+            remaining = deadline_dt - now
+            days_left = max(int(remaining.total_seconds() // 86400), 0)
+            deadline_info['badge'] = 'Bugün' if days_left == 0 else f'{days_left} gün kaldı'
+        else:
+            deadline_info['state'] = 'scheduled'
+            deadline_info['badge'] = 'Takvimde'
+
+    location_display = (
+        post.formatted_address
+        or post.location
+        or ', '.join(filter(None, [post.courthouse, post.district, post.city]))
+        or 'Belirtilmemiş'
+    )
+
+    application_breakdown = {
+        'total': len(applications),
+        'pending': post_stats.get('pending_count', 0),
+        'accepted': post_stats.get('accepted_count', 0),
+        'rejected': post_stats.get('rejected_count', 0),
+    }
+
+    stats_cards = [
+        {
+            'label': 'Görüntülenme',
+            'value': post_stats.get('view_count', post.view_count or post.views or 0),
+            'icon': 'visibility',
+            'variant': 'slate',
+        },
+        {
+            'label': 'Toplam başvuru',
+            'value': application_breakdown['total'],
+            'icon': 'inbox',
+            'variant': 'brand',
+            'subtitle': f"{application_breakdown['pending']} bekliyor",
+        },
+        {
+            'label': 'Kabul edilen',
+            'value': application_breakdown['accepted'],
+            'icon': 'task_alt',
+            'variant': 'emerald',
+            'subtitle': f"{application_breakdown['rejected']} reddedildi",
+        },
+        {
+            'label': 'İlk başvuru süresi',
+            'value': f"{post_stats.get('avg_time_to_apply_hours', 0)} sa",
+            'icon': 'schedule',
+            'variant': 'amber',
+            'subtitle': 'İlk başvuruya kadar geçen süre',
+        },
+    ]
+
+    detail_context = {
+        'category_label': TASK_CATEGORY_LABELS.get(
+            post.category,
+            (post.category or 'diger').replace('_', ' ').title()
+        ),
+        'status': status_variants.get(post.status, {'label': post.status.title() if post.status else 'Durum yok', 'variant': 'slate'}),
+        'urgency': urgency_variants.get(post.urgency_level, urgency_variants[None]),
+        'deadline': deadline_info,
+        'price_display': price_display,
+        'created_display': _format_datetime(post.created_at),
+        'created_ago': _time_ago(post.created_at),
+        'last_viewed_display': _format_datetime(post_stats.get('last_viewed_at')),
+        'court_date_display': _format_datetime(post.court_date),
+        'expires_display': _format_datetime(post.expires_at),
+        'deadline_due_display': _format_datetime(post.deadline),
+        'location_display': location_display,
+        'city': post.city,
+        'courthouse': post.courthouse,
+        'remote_allowed': bool(post.remote_allowed),
+        'applications': application_breakdown,
+        'favorite': is_favorited,
+    }
+
     # Google Maps API anahtarı
     google_maps_key = os.getenv('GOOGLE_MAPS_API_KEY', '')
     
-    return render_template('post_detail.html', post=post, applications=applications, 
-                         is_favorited=is_favorited, post_stats=post_stats,
-                         google_maps_key=google_maps_key)
+    return render_template(
+        'post_detail.html',
+        post=post,
+        applications=applications,
+        is_favorited=is_favorited,
+        post_stats=post_stats,
+        google_maps_key=google_maps_key,
+        detail=detail_context,
+        stats_cards=stats_cards,
+    )
 
 @app.route('/posts/<int:post_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -1004,31 +1976,82 @@ def edit_post(post_id):
     
     if request.method == 'POST':
         data = request.form
-        
+        from spam_detector import sanitize_text
+
+        category = (data.get('category') or '').strip()
+        description = data.get('description', '')
+        task_date_raw = data.get('task_date')
+        task_time_raw = data.get('task_time')
+        city = (data.get('city') or '').strip()
+        district = (data.get('district') or '').strip()
+        courthouse = (data.get('courthouse') or '').strip()
+        location_hidden = (data.get('location') or '').strip()
+
+        if not category:
+            flash('Görev türü seçmek zorunludur.', 'error')
+            return redirect(url_for('edit_post', post_id=post_id))
+
+        if not task_date_raw or not task_time_raw:
+            flash('Görev tarihi ve saatini belirtmelisiniz.', 'error')
+            return redirect(url_for('edit_post', post_id=post_id))
+
+        try:
+            task_datetime = datetime.strptime(f"{task_date_raw} {task_time_raw}", '%Y-%m-%d %H:%M')
+        except ValueError:
+            flash('Görev tarihi veya saati geçersiz. Lütfen formatı kontrol edin.', 'error')
+            return redirect(url_for('edit_post', post_id=post_id))
+
+        auto_title = generate_post_title(category, city=city, courthouse=courthouse, district=district)
+
+        description = sanitize_text(description, max_length=5000)
+        category = sanitize_text(category, max_length=50)
+        city = sanitize_text(city, max_length=50) if city else None
+        district = sanitize_text(district, max_length=100) if district else None
+        courthouse = sanitize_text(courthouse, max_length=150) if courthouse else None
+        auto_title = sanitize_text(auto_title, max_length=200)
+        city = city or None
+        district = district or None
+        courthouse = courthouse or None
+
+        new_location_str = courthouse or (f"{district} {city}".strip() if district and city else district) or city or location_hidden
+
         # Konum değiştiyse yeniden geocode et
-        location_str = data.get('location')
-        if location_str != post.location:
-            coords = get_coordinates(location_str) if location_str else {}
+        if new_location_str != post.location:
+            coords = get_coordinates(new_location_str) if new_location_str else {}
             post.latitude = coords.get('latitude')
             post.longitude = coords.get('longitude')
             post.formatted_address = coords.get('formatted_address')
-        
-        post.title = data.get('title')
-        post.description = data.get('description')
-        post.category = data.get('category')
+
+        post.title = auto_title
+        post.description = description
+        post.category = category
         post.urgency_level = data.get('urgency_level')
-        post.location = location_str
+        post.location = new_location_str
+        post.city = city
+        post.district = district
+        post.courthouse = courthouse
+        post.court_date = task_datetime
         post.remote_allowed = data.get('remote_allowed') == 'on'
-        post.price_min = float(data.get('price_min')) if data.get('price_min') else None
-        post.price_max = float(data.get('price_max')) if data.get('price_max') else None
+        price_raw = data.get('price')
+        price_value = float(price_raw) if price_raw else None
+        post.price_min = price_value
+        post.price_max = price_value
         post.updated_at = datetime.now(timezone.utc)
         
         db.session.commit()
         
         flash('İlan güncellendi!', 'success')
         return redirect(url_for('post_detail', post_id=post_id))
-    
-    return render_template('post_edit.html', post=post)
+
+    return render_template(
+        'post_edit.html',
+        post=post,
+        cities=CITIES,
+        courthouses=COURTHOUSES,
+        task_category_options=TASK_CATEGORY_OPTIONS,
+        category_definitions=TASK_CATEGORY_DEFINITIONS,
+        category_abbreviations=CATEGORY_ABBREVIATIONS,
+    )
 
 @app.route('/posts/<int:post_id>/delete', methods=['POST'])
 @login_required
@@ -1089,7 +2112,7 @@ def apply_to_post(post_id):
         user_id=post.user_id,
         type='new_application',
         title='Yeni Başvuru',
-        message=f'{current_user.full_name} ilanınıza başvurdu: {post.title}',
+    message=f'{mask_name(current_user.full_name)} ilanınıza başvurdu: {post.title}',
         related_post_id=post_id,
         related_user_id=current_user.id,
         action_url=f'/applications/received'  # Gelen başvurular sayfasına yönlendir
@@ -1111,7 +2134,7 @@ def apply_to_post(post_id):
             print(f"WhatsApp bildirimi gönderilemedi: {str(e)}")
     
     # 📧 E-posta bildirimi gönder (ilan sahibine)
-    if email_enabled and post.user.notify_email:
+    if current_app.config.get('EMAIL_ENABLED') and post.user.notify_email:
         try:
             from email_service import send_application_received_email
             send_application_received_email(post.user, application)
@@ -1175,7 +2198,7 @@ def accept_application(app_id):
             print(f"WhatsApp bildirimi gönderilemedi: {str(e)}")
     
     # 📧 E-posta bildirimi gönder
-    if email_enabled and application.applicant.notify_email:
+    if current_app.config.get('EMAIL_ENABLED') and application.applicant.notify_email:
         try:
             from email_service import send_application_accepted_email
             send_application_accepted_email(application.applicant, application)
@@ -1247,7 +2270,7 @@ def get_authorization_info(app_id):
         'success': True,
         'data': {
             'post_owner': {
-                'full_name': post.user.full_name,
+                'full_name': post.user.masked_full_name,
                 'bar_association': post.user.bar_association,
                 'tc_number': post.user.tc_number,
                 'bar_registration_number': post.user.bar_registration_number,
@@ -1257,7 +2280,7 @@ def get_authorization_info(app_id):
                 'email': post.user.email
             },
             'applicant': {
-                'full_name': application.applicant.full_name,
+                'full_name': application.applicant.masked_full_name,
                 'bar_association': application.applicant.bar_association,
                 'tc_number': application.applicant.tc_number,
                 'bar_registration_number': application.applicant.bar_registration_number,
@@ -1305,7 +2328,7 @@ def generate_authorization_pdf(app_id):
     
     # Verileri hazırla
     post_owner = {
-        'name': post.user.full_name,
+    'name': post.user.masked_full_name,
         'baro': post.user.bar_association or 'Belirtilmemiş',
         'tc_number': post.user.tc_number or '',
         'sicil': post.user.bar_registration_number or 'Belirtilmemiş',
@@ -1315,7 +2338,7 @@ def generate_authorization_pdf(app_id):
     }
     
     applicant_data = {
-        'name': application.applicant.full_name,
+    'name': application.applicant.masked_full_name,
         'baro': application.applicant.bar_association or 'Belirtilmemiş',
         'tc_number': application.applicant.tc_number or '',
         'sicil': application.applicant.bar_registration_number or 'Belirtilmemiş',
@@ -1374,7 +2397,7 @@ def user_profile(user_id):
     # Aldığı değerlendirmeler
     ratings = Rating.query.filter_by(reviewed_id=user_id).order_by(Rating.created_at.desc()).all()
     
-    return render_template('profile.html', user=user, completed_posts=completed_posts, ratings=ratings)
+    return render_template('phoenix/profile/view.html', user=user, completed_posts=completed_posts, ratings=ratings)
 
 @app.route('/profile/edit', methods=['GET', 'POST'])
 @login_required
@@ -1430,7 +2453,7 @@ def edit_profile():
         flash('Profil güncellendi!', 'success')
         return redirect(url_for('user_profile', user_id=current_user.id))
     
-    return render_template('profile_edit.html')
+    return render_template('phoenix/profile/edit.html')
 
 @app.route('/settings')
 @login_required
@@ -1446,7 +2469,7 @@ def settings():
         except:
             backup_codes = []
     
-    return render_template('settings.html', 
+    return render_template('phoenix/settings/preferences.html', 
                          two_fa_enabled=two_fa_enabled,
                          backup_codes=backup_codes)
 
@@ -1536,7 +2559,7 @@ def rate_user(user_id):
             user_id=user_id,
             notification_type='new_rating',
             title='⭐ Yeni Değerlendirme!',
-            message=f'{current_user.full_name} sizi değerlendirdi: {rating_value}/5 yıldız',
+            message=f'{mask_name(current_user.full_name)} sizi değerlendirdi: {rating_value}/5 yıldız',
             related_user_id=current_user.id,
             priority='normal',
             category='rating',
@@ -1994,16 +3017,18 @@ def create_notification(user_id, notification_type, title, message, related_post
 
 def get_notification_stats(user_id):
     """Kullanıcının bildirim istatistiklerini getir"""
-    total = Notification.query.filter_by(user_id=user_id).count()
-    unread = Notification.query.filter_by(user_id=user_id, read_at=None).count()
-    today = Notification.query.filter_by(user_id=user_id).filter(
-        Notification.created_at >= datetime.now(timezone.utc).replace(hour=0, minute=0, second=0)
-    ).count()
-    
+    base_query = Notification.query.filter_by(user_id=user_id, archived_at=None)
+    total = base_query.count()
+    unread = base_query.filter(Notification.read_at.is_(None)).count()
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today = base_query.filter(Notification.created_at >= today_start).count()
+    high_priority = base_query.filter(Notification.priority.in_(['high', 'urgent'])).count()
+
     return {
         'total': total,
         'unread': unread,
-        'today': today
+        'today': today,
+        'high_priority': high_priority,
     }
 
 
@@ -2206,17 +3231,239 @@ def update_post_view(post_id, user_id=None):
 @login_required
 def notifications():
     """Geliştirilmiş bildirimler sayfası"""
-    notifications_list = Notification.query.filter_by(
+    notifications_query = Notification.query.filter_by(
         user_id=current_user.id,
         archived_at=None
-    ).order_by(Notification.created_at.desc()).all()
-    
-    # İstatistikleri getir
+    ).order_by(Notification.created_at.desc())
+    notifications_raw = notifications_query.all()
+
+    now = datetime.now(timezone.utc)
+
+    def _to_utc(dt):
+        if not dt:
+            return None
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+    def _time_ago(dt):
+        if not dt:
+            return ""
+        delta = now - dt
+        seconds = int(delta.total_seconds())
+        if seconds < 60:
+            return "az önce"
+        minutes = seconds // 60
+        if minutes < 60:
+            return f"{minutes} dk önce"
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours} sa önce"
+        days = hours // 24
+        if days < 7:
+            return f"{days} gün önce"
+        weeks = days // 7
+        if weeks < 5:
+            return f"{weeks} hf önce"
+        months = max(days // 30, 1)
+        return f"{months} ay önce"
+
+    type_config = {
+        'new_application': {
+            'icon': 'description',
+            'accent': 'bg-blue-100 dark:bg-blue-900/30',
+            'icon_color': 'text-blue-600 dark:text-blue-400',
+            'category': 'application',
+            'default_title': 'Yeni başvuru',
+            'default_message': 'İlanınıza yeni bir başvuru var.',
+            'action_text': 'Başvuruyu görüntüle',
+        },
+        'application_accepted': {
+            'icon': 'task_alt',
+            'accent': 'bg-emerald-100 dark:bg-emerald-900/30',
+            'icon_color': 'text-emerald-600 dark:text-emerald-400',
+            'category': 'application',
+            'default_title': 'Başvurun kabul edildi',
+            'default_message': 'Başvuruna olumlu yanıt verildi.',
+            'action_text': 'Yanıtı gör',
+        },
+        'application_rejected': {
+            'icon': 'cancel',
+            'accent': 'bg-rose-100 dark:bg-rose-900/30',
+            'icon_color': 'text-rose-600 dark:text-rose-400',
+            'category': 'application',
+            'default_title': 'Başvurun reddedildi',
+            'default_message': 'Başvuruna olumsuz yanıt verildi.',
+            'action_text': 'Detayı aç',
+        },
+        'new_message': {
+            'icon': 'mail',
+            'accent': 'bg-violet-100 dark:bg-violet-900/30',
+            'icon_color': 'text-violet-600 dark:text-violet-300',
+            'category': 'message',
+            'default_title': 'Yeni mesaj',
+            'default_message': 'Bir kullanıcıdan yeni mesajın var.',
+            'action_text': 'Mesajı oku',
+        },
+        'new_rating': {
+            'icon': 'star',
+            'accent': 'bg-amber-100 dark:bg-amber-900/30',
+            'icon_color': 'text-amber-600 dark:text-amber-400',
+            'category': 'message',
+            'default_title': 'Yeni değerlendirme',
+            'default_message': 'Profiline yeni bir değerlendirme eklendi.',
+            'action_text': 'Değerlendirmeyi gör',
+        },
+        'post_expiring': {
+            'icon': 'schedule',
+            'accent': 'bg-orange-100 dark:bg-orange-900/30',
+            'icon_color': 'text-orange-600 dark:text-orange-400',
+            'category': 'alert',
+            'default_title': 'İlan süresi doluyor',
+            'default_message': 'İlanın sona ermek üzere, süresini uzatmayı düşün.',
+            'action_text': 'İlanı yönet',
+        },
+        'system': {
+            'icon': 'info',
+            'accent': 'bg-slate-200 dark:bg-slate-800/30',
+            'icon_color': 'text-slate-600 dark:text-slate-300',
+            'category': 'system',
+            'default_title': 'Sistem duyurusu',
+            'default_message': 'Platformla ilgili önemli bir güncelleme var.',
+            'action_text': 'Detayları gör',
+        },
+    }
+
+    category_info = {
+        'application': {'label': 'Başvurular', 'icon': 'description'},
+        'message': {'label': 'Mesajlar', 'icon': 'mail'},
+        'system': {'label': 'Sistem', 'icon': 'info'},
+        'alert': {'label': 'Uyarılar', 'icon': 'warning'},
+        'general': {'label': 'Genel', 'icon': 'notifications'},
+    }
+
+    priority_labels = {
+        'urgent': 'Acil',
+        'high': 'Önemli',
+        'normal': 'Standart',
+        'low': 'Düşük',
+        None: 'Standart',
+    }
+
+    priority_variants = {
+        'urgent': 'rose',
+        'high': 'orange',
+        'normal': 'slate',
+        'low': 'slate',
+        None: 'slate',
+    }
+
+    notification_cards = []
+    category_counts = {key: 0 for key in category_info.keys()}
+    unread_count = 0
+    today_count = 0
+    high_priority_count = 0
+
+    for notif in notifications_raw:
+        config = type_config.get(notif.type, {})
+        category_key = (notif.category or config.get('category') or 'general')
+        if category_key not in category_info:
+            category_info[category_key] = {'label': category_key.title(), 'icon': 'notifications'}
+            category_counts[category_key] = 0
+
+        created_utc = _to_utc(notif.created_at) or now
+        is_new = (now - created_utc).total_seconds() < 86400
+        is_read = bool(notif.read_at)
+
+        category_counts[category_key] = category_counts.get(category_key, 0) + 1
+        if not is_read:
+            unread_count += 1
+        if is_new:
+            today_count += 1
+        if (notif.priority or 'normal') in ('high', 'urgent'):
+            high_priority_count += 1
+
+        card = {
+            'id': notif.id,
+            'title': notif.title or config.get('default_title') or 'Yeni bildirim',
+            'message': notif.message or config.get('default_message') or '',
+            'type': notif.type,
+            'category': category_key,
+            'category_label': category_info[category_key]['label'],
+            'icon': config.get('icon', category_info[category_key]['icon']),
+            'accent_class': config.get('accent', 'bg-slate-100 dark:bg-slate-800/40'),
+            'icon_color_class': config.get('icon_color', 'text-slate-600 dark:text-slate-300'),
+            'is_read': is_read,
+            'read_state': 'read' if is_read else 'unread',
+            'is_new': is_new,
+            'priority': notif.priority or 'normal',
+            'priority_label': priority_labels.get(notif.priority or 'normal', 'Standart'),
+            'priority_variant': priority_variants.get(notif.priority or 'normal', 'slate'),
+            'time_ago': _time_ago(created_utc),
+            'timestamp': created_utc.strftime('%d %b %Y, %H:%M'),
+            'action_url': notif.action_url,
+            'action_text': notif.action_text or config.get('action_text'),
+        }
+
+        notification_cards.append(card)
+
     stats = get_notification_stats(current_user.id)
-    
-    return render_template('notifications_new.html', 
-                         notifications=notifications_list,
-                         stats=stats)
+    stats.update({
+        'total': len(notification_cards),
+        'unread': unread_count,
+        'today': today_count,
+        'high_priority': high_priority_count,
+    })
+
+    filters = [
+        {'key': 'all', 'label': 'Tümü', 'count': len(notification_cards)},
+        {'key': 'unread', 'label': 'Okunmamış', 'count': unread_count},
+    ]
+
+    if high_priority_count:
+        filters.append({'key': 'priority', 'label': 'Önemli', 'count': high_priority_count})
+
+    for key, info in category_info.items():
+        count = category_counts.get(key, 0)
+        if count:
+            filters.append({'key': key, 'label': info['label'], 'count': count})
+
+    metrics = [
+        {
+            'label': 'Toplam bildirim',
+            'icon': 'notifications',
+            'value': stats['total'],
+            'subtitle': f"Bugün {today_count}",
+            'variant': 'brand',
+        },
+        {
+            'label': 'Okunmamış',
+            'icon': 'mark_email_unread',
+            'value': unread_count,
+            'subtitle': f"Önemli {high_priority_count}",
+            'variant': 'amber',
+        },
+        {
+            'label': 'Başvuru hareketi',
+            'icon': 'description',
+            'value': category_counts.get('application', 0),
+            'subtitle': 'İlan aktiviteleri',
+            'variant': 'indigo',
+        },
+        {
+            'label': 'Sistem duyuruları',
+            'icon': 'campaign',
+            'value': category_counts.get('system', 0),
+            'subtitle': 'Platform güncellemeleri',
+            'variant': 'slate',
+        },
+    ]
+
+    return render_template(
+        'notifications_new.html',
+        notifications=notification_cards,
+        stats=stats,
+        filters=filters,
+        metrics=metrics,
+    )
 
 
 @app.route('/notifications/mark-all-read', methods=['POST'])
@@ -2254,7 +3501,7 @@ def archive_notification(notification_id):
 @login_required
 def notification_settings():
     """Bildirim ayarları sayfası"""
-    return render_template('notification_settings.html', user=current_user)
+    return render_template('phoenix/settings/notifications.html', user=current_user)
 
 
 @app.route('/notifications/settings/update', methods=['POST'])
@@ -2295,276 +3542,460 @@ def mark_notifications_read():
 # CHAT / MESSAGING ROUTES (Modern Chat System)
 # ============================================
 
-@app.route('/chat')
-@login_required
-def chat():
-    """Modern chat ana sayfası - WhatsApp tarzı"""
-    # Kullanıcının tüm conversation'larını al, son mesaja göre sırala
-    user_convs = db.session.query(Conversation).filter(
-        or_(
-            Conversation.user1_id == current_user.id,
-            Conversation.user2_id == current_user.id
-        )
-    ).order_by(Conversation.last_message_at.desc()).all()
-    
-    # Toplam okunmamış mesaj sayısı
-    total_unread = sum(conv.get_unread_count(current_user.id) for conv in user_convs)
-    
-    # Bugünün tarihi (template için)
-    today = datetime.now(timezone.utc).date()
-    
-    return render_template('chat.html', 
-                         conversations=user_convs,
-                         total_unread=total_unread,
-                         today=today)
 
-@app.route('/chat/<int:conversation_id>')
-@login_required
-def chat_conversation(conversation_id):
-    """Belirli bir conversation'ın detayı"""
-    conversation = Conversation.query.get_or_404(conversation_id)
-    
-    # Kullanıcı bu conversation'a dahil mi kontrol et
-    if current_user.id not in [conversation.user1_id, conversation.user2_id]:
-        flash('Bu sohbete erişim yetkiniz yok', 'error')
-        return redirect(url_for('chat'))
-    
-    # Mesajları okundu işaretle
-    conversation.mark_as_read(current_user.id)
-    
-    # Bu conversation'daki tüm mesajları okundu işaretle
-    Message.query.filter(
-        Message.conversation_id == conversation_id,
-        Message.sender_id != current_user.id,
-        Message.read_at.is_(None)
-    ).update({'read_at': datetime.now(timezone.utc)})
-    
-    db.session.commit()
-    
-    # Tüm conversation'ları al (sidebar için)
-    user_convs = db.session.query(Conversation).filter(
-        or_(
-            Conversation.user1_id == current_user.id,
-            Conversation.user2_id == current_user.id
-        )
-    ).order_by(Conversation.last_message_at.desc()).all()
-    
-    # Bu conversation'ın mesajlarını al
-    messages = Message.query.filter_by(
-        conversation_id=conversation_id
-    ).order_by(Message.created_at.asc()).all()
-    
-    # Karşı tarafı al
-    other_user = conversation.get_other_user(current_user.id)
-    
-    # Toplam okunmamış
-    total_unread = sum(conv.get_unread_count(current_user.id) for conv in user_convs)
-    
-    # Bugünün tarihi
-    today = datetime.now(timezone.utc).date()
-    
-    return render_template('chat.html',
-                         conversations=user_convs,
-                         active_conversation=conversation,
-                         messages=messages,
-                         other_user=other_user,
-                         total_unread=total_unread,
-                         today=today)
+def _user_initials(user):
+    """Return capitalised initials derived from the user's full name."""
+    if not user or not user.full_name:
+        return "TR"
+    parts = [segment for segment in user.full_name.strip().split() if segment]
+    if not parts:
+        return "TR"
+    if len(parts) == 1:
+        return parts[0][:2].upper()
+    return (parts[0][0] + parts[-1][0]).upper()
 
-@app.route('/chat/start/<int:user_id>', methods=['GET'])
-@login_required
-def start_chat(user_id):
-    """Yeni bir chat başlat veya var olanı aç"""
-    if user_id == current_user.id:
-        flash('Kendinize mesaj gönderemezsiniz', 'error')
-        return redirect(url_for('chat'))
-    
-    # Kullanıcı var mı kontrol et
-    other_user = User.query.get_or_404(user_id)
-    
-    # Post ID varsa al
-    post_id = request.args.get('post_id', type=int)
-    
-    # Conversation bul veya oluştur
-    conversation = Conversation.get_or_create(
-        current_user.id, 
-        user_id,
-        post_id
+
+def _normalise_to_utc(dt):
+    """Ensure datetime values are timezone-aware in UTC."""
+    if not dt:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def _format_relative_time(dt):
+    """Generate a concise human readable relative time string."""
+    dt = _normalise_to_utc(dt)
+    if not dt:
+        return ""
+    now = datetime.now(timezone.utc)
+    diff = now - dt
+    if diff.total_seconds() < 0:
+        return dt.strftime('%d.%m.%Y %H:%M')
+    minutes = int(diff.total_seconds() // 60)
+    hours = int(diff.total_seconds() // 3600)
+    days = diff.days
+    if minutes < 1:
+        return "az önce"
+    if minutes < 60:
+        return f"{minutes} dk önce"
+    if hours < 24:
+        return f"{hours} saat önce"
+    if days < 7:
+        return f"{days} gün önce"
+    return dt.strftime('%d.%m.%Y')
+
+
+def _format_file_size(size_bytes):
+    """Format byte values for human friendly display."""
+    if not size_bytes:
+        return None
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    if size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.1f} KB"
+    return f"{size_bytes / (1024 * 1024):.1f} MB"
+
+
+def _conversation_meta(conversation):
+    """Build metadata text rendered under the participant name."""
+    parts = []
+    if conversation.post:
+        title = conversation.post.title or "İlan"
+        if conversation.post.city:
+            parts.append(f"{conversation.post.city} · {title}")
+        else:
+            parts.append(title)
+    if conversation.created_at:
+        created = _normalise_to_utc(conversation.created_at)
+        if created:
+            parts.append(f"Başlangıç {created.strftime('%d.%m.%Y')}")
+    return " · ".join(parts) if parts else "Sohbet"
+
+
+def _thread_summary(conversation, current_user_id, active_id):
+    """Convert conversation model into sidebar friendly summary data."""
+    other_user = conversation.get_other_user(current_user_id)
+    return {
+        "id": conversation.id,
+        "name": other_user.masked_full_name if hasattr(other_user, "masked_full_name") else other_user.full_name,
+        "initials": _user_initials(other_user),
+        "last_timestamp": _format_relative_time(conversation.last_message_at or conversation.updated_at),
+        "preview": conversation.last_message_text or "Henüz mesaj yok",
+        "unread": conversation.get_unread_count(current_user_id),
+        "active": active_id == conversation.id,
+        "meta": _conversation_meta(conversation),
+        "url": url_for("chat_conversation", conversation_id=conversation.id),
+    }
+
+
+def _thread_detail(conversation, current_user_id):
+    """Build the payload required to render the active chat panel."""
+    other_user = conversation.get_other_user(current_user_id)
+    messages = Message.query.filter_by(conversation_id=conversation.id).order_by(Message.created_at.asc()).all()
+    return {
+        "id": conversation.id,
+        "name": other_user.masked_full_name if hasattr(other_user, "masked_full_name") else other_user.full_name,
+        "initials": _user_initials(other_user),
+        "meta": _conversation_meta(conversation),
+        "post": {
+            "title": conversation.post.title,
+            "url": url_for("post_detail", post_id=conversation.post_id),
+        } if conversation.post_id else None,
+        "other_user_id": other_user.id,
+        "messages": [
+            {
+                "id": msg.id,
+                "body": msg.message,
+                "timestamp": _normalise_to_utc(msg.created_at).strftime('%d.%m.%Y %H:%M') if msg.created_at else "",
+                "is_owner": msg.sender_id == current_user_id,
+                "type": msg.message_type or "text",
+                "file_url": msg.file_url,
+                "file_name": msg.file_name,
+                "file_size": _format_file_size(msg.file_size),
+            }
+            for msg in messages
+        ],
+    }
+
+
+class ChatMessageError(Exception):
+    """Raised when chat message creation fails."""
+
+    def __init__(self, message, status_code=400):
+        super().__init__(message)
+        self.status_code = status_code
+
+
+def _create_chat_message(
+    conversation,
+    sender,
+    message_text="",
+    reply_to_id=None,
+    uploaded_file=None,
+):
+    """Persist a chat message, emit socket event and return payload metadata."""
+    message_text = (message_text or "").strip()
+
+    if sender.id not in (conversation.user1_id, conversation.user2_id):
+        raise ChatMessageError("Yetkiniz yok", status_code=403)
+
+    if not message_text and not uploaded_file:
+        raise ChatMessageError("Mesaj veya dosya gerekli")
+
+    file_url = None
+    file_name = None
+    file_size = None
+    file_type = None
+    message_type = "text"
+
+    if uploaded_file:
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'pdf', 'docx', 'udf', 'gif', 'webp'}
+        original_name = uploaded_file.filename or ""
+        file_ext = original_name.rsplit('.', 1)[1].lower() if '.' in original_name else ''
+        if file_ext not in allowed_extensions:
+            raise ChatMessageError(f"Desteklenmeyen dosya tipi. İzin verilenler: {', '.join(sorted(allowed_extensions))}")
+
+        uploaded_file.seek(0, os.SEEK_END)
+        file_size = uploaded_file.tell()
+        uploaded_file.seek(0)
+        if file_size > 10 * 1024 * 1024:
+            raise ChatMessageError("Dosya boyutu 10MB'dan büyük olamaz")
+
+        upload_folder = os.path.join(app.root_path, 'static', 'uploads', 'chat')
+        os.makedirs(upload_folder, exist_ok=True)
+
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        safe_name = secure_filename(original_name)
+        unique_filename = f"{sender.id}_{timestamp}_{safe_name}"
+        file_path = os.path.join(upload_folder, unique_filename)
+        uploaded_file.save(file_path)
+
+        file_url = f"/static/uploads/chat/{unique_filename}"
+        file_name = original_name
+        file_type = uploaded_file.content_type or f'application/{file_ext}'
+        message_type = 'image' if file_ext in {'png', 'jpg', 'jpeg', 'gif', 'webp'} else 'file'
+        if not message_text:
+            message_text = f"📎 {file_name}"
+
+    other_user = conversation.get_other_user(sender.id)
+    message = Message(
+        conversation_id=conversation.id,
+        sender_id=sender.id,
+        message=message_text,
+        reply_to_id=reply_to_id,
+        delivered_at=datetime.now(timezone.utc),
+        message_type=message_type,
+        file_url=file_url,
+        file_name=file_name,
+        file_size=file_size,
+        file_type=file_type,
     )
-    db.session.commit()
-    
-    return redirect(url_for('chat_conversation', conversation_id=conversation.id))
+    message.receiver_id = other_user.id
+    message.post_id = conversation.post_id
 
-@app.route('/chat/send', methods=['POST'])
-@login_required
-@limiter.limit("100 per minute")  # Chat için yüksek limit
-def send_chat_message():
-    """Chat mesajı gönder (AJAX) - Dosya desteği ile"""
+    db.session.add(message)
+
+    conversation.last_message_at = datetime.now(timezone.utc)
+    conversation.last_message_text = message_text[:100]
+    conversation.last_message_sender_id = sender.id
+    if sender.id == conversation.user1_id:
+        conversation.unread_count_user2 += 1
+    else:
+        conversation.unread_count_user1 += 1
+
     try:
-        # Form data veya JSON data kontrolü
-        if request.is_json:
-            data = request.get_json()
-            conversation_id = data.get('conversation_id')
-            message_text = data.get('message', '').strip()
-            reply_to_id = data.get('reply_to_id')
-            uploaded_file = None
-        else:
-            # FormData (dosya upload için)
-            conversation_id = request.form.get('conversation_id')
-            message_text = request.form.get('message', '').strip()
-            reply_to_id = request.form.get('reply_to_id')
-            uploaded_file = request.files.get('file')
-        
-        if not message_text and not uploaded_file:
-            return jsonify({'success': False, 'error': 'Mesaj veya dosya gerekli'}), 400
-        
-        # Conversation kontrolü
-        conversation = Conversation.query.get_or_404(conversation_id)
-        
-        if current_user.id not in [conversation.user1_id, conversation.user2_id]:
-            return jsonify({'success': False, 'error': 'Yetkiniz yok'}), 403
-        
-        # 📎 Dosya upload işlemi
-        file_url = None
-        file_name = None
-        file_size = None
-        file_type = None
-        message_type = 'text'
-        
-        if uploaded_file:
-            # Dosya uzantısı kontrolü
-            allowed_extensions = {'png', 'jpg', 'jpeg', 'pdf', 'docx', 'udf', 'gif', 'webp'}
-            file_ext = uploaded_file.filename.rsplit('.', 1)[1].lower() if '.' in uploaded_file.filename else ''
-            
-            if file_ext not in allowed_extensions:
-                return jsonify({'success': False, 'error': f'Desteklenmeyen dosya tipi. İzin verilenler: {", ".join(allowed_extensions)}'}), 400
-            
-            # Dosya boyutu kontrolü (max 10MB)
-            uploaded_file.seek(0, 2)  # Dosya sonuna git
-            file_size = uploaded_file.tell()  # Boyutu al
-            uploaded_file.seek(0)  # Başa dön
-            
-            if file_size > 10 * 1024 * 1024:  # 10MB
-                return jsonify({'success': False, 'error': 'Dosya boyutu 10MB\'dan büyük olamaz'}), 400
-            
-            # Upload klasörünü oluştur
-            upload_folder = os.path.join(app.root_path, 'static', 'uploads', 'chat')
-            os.makedirs(upload_folder, exist_ok=True)
-            
-            # Benzersiz dosya adı oluştur
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            unique_filename = f"{current_user.id}_{timestamp}_{secure_filename(uploaded_file.filename)}"
-            file_path = os.path.join(upload_folder, unique_filename)
-            
-            # Dosyayı kaydet
-            uploaded_file.save(file_path)
-            
-            # URL ve metadata
-            file_url = f"/static/uploads/chat/{unique_filename}"
-            file_name = uploaded_file.filename
-            file_type = uploaded_file.content_type or f'application/{file_ext}'
-            
-            # Mesaj tipini belirle
-            if file_ext in {'png', 'jpg', 'jpeg', 'gif', 'webp'}:
-                message_type = 'image'
-            else:
-                message_type = 'file'
-            
-            # Eğer mesaj metni yoksa, dosya adını kullan
-            if not message_text:
-                message_text = f"📎 {file_name}"
-        
-        # Yeni mesaj oluştur
-        message = Message(
-            conversation_id=conversation_id,
-            sender_id=current_user.id,
-            message=message_text,
-            reply_to_id=reply_to_id,
-            delivered_at=datetime.now(timezone.utc),
-            message_type=message_type,
-            file_url=file_url,
-            file_name=file_name,
-            file_size=file_size,
-            file_type=file_type
-        )
-        
-        # DEPRECATED alanları doldur (eski sistem uyumluluğu)
-        other_user = conversation.get_other_user(current_user.id)
-        message.receiver_id = other_user.id
-        message.post_id = conversation.post_id
-        
-        db.session.add(message)
-        
-        # Conversation'ı güncelle
-        conversation.last_message_at = datetime.now(timezone.utc)
-        conversation.last_message_text = message_text[:100]
-        conversation.last_message_sender_id = current_user.id
-        
-        # Karşı tarafın okunmamış sayısını artır
-        if current_user.id == conversation.user1_id:
-            conversation.unread_count_user2 += 1
-        else:
-            conversation.unread_count_user1 += 1
-        
         db.session.commit()
-        
-        # ⚡ Get sender avatar with fallback
-        sender_avatar = current_user.avatar_url if current_user.avatar_url else f"https://ui-avatars.com/api/?name={current_user.full_name.replace(' ', '+')}&background=1f2937&color=fff"
-        other_user_avatar = other_user.avatar_url if other_user.avatar_url else f"https://ui-avatars.com/api/?name={other_user.full_name.replace(' ', '+')}&background=1f2937&color=fff"
-        
-        # ⚡ SOCKET.IO REAL-TIME EMIT - Mesajı anında gönder
-        socketio.emit('new_message', {
-            'conversation_id': conversation_id,
-            'sender_id': current_user.id,
-            'sender_name': current_user.full_name,
+    except Exception as exc:  # pragma: no cover - safeguard
+        db.session.rollback()
+        raise ChatMessageError("Mesaj kaydedilemedi") from exc
+
+    masked_sender_name = sender.masked_full_name if hasattr(sender, "masked_full_name") else sender.full_name
+    masked_other_name = other_user.masked_full_name if hasattr(other_user, "masked_full_name") else other_user.full_name
+    sender_avatar = (
+        sender.avatar_url
+        if getattr(sender, "avatar_url", None)
+        else f"https://ui-avatars.com/api/?name={masked_sender_name.replace(' ', '+')}&background=1f2937&color=fff"
+    )
+    other_user_avatar = (
+        other_user.avatar_url
+        if getattr(other_user, "avatar_url", None)
+        else f"https://ui-avatars.com/api/?name={masked_other_name.replace(' ', '+')}&background=1f2937&color=fff"
+    )
+
+    socketio.emit(
+        'new_message',
+        {
+            'conversation_id': conversation.id,
+            'sender_id': sender.id,
+            'sender_name': masked_sender_name,
             'sender_avatar': sender_avatar,
             'content': message_text,
             'message': message_text,
             'timestamp': message.created_at.strftime('%H:%M'),
             'created_at': message.created_at.isoformat(),
             'id': message.id,
-            'is_mine': False,  # Frontend'de dinamik olarak ayarlanacak
+            'is_mine': False,
             'read_at': None,
-            # 📎 Dosya bilgileri
             'message_type': message_type,
             'file_url': file_url,
             'file_name': file_name,
             'file_size': file_size,
-            'file_type': file_type
-        }, room=f'conversation_{conversation_id}')
-        
-        # Bildirim gönder (asenkron - UI'ı bloklamaz)
-        try:
-            create_notification(
-                user_id=other_user.id,
-                notification_type='new_message',
-                title='💬 Yeni Mesaj',
-                message=f'{current_user.full_name}: {message_text[:50]}...',
-                related_user_id=current_user.id,
-                action_url=url_for('chat_conversation', conversation_id=conversation_id),
-                action_text='Mesajı Görüntüle',
-                priority='normal'
-            )
-        except Exception as e:
-            # Bildirim hatası mesaj göndermeyi engellemez
-            print(f"Notification error: {e}")
-        
-        return jsonify({
-            'success': True,
+            'file_type': file_type,
+        },
+        room=f'conversation_{conversation.id}',
+    )
+
+    try:
+        create_notification(
+            user_id=other_user.id,
+            notification_type='new_message',
+            title='💬 Yeni Mesaj',
+            message=f'{masked_sender_name}: {message_text[:50]}...',
+            related_user_id=sender.id,
+            action_url=url_for('chat_conversation', conversation_id=conversation.id),
+            action_text='Mesajı Görüntüle',
+            priority='normal',
+        )
+    except Exception as exc:  # pragma: no cover - notification best effort
+        print(f"Notification error: {exc}")
+
+    return {
+        "message": message,
+        "other_user": other_user,
+        "payload": {
             'message_id': message.id,
             'created_at': message.created_at.strftime('%H:%M'),
-            'sender_name': current_user.full_name,
+            'sender_name': masked_sender_name,
             'message_text': message_text,
             'message_type': message_type,
             'file_url': file_url,
             'file_name': file_name,
             'file_size': file_size,
-            'file_type': file_type
+            'file_type': file_type,
+        },
+    }
+
+
+@app.route('/chat')
+@login_required
+def chat():
+    """Phoenix tabanlı mesajlaşma merkezi."""
+    user_convs = db.session.query(Conversation).filter(
+        or_(
+            Conversation.user1_id == current_user.id,
+            Conversation.user2_id == current_user.id,
+        )
+    ).order_by(Conversation.last_message_at.desc()).all()
+
+    active_conversation = user_convs[0] if user_convs else None
+    if active_conversation:
+        active_conversation.mark_as_read(current_user.id)
+        Message.query.filter(
+            Message.conversation_id == active_conversation.id,
+            Message.sender_id != current_user.id,
+            Message.read_at.is_(None),
+        ).update({'read_at': datetime.now(timezone.utc)})
+        db.session.commit()
+
+    total_unread = sum(conv.get_unread_count(current_user.id) for conv in user_convs)
+    active_id = active_conversation.id if active_conversation else None
+    threads = [
+        _thread_summary(conv, current_user.id, active_id=active_id)
+        for conv in user_convs
+    ]
+    active_thread = _thread_detail(active_conversation, current_user.id) if active_conversation else None
+
+    return render_template(
+        'chat.html',
+        threads=threads,
+        active_thread=active_thread,
+        total_unread=total_unread,
+    )
+
+
+@app.route('/chat/<int:conversation_id>', methods=['GET', 'POST'])
+@login_required
+def chat_conversation(conversation_id: int):
+    """Gösterilen sohbeti Phoenix arayüzüyle render et."""
+    conversation = Conversation.query.get_or_404(conversation_id)
+
+    if current_user.id not in (conversation.user1_id, conversation.user2_id):
+        flash('Bu sohbete erişim yetkiniz yok', 'error')
+        return redirect(url_for('chat'))
+
+    if request.method == 'POST':
+        message_text = request.form.get('message', '')
+        reply_to_raw = request.form.get('reply_to_id')
+        try:
+            reply_to_id = int(reply_to_raw) if reply_to_raw else None
+        except (TypeError, ValueError):
+            reply_to_id = None
+
+        try:
+            _create_chat_message(
+                conversation=conversation,
+                sender=current_user,
+                message_text=message_text,
+                reply_to_id=reply_to_id,
+                uploaded_file=request.files.get('file'),
+            )
+            flash('Mesaj gönderildi.', 'success')
+        except ChatMessageError as exc:
+            flash(str(exc), 'error')
+            if exc.status_code == 403:
+                return redirect(url_for('chat'))
+        return redirect(url_for('chat_conversation', conversation_id=conversation_id))
+
+    conversation.mark_as_read(current_user.id)
+    Message.query.filter(
+        Message.conversation_id == conversation_id,
+        Message.sender_id != current_user.id,
+        Message.read_at.is_(None),
+    ).update({'read_at': datetime.now(timezone.utc)})
+    db.session.commit()
+
+    user_convs = db.session.query(Conversation).filter(
+        or_(
+            Conversation.user1_id == current_user.id,
+            Conversation.user2_id == current_user.id,
+        )
+    ).order_by(Conversation.last_message_at.desc()).all()
+
+    total_unread = sum(conv.get_unread_count(current_user.id) for conv in user_convs)
+    threads = [
+        _thread_summary(conv, current_user.id, active_id=conversation.id)
+        for conv in user_convs
+    ]
+    active_thread = _thread_detail(conversation, current_user.id)
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.args.get('ajax') == '1':
+        panel_html = render_template(
+            'partials/chat_panel.html',
+            active_thread=active_thread,
+            current_user=current_user,
+        )
+        return jsonify({
+            'success': True,
+            'panel_html': panel_html,
+            'conversation_id': conversation.id,
+            'url': url_for('chat_conversation', conversation_id=conversation.id),
         })
-        
-    except Exception as e:
+
+    return render_template(
+        'chat.html',
+        threads=threads,
+        active_thread=active_thread,
+        total_unread=total_unread,
+    )
+
+
+@app.route('/chat/start/<int:user_id>', methods=['GET'])
+@login_required
+def start_chat(user_id: int):
+    """Yeni bir chat başlat veya var olanı aç."""
+    if user_id == current_user.id:
+        flash('Kendinize mesaj gönderemezsiniz', 'error')
+        return redirect(url_for('chat'))
+
+    User.query.get_or_404(user_id)
+    post_id = request.args.get('post_id', type=int)
+    conversation = Conversation.get_or_create(current_user.id, user_id, post_id)
+    db.session.commit()
+
+    return redirect(url_for('chat_conversation', conversation_id=conversation.id))
+
+
+@app.route('/chat/send', methods=['POST'])
+@login_required
+@limiter.limit("100 per minute")
+def send_chat_message():
+    """Chat mesajı gönder (AJAX) - Dosya desteği ile."""
+    try:
+        if request.is_json:
+            data = request.get_json() or {}
+            conversation_id = data.get('conversation_id')
+            message_text = data.get('message', '')
+            reply_to_raw = data.get('reply_to_id')
+            uploaded_file = None
+        else:
+            conversation_id = request.form.get('conversation_id')
+            message_text = request.form.get('message', '')
+            reply_to_raw = request.form.get('reply_to_id')
+            uploaded_file = request.files.get('file')
+
+        conversation_id = int(conversation_id)
+    except (TypeError, ValueError):
+        return jsonify({'success': False, 'error': 'Geçersiz sohbet'}), 400
+
+    reply_to_id = None
+    if reply_to_raw:
+        try:
+            reply_to_id = int(reply_to_raw)
+        except (TypeError, ValueError):
+            reply_to_id = None
+
+    conversation = Conversation.query.get_or_404(conversation_id)
+
+    try:
+        result = _create_chat_message(
+            conversation=conversation,
+            sender=current_user,
+            message_text=message_text,
+            reply_to_id=reply_to_id,
+            uploaded_file=uploaded_file,
+        )
+    except ChatMessageError as exc:
+        return jsonify({'success': False, 'error': str(exc)}), exc.status_code
+    except Exception as exc:  # pragma: no cover - unexpected errors
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+    payload = result['payload']
+    return jsonify({'success': True, **payload})
+
+ 
 
 @app.route('/chat/messages/<int:conversation_id>/new', methods=['GET'])
 @login_required
@@ -2599,7 +4030,7 @@ def get_new_messages(conversation_id):
         'messages': [{
             'id': msg.id,
             'sender_id': msg.sender_id,
-            'sender_name': msg.sender.full_name,
+            'sender_name': msg.sender.masked_full_name,
             'message': msg.message,
             'created_at': msg.created_at.strftime('%H:%M'),
             'is_mine': msg.sender_id == current_user.id,
@@ -2781,8 +4212,210 @@ def mark_message_read(message_id):
 @login_required
 def favorites():
     """Favori ilanlar"""
-    favorites_list = Favorite.query.filter_by(user_id=current_user.id).order_by(Favorite.created_at.desc()).all()
-    return render_template('favorites.html', favorites=favorites_list)
+    favorites_raw = Favorite.query.filter_by(user_id=current_user.id).order_by(Favorite.created_at.desc()).all()
+
+    now = datetime.now(timezone.utc)
+    soon_threshold = now + timedelta(days=7)
+
+    def _to_utc(dt):
+        if not dt:
+            return None
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+    def _time_ago(dt):
+        if not dt:
+            return ""
+        dt = _to_utc(dt) or now
+        delta = now - dt
+        seconds = int(delta.total_seconds())
+        if seconds < 60:
+            return "az önce"
+        minutes = seconds // 60
+        if minutes < 60:
+            return f"{minutes} dk önce"
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours} sa önce"
+        days = hours // 24
+        if days < 7:
+            return f"{days} gün önce"
+        weeks = days // 7
+        if weeks < 5:
+            return f"{weeks} hf önce"
+        months = max(days // 30, 1)
+        return f"{months} ay önce"
+
+    def _slugify(value):
+        if not value:
+            return "other"
+        sanitized = "".join(ch.lower() if ch.isalnum() else "-" for ch in value.strip())
+        cleaned = "-".join(segment for segment in sanitized.split("-") if segment)
+        return cleaned or "other"
+
+    urgency_map = {
+        'very_urgent': {'label': 'Çok acil', 'variant': 'rose'},
+        'urgent': {'label': 'Acil', 'variant': 'orange'},
+        'normal': {'label': 'Normal', 'variant': 'slate'},
+        None: {'label': 'Normal', 'variant': 'slate'},
+    }
+
+    favorite_cards = []
+    category_counts = {}
+    price_values = []
+    urgent_count = 0
+    upcoming_count = 0
+
+    for fav in favorites_raw:
+        post = fav.post
+        if not post:
+            favorite_cards.append({
+                'favorite_id': fav.id,
+                'post_id': None,
+                'title': 'İlan kaldırıldı',
+                'url': None,
+                'category': 'Bilinmiyor',
+                'category_slug': 'other',
+                'city': None,
+                'city_slug': 'other',
+                'urgency': 'normal',
+                'urgency_label': 'Normal',
+                'urgency_variant': 'slate',
+                'deadline_display': 'Takvimlenmedi',
+                'deadline_state': 'none',
+                'deadline_badge': None,
+                'price_display': None,
+                'views': 0,
+                'applications': 0,
+                'status': 'inactive',
+                'status_label': 'Pasif',
+                'favorited_display': fav.created_at.strftime('%d %b %Y, %H:%M') if fav.created_at else '',
+                'time_ago': _time_ago(fav.created_at),
+            })
+            continue
+
+        deadline_source = post.deadline or post.court_date
+        deadline_utc = _to_utc(deadline_source)
+        deadline_display = deadline_utc.strftime('%d %b %Y, %H:%M') if deadline_utc else 'Takvimlenmedi'
+        if deadline_utc:
+            if deadline_utc < now:
+                deadline_state = 'overdue'
+                deadline_badge = 'Süresi doldu'
+            elif deadline_utc <= soon_threshold:
+                remaining = deadline_utc - now
+                days_left = max(int(remaining.total_seconds() // 86400), 0)
+                deadline_state = 'soon'
+                deadline_badge = 'Bugün' if days_left == 0 else f'{days_left} gün kaldı'
+            else:
+                deadline_state = 'scheduled'
+                deadline_badge = 'Takvimde'
+        else:
+            deadline_state = 'none'
+            deadline_badge = None
+
+        urgency_key = post.urgency_level or 'normal'
+        urgency_info = urgency_map.get(urgency_key, urgency_map['normal'])
+        if urgency_info['variant'] in ('rose', 'orange'):
+            urgent_count += 1
+        if deadline_state == 'soon':
+            upcoming_count += 1
+
+        category_counts[post.category] = category_counts.get(post.category, 0) + 1
+        city_key = post.city or post.location or 'Diğer'
+
+        if post.price_min:
+            price_values.append(post.price_min)
+        elif post.price_max:
+            price_values.append(post.price_max)
+
+        price_display = None
+        if post.price_min and post.price_max:
+            price_display = f"{int(post.price_min)} - {int(post.price_max)} ₺"
+        elif post.price_min:
+            price_display = f"{int(post.price_min)} ₺"
+        elif post.price_max:
+            price_display = f"{int(post.price_max)} ₺"
+
+        favorite_cards.append({
+            'favorite_id': fav.id,
+            'post_id': post.id,
+            'title': post.title,
+            'url': url_for('post_detail', post_id=post.id),
+            'category': post.category,
+            'category_slug': _slugify(post.category),
+            'city': city_key,
+            'city_slug': _slugify(city_key),
+            'urgency': urgency_key,
+            'urgency_label': urgency_info['label'],
+            'urgency_variant': urgency_info['variant'],
+            'deadline_display': deadline_display,
+            'deadline_state': deadline_state,
+            'deadline_badge': deadline_badge,
+            'price_display': price_display,
+            'views': post.views or post.view_count or 0,
+            'applications': post.applications_count or 0,
+            'status': post.status,
+            'status_label': 'Aktif' if post.status == 'active' else 'Pasif',
+            'favorited_display': fav.created_at.strftime('%d %b %Y, %H:%M') if fav.created_at else '',
+            'time_ago': _time_ago(fav.created_at),
+        })
+
+    total_count = len(favorite_cards)
+    average_price = int(sum(price_values) / len(price_values)) if price_values else 0
+    last_added = _time_ago(favorites_raw[0].created_at) if favorites_raw else None
+
+    metrics = [
+        {
+            'label': 'Favori ilan',
+            'icon': 'favorite',
+            'value': total_count,
+            'subtitle': f"Son eklenen {last_added}" if last_added else 'Henüz favori yok',
+            'variant': 'brand',
+        },
+        {
+            'label': 'Acil durum',
+            'icon': 'priority_high',
+            'value': urgent_count,
+            'subtitle': 'Çok acil ilanlar',
+            'variant': 'rose',
+        },
+        {
+            'label': 'Yaklaşan tarih',
+            'icon': 'event_upcoming',
+            'value': upcoming_count,
+            'subtitle': '7 gün içinde duruşma',
+            'variant': 'amber',
+        },
+        {
+            'label': 'Ortalama teklif',
+            'icon': 'payments',
+            'value': f'{average_price:,} ₺' if average_price else '—',
+            'subtitle': 'Favorilerde',
+            'variant': 'indigo',
+        },
+    ]
+
+    filters = [
+        {'key': 'all', 'label': 'Tümü', 'count': total_count},
+    ]
+    if urgent_count:
+        filters.append({'key': 'urgent', 'label': 'Acil', 'count': urgent_count})
+
+    for category, count in sorted(category_counts.items(), key=lambda item: item[0]):
+        filters.append({'key': f'cat-{_slugify(category)}', 'label': category, 'count': count, 'type': 'category'})
+
+    counts = {
+        'total': total_count,
+        'urgent': urgent_count,
+        'upcoming': upcoming_count,
+    }
+
+    return render_template(
+        'favorites.html',
+        favorites=favorite_cards,
+        metrics=metrics,
+        filters=filters,
+        counts=counts,
+    )
 
 @app.route('/favorites/toggle/<int:post_id>', methods=['POST'])
 @login_required
@@ -2837,7 +4470,7 @@ def whatsapp_webhook():
     Merkezi WhatsApp Cloud API Webhook
     Tek numara - Tüm avukatlar için
     """
-    if not whatsapp_enabled:
+    if not current_app.config.get('WHATSAPP_ENABLED'):
         abort(404)
     
     from whatsapp_central_bot import central_bot
@@ -2970,7 +4603,7 @@ def whatsapp_test():
     WhatsApp bot test endpoint - Manuel test için
     Merkezi bot sistemini kullanır
     """
-    if not whatsapp_enabled:
+    if not current_app.config.get('WHATSAPP_ENABLED'):
         return jsonify({'success': False, 'error': 'WhatsApp özelliği şu anda devre dışı'}), 404
     
     from whatsapp_central_bot import central_bot
@@ -3216,7 +4849,7 @@ def handle_connect():
         emit('user_status', {
             'user_id': current_user.id,
             'status': 'online',
-            'full_name': current_user.full_name
+            'full_name': current_user.masked_full_name
         }, broadcast=True)
     else:
         print('❌ WebSocket: Unauthenticated connection attempt')
@@ -3234,7 +4867,7 @@ def handle_disconnect():
         emit('user_status', {
             'user_id': current_user.id,
             'status': 'offline',
-            'full_name': current_user.full_name
+            'full_name': current_user.masked_full_name
         }, broadcast=True)
 
 @socketio.on('join_conversation')
@@ -3260,11 +4893,13 @@ def handle_join_conversation(data):
     print(f'📥 User {current_user.id} joined conversation {conversation_id}')
     
     # Mark messages as read
-    Message.query.filter_by(
-        conversation_id=conversation_id,
-        receiver_id=current_user.id,
-        is_read=False
-    ).update({'is_read': True, 'read_at': datetime.now(timezone.utc)})
+    Message.query.filter(
+        Message.conversation_id == conversation_id,
+        Message.receiver_id == current_user.id,
+        Message.read_at.is_(None)
+    ).update({'read_at': datetime.now(timezone.utc)}, synchronize_session=False)
+
+    conversation.mark_as_read(current_user.id)
     db.session.commit()
     
     # Notify about read status
@@ -3334,14 +4969,15 @@ def handle_send_message(data):
         db.session.commit()
         
         # Get sender avatar with fallback
-        sender_avatar = current_user.avatar_url if current_user.avatar_url else f"https://ui-avatars.com/api/?name={current_user.full_name}&background=1f2937&color=fff"
+        masked_sender_name = current_user.masked_full_name
+        sender_avatar = current_user.avatar_url if current_user.avatar_url else f"https://ui-avatars.com/api/?name={masked_sender_name.replace(' ', '+')}&background=1f2937&color=fff"
         
         # Prepare message data
         message_data = {
             'id': message.id,
             'conversation_id': conversation_id,
             'sender_id': current_user.id,
-            'sender_name': current_user.full_name,
+            'sender_name': masked_sender_name,
             'sender_avatar': sender_avatar,
             'receiver_id': receiver_id,
             'content': content,
@@ -3366,7 +5002,7 @@ def handle_send_message(data):
         if receiver_id in active_users:
             emit('new_message_notification', {
                 'conversation_id': conversation_id,
-                'sender_name': current_user.full_name,
+                'sender_name': masked_sender_name,
                 'sender_avatar': sender_avatar,
                 'preview': content[:50]
             }, room=active_users[receiver_id])
@@ -3375,13 +5011,13 @@ def handle_send_message(data):
         try:
             send_push_notification(
                 user_id=receiver_id,
-                title=f'💬 {current_user.full_name}',
+                title=f'💬 {masked_sender_name}',
                 body=content[:100],  # İlk 100 karakter
                 data={
                     'type': 'new_message',
                     'conversation_id': str(conversation_id),
                     'sender_id': str(current_user.id),
-                    'sender_name': current_user.full_name,
+                    'sender_name': masked_sender_name,
                     'page': f'/chat?conversation_id={conversation_id}'
                 }
             )
@@ -3423,7 +5059,7 @@ def handle_typing(data):
     # Broadcast typing status to room (except sender)
     emit('user_typing', {
         'user_id': current_user.id,
-        'user_name': current_user.full_name,
+        'user_name': current_user.masked_full_name,
         'is_typing': is_typing
     }, room=room, skip_sid=request.sid)
 
@@ -3435,12 +5071,18 @@ def handle_mark_as_read(data):
     if not conversation_id:
         return
     
+    conversation = Conversation.query.get(conversation_id)
+    if not conversation or current_user.id not in [conversation.user1_id, conversation.user2_id]:
+        return
+
     # Mark all messages from other user as read
-    Message.query.filter_by(
-        conversation_id=conversation_id,
-        receiver_id=current_user.id,
-        is_read=False
-    ).update({'is_read': True, 'read_at': datetime.now(timezone.utc)})
+    Message.query.filter(
+        Message.conversation_id == conversation_id,
+        Message.receiver_id == current_user.id,
+        Message.read_at.is_(None)
+    ).update({'read_at': datetime.now(timezone.utc)}, synchronize_session=False)
+
+    conversation.mark_as_read(current_user.id)
     db.session.commit()
     
     room = f'conversation_{conversation_id}'
@@ -3742,9 +5384,18 @@ def api_mobile_verify():
 
 # ==================== HEALTH CHECK ====================
 @app.route('/health')
+@app.route('/healthz')
 @limiter.exempt  # 🔥 Health check'i rate limiting'den muaf tut
 def health_check():
-    """Health check endpoint for Fly.io monitoring - Simple version"""
+    """Health check endpoint for platform and external monitors."""
+    try:
+        db.session.execute(text('SELECT 1'))
+        db.session.rollback()
+    except Exception as exc:  # pragma: no cover - defensive guard
+        current_app.logger.error('Health check failed: %s', exc)
+        db.session.rollback()
+        return jsonify({'status': 'unhealthy', 'detail': str(exc)}), 500
+
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now(timezone.utc).isoformat()
@@ -3771,171 +5422,632 @@ def cookie_policy():
     """Cookie policy page"""
     return render_template('cookie_policy.html', current_date='2025')
 
+# ==================== HEALTH & ANALYTICS HELPERS ====================
+
+def _apply_date_range(query, column, start_dt=None, end_dt=None):
+    """Apply optional start/end datetime filters to a SQLAlchemy query."""
+    if start_dt:
+        query = query.filter(column >= start_dt)
+    if end_dt:
+        query = query.filter(column < end_dt)
+    return query
+
+
+def _parse_analytics_filters(args):
+    """Normalise incoming analytics filter query parameters."""
+    filters = {
+        'start_date': (args.get('start_date') or '').strip(),
+        'end_date': (args.get('end_date') or '').strip(),
+        'city': (args.get('city') or '').strip(),
+        'category': (args.get('category') or '').strip(),
+    }
+
+    start_dt = None
+    end_dt = None
+    date_format = '%Y-%m-%d'
+
+    if filters['start_date']:
+        try:
+            start_dt = datetime.strptime(filters['start_date'], date_format)
+        except ValueError:
+            flash('Geçersiz başlangıç tarihi formatı. YYYY-MM-DD kullanın.', 'error')
+            filters['start_date'] = ''
+
+    if filters['end_date']:
+        try:
+            end_dt = datetime.strptime(filters['end_date'], date_format) + timedelta(days=1)
+        except ValueError:
+            flash('Geçersiz bitiş tarihi formatı. YYYY-MM-DD kullanın.', 'error')
+            filters['end_date'] = ''
+
+    if start_dt and end_dt and end_dt <= start_dt:
+        flash('Bitiş tarihi başlangıç tarihinden sonra olmalıdır.', 'error')
+        start_dt = None
+        end_dt = None
+        filters['start_date'] = ''
+        filters['end_date'] = ''
+
+    filters['start_dt'] = start_dt
+    filters['end_dt'] = end_dt
+    filters['query_params'] = {
+        key: value for key, value in filters.items()
+        if key in ('start_date', 'end_date', 'city', 'category') and value
+    }
+    filters['has_active'] = any(filters['query_params'].values())
+    return filters
+
+
+def _gather_analytics_stats(filters):
+    """Collect analytics metrics respecting the active filter set."""
+    now = datetime.utcnow()
+    start_dt = filters.get('start_dt')
+    end_dt = filters.get('end_dt')
+    city = filters.get('city') or None
+    category = filters.get('category') or None
+
+    week_threshold = now - timedelta(days=7)
+    month_threshold = now - timedelta(days=30)
+    year_threshold = now - timedelta(days=365)
+
+    week_start = max(week_threshold, start_dt) if start_dt else week_threshold
+    month_start = max(month_threshold, start_dt) if start_dt else month_threshold
+    year_start = max(year_threshold, start_dt) if start_dt else year_threshold
+
+    user_query = _apply_date_range(User.query, User.created_at, start_dt, end_dt)
+    total_users = user_query.count()
+    active_users_week = _apply_date_range(User.query, User.last_active, week_start, end_dt).count()
+    active_users_month = _apply_date_range(User.query, User.last_active, month_start, end_dt).count()
+    new_users_week = _apply_date_range(User.query, User.created_at, week_start, end_dt).count()
+    new_users_month = _apply_date_range(User.query, User.created_at, month_start, end_dt).count()
+
+    registrations_query = db.session.query(
+        extract('year', User.created_at).label('year'),
+        extract('month', User.created_at).label('month'),
+        func.count(User.id).label('count')
+    ).filter(User.created_at >= year_start)
+    registrations_query = _apply_date_range(registrations_query, User.created_at, start_dt, end_dt)
+    user_registrations_by_month = registrations_query.group_by('year', 'month').order_by('year', 'month').all()
+
+    post_conditions = []
+    if city:
+        post_conditions.append(TevkilPost.city == city)
+    if category:
+        post_conditions.append(TevkilPost.category == category)
+
+    def _filtered_post_query():
+        query = TevkilPost.query
+        for condition in post_conditions:
+            query = query.filter(condition)
+        return query
+
+    post_query = _apply_date_range(_filtered_post_query(), TevkilPost.created_at, start_dt, end_dt)
+
+    total_posts = post_query.count()
+    active_posts = post_query.filter(TevkilPost.status == 'active').count()
+    completed_posts = post_query.filter(TevkilPost.status == 'completed').count()
+    cancelled_posts = post_query.filter(TevkilPost.status == 'cancelled').count()
+
+    posts_this_week = _apply_date_range(_filtered_post_query(), TevkilPost.created_at, week_start, end_dt).count()
+    posts_this_month = _apply_date_range(_filtered_post_query(), TevkilPost.created_at, month_start, end_dt).count()
+
+    posts_by_category_query = db.session.query(
+        TevkilPost.category,
+        func.count(TevkilPost.id).label('count')
+    )
+    for condition in post_conditions:
+        posts_by_category_query = posts_by_category_query.filter(condition)
+    posts_by_category = _apply_date_range(
+        posts_by_category_query, TevkilPost.created_at, start_dt, end_dt
+    ).group_by(TevkilPost.category).order_by(func.count(TevkilPost.id).desc()).all()
+
+    posts_by_city_query = db.session.query(
+        TevkilPost.city,
+        func.count(TevkilPost.id).label('count')
+    )
+    for condition in post_conditions:
+        posts_by_city_query = posts_by_city_query.filter(condition)
+    posts_by_city = _apply_date_range(
+        posts_by_city_query, TevkilPost.created_at, start_dt, end_dt
+    ).group_by(TevkilPost.city).order_by(func.count(TevkilPost.id).desc()).limit(10).all()
+
+    def _filtered_application_query():
+        query = Application.query
+        if post_conditions:
+            query = query.join(TevkilPost, Application.post_id == TevkilPost.id)
+            for condition in post_conditions:
+                query = query.filter(condition)
+        return query
+
+    applications_query = _apply_date_range(_filtered_application_query(), Application.created_at, start_dt, end_dt)
+
+    total_applications = applications_query.count()
+    pending_applications = applications_query.filter(Application.status == 'pending').count()
+    accepted_applications = applications_query.filter(Application.status == 'accepted').count()
+    rejected_applications = applications_query.filter(Application.status == 'rejected').count()
+    applications_this_week = _apply_date_range(_filtered_application_query(), Application.created_at, week_start, end_dt).count()
+
+    message_query = _apply_date_range(Message.query, Message.created_at, start_dt, end_dt)
+    total_messages = message_query.count()
+    messages_this_week = _apply_date_range(Message.query, Message.created_at, week_start, end_dt).count()
+
+    rating_query = _apply_date_range(Rating.query, Rating.created_at, start_dt, end_dt)
+    total_ratings = rating_query.count()
+    avg_rating = rating_query.with_entities(func.avg(Rating.rating)).scalar() or 0
+    ratings_this_week = _apply_date_range(Rating.query, Rating.created_at, week_start, end_dt).count()
+
+    top_post_creators_query = db.session.query(
+        User.full_name,
+        User.email,
+        func.count(TevkilPost.id).label('post_count')
+    ).join(TevkilPost, TevkilPost.user_id == User.id)
+    for condition in post_conditions:
+        top_post_creators_query = top_post_creators_query.filter(condition)
+    top_post_creators = _apply_date_range(
+        top_post_creators_query, TevkilPost.created_at, start_dt, end_dt
+    ).group_by(User.id).order_by(func.count(TevkilPost.id).desc()).limit(10).all()
+
+    top_applicants_query = db.session.query(
+        User.full_name,
+        User.email,
+        func.count(Application.id).label('application_count')
+    ).join(Application, Application.applicant_id == User.id)
+    if post_conditions:
+        top_applicants_query = top_applicants_query.join(TevkilPost, Application.post_id == TevkilPost.id)
+        for condition in post_conditions:
+            top_applicants_query = top_applicants_query.filter(condition)
+    top_applicants = _apply_date_range(
+        top_applicants_query, Application.created_at, start_dt, end_dt
+    ).group_by(User.id).order_by(func.count(Application.id).desc()).limit(10).all()
+
+    total_reports = 0
+    pending_reports = 0
+    pending_reports_list = []
+    report_table_available = True
+    try:
+        reports_query = _apply_date_range(Report.query, Report.created_at, start_dt, end_dt)
+        total_reports = reports_query.count()
+        pending_reports_query = reports_query.filter(Report.status == 'pending')
+        pending_reports = pending_reports_query.count()
+        pending_reports_list = pending_reports_query.order_by(Report.created_at.desc()).limit(10).all()
+    except ProgrammingError as exc:
+        db.session.rollback()
+        current_app.logger.warning('Report tablosu bulunamadı: %s', exc)
+        report_table_available = False
+
+    filter_summary_parts = []
+    if filters.get('start_date'):
+        filter_summary_parts.append(f"Başlangıç: {filters['start_date']}")
+    if filters.get('end_date'):
+        display_end = filters['end_date']
+        filter_summary_parts.append(f"Bitiş: {display_end}")
+    if city:
+        filter_summary_parts.append(f"Şehir: {city}")
+    if category:
+        filter_summary_parts.append(f"Kategori: {category}")
+
+    return {
+        'total_users': total_users,
+        'active_users_week': active_users_week,
+        'active_users_month': active_users_month,
+        'new_users_week': new_users_week,
+        'new_users_month': new_users_month,
+        'user_registrations_by_month': user_registrations_by_month,
+        'total_posts': total_posts,
+        'active_posts': active_posts,
+        'completed_posts': completed_posts,
+        'cancelled_posts': cancelled_posts,
+        'posts_this_week': posts_this_week,
+        'posts_this_month': posts_this_month,
+        'posts_by_category': posts_by_category,
+        'posts_by_city': posts_by_city,
+        'total_applications': total_applications,
+        'pending_applications': pending_applications,
+        'accepted_applications': accepted_applications,
+        'rejected_applications': rejected_applications,
+        'applications_this_week': applications_this_week,
+        'total_messages': total_messages,
+        'messages_this_week': messages_this_week,
+        'total_ratings': total_ratings,
+        'avg_rating': avg_rating,
+        'ratings_this_week': ratings_this_week,
+        'top_post_creators': top_post_creators,
+        'top_applicants': top_applicants,
+        'total_reports': total_reports,
+        'pending_reports': pending_reports,
+        'pending_reports_list': pending_reports_list,
+        'report_table_available': report_table_available,
+        'filter_summary': ', '.join(filter_summary_parts) if filter_summary_parts else '',
+    }
 # ==================== ADMIN & ANALYTICS ====================
 @app.route('/admin/analytics')
 @admin_required
 def admin_analytics():
-    """Admin analytics dashboard with comprehensive statistics"""
-    from sqlalchemy import func, extract
-    from datetime import datetime, timedelta
-    
-    # Time ranges
-    today = datetime.utcnow()
-    week_ago = today - timedelta(days=7)
-    month_ago = today - timedelta(days=30)
-    year_ago = today - timedelta(days=365)
-    
-    # User Statistics
-    total_users = User.query.count()
-    active_users_week = User.query.filter(User.last_active >= week_ago).count()
-    active_users_month = User.query.filter(User.last_active >= month_ago).count()
-    new_users_week = User.query.filter(User.created_at >= week_ago).count()
-    new_users_month = User.query.filter(User.created_at >= month_ago).count()
-    
-    # User registrations by month (last 12 months)
-    user_registrations_by_month = db.session.query(
-        extract('year', User.created_at).label('year'),
-        extract('month', User.created_at).label('month'),
-        func.count(User.id).label('count')
-    ).filter(
-        User.created_at >= year_ago
-    ).group_by('year', 'month').order_by('year', 'month').all()
-    
-    # Post Statistics
-    total_posts = TevkilPost.query.count()
-    active_posts = TevkilPost.query.filter_by(status='active').count()
-    completed_posts = TevkilPost.query.filter_by(status='completed').count()
-    cancelled_posts = TevkilPost.query.filter_by(status='cancelled').count()
-    posts_this_week = TevkilPost.query.filter(TevkilPost.created_at >= week_ago).count()
-    posts_this_month = TevkilPost.query.filter(TevkilPost.created_at >= month_ago).count()
-    
-    # Posts by category
-    posts_by_category = db.session.query(
-        TevkilPost.category,
-        func.count(TevkilPost.id).label('count')
-    ).group_by(TevkilPost.category).order_by(func.count(TevkilPost.id).desc()).all()
-    
-    # Posts by city (top 10)
-    posts_by_city = db.session.query(
-        TevkilPost.city,
-        func.count(TevkilPost.id).label('count')
-    ).group_by(TevkilPost.city).order_by(func.count(TevkilPost.id).desc()).limit(10).all()
-    
-    # Application Statistics
-    total_applications = Application.query.count()
-    pending_applications = Application.query.filter_by(status='pending').count()
-    accepted_applications = Application.query.filter_by(status='accepted').count()
-    rejected_applications = Application.query.filter_by(status='rejected').count()
-    applications_this_week = Application.query.filter(Application.created_at >= week_ago).count()
-    
-    # Message Statistics
-    total_messages = Message.query.count()
-    messages_this_week = Message.query.filter(Message.created_at >= week_ago).count()
-    
-    # Rating Statistics
-    total_ratings = Rating.query.count()
-    avg_rating = db.session.query(func.avg(Rating.rating)).scalar() or 0
-    ratings_this_week = Rating.query.filter(Rating.created_at >= week_ago).count()
-    
-    # Most active users (by posts created)
-    top_post_creators = db.session.query(
-        User.full_name,
-        User.email,
-        func.count(TevkilPost.id).label('post_count')
-    ).join(TevkilPost, TevkilPost.lawyer_id == User.id).group_by(User.id).order_by(func.count(TevkilPost.id).desc()).limit(10).all()
-    
-    # Most active applicants
-    top_applicants = db.session.query(
-        User.full_name,
-        User.email,
-        func.count(Application.id).label('application_count')
-    ).join(Application, Application.applicant_id == User.id).group_by(User.id).order_by(func.count(Application.id).desc()).limit(10).all()
-    
-    # Report Statistics
-    total_reports = Report.query.count()
-    pending_reports = Report.query.filter_by(status='pending').count()
-    
-    return render_template('admin_analytics.html',
-                         # User stats
-                         total_users=total_users,
-                         active_users_week=active_users_week,
-                         active_users_month=active_users_month,
-                         new_users_week=new_users_week,
-                         new_users_month=new_users_month,
-                         user_registrations_by_month=user_registrations_by_month,
-                         # Post stats
-                         total_posts=total_posts,
-                         active_posts=active_posts,
-                         completed_posts=completed_posts,
-                         cancelled_posts=cancelled_posts,
-                         posts_this_week=posts_this_week,
-                         posts_this_month=posts_this_month,
-                         posts_by_category=posts_by_category,
-                         posts_by_city=posts_by_city,
-                         # Application stats
-                         total_applications=total_applications,
-                         pending_applications=pending_applications,
-                         accepted_applications=accepted_applications,
-                         rejected_applications=rejected_applications,
-                         applications_this_week=applications_this_week,
-                         # Message stats
-                         total_messages=total_messages,
-                         messages_this_week=messages_this_week,
-                         # Rating stats
-                         total_ratings=total_ratings,
-                         avg_rating=round(avg_rating, 2),
-                         ratings_this_week=ratings_this_week,
-                         # Top users
-                         top_post_creators=top_post_creators,
-                         top_applicants=top_applicants,
-                         # Reports
-                         total_reports=total_reports,
-                         pending_reports=pending_reports)
+    """Render the admin analytics dashboard with optional filtering."""
+
+    filters = _parse_analytics_filters(request.args)
+    stats = _gather_analytics_stats(filters)
+
+    template_filters = {
+        'start_date': filters.get('start_date'),
+        'end_date': filters.get('end_date'),
+        'city': filters.get('city'),
+        'category': filters.get('category'),
+        'has_active': filters.get('has_active'),
+    }
+
+    user_registrations = stats.get('user_registrations_by_month') or []
+    user_registration_labels = [
+        f"{int(row.year)}-{int(row.month):02d}" for row in user_registrations
+    ]
+    user_registration_counts = [int(row.count) for row in user_registrations]
+
+    category_rows = stats.get('posts_by_category') or []
+    category_labels = [(row.category or 'Belirtilmemiş') for row in category_rows]
+    category_counts = [int(row.count) for row in category_rows]
+
+    city_rows = stats.get('posts_by_city') or []
+    city_labels = [(row.city or 'Belirtilmemiş') for row in city_rows]
+    city_counts = [int(row.count) for row in city_rows]
+
+    post_status_counts = [
+        int(stats.get('active_posts') or 0),
+        int(stats.get('completed_posts') or 0),
+        int(stats.get('cancelled_posts') or 0),
+    ]
+
+    context = {
+        **stats,
+        'avg_rating': round(stats.get('avg_rating') or 0, 2),
+        'filters': template_filters,
+        'filter_query_params': filters.get('query_params', {}),
+        'cities': CITIES,
+        'categories': POST_CATEGORIES,
+        'user_registration_labels': user_registration_labels,
+        'user_registration_counts': user_registration_counts,
+        'category_labels': category_labels,
+        'category_counts': category_counts,
+        'city_labels': city_labels,
+        'city_counts': city_counts,
+        'post_status_counts': post_status_counts,
+    }
+
+    context['analytics_chart_data'] = {
+        'user_registration_labels': user_registration_labels,
+        'user_registration_counts': user_registration_counts,
+        'category_labels': category_labels,
+        'category_counts': category_counts,
+        'city_labels': city_labels,
+        'city_counts': city_counts,
+        'post_status_counts': post_status_counts,
+    }
+
+    return render_template('admin_analytics.html', **context)
 
 @app.route('/admin/analytics/export')
 @admin_required
 def export_analytics():
-    """Export analytics data as CSV"""
-    import csv
-    from io import StringIO
-    from flask import make_response
-    from datetime import datetime
-    
-    # Gather all statistics
+    """Export analytics data as CSV respecting active filters."""
+
+    filters = _parse_analytics_filters(request.args)
+    stats = _gather_analytics_stats(filters)
+
     output = StringIO()
     writer = csv.writer(output)
-    
-    # Headers
-    writer.writerow(['Analytics Report', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')])
+
+    timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+    writer.writerow(['Analytics Report', timestamp])
+    if stats.get('filter_summary'):
+        writer.writerow(['Filters', stats['filter_summary']])
+    elif filters.get('has_active'):
+        query_params = filters.get('query_params', {})
+        joined_filters = ', '.join(
+            f"{key}={value}" for key, value in query_params.items()
+        )
+        writer.writerow(['Filters', joined_filters])
     writer.writerow([])
-    
-    # User Statistics
+
     writer.writerow(['User Statistics'])
-    writer.writerow(['Total Users', User.query.count()])
-    writer.writerow(['Active This Week', User.query.filter(User.last_active >= datetime.utcnow() - timedelta(days=7)).count()])
-    writer.writerow(['New This Month', User.query.filter(User.created_at >= datetime.utcnow() - timedelta(days=30)).count()])
+    writer.writerow(['Total Users', stats['total_users']])
+    writer.writerow(['Active (7 days)', stats['active_users_week']])
+    writer.writerow(['Active (30 days)', stats['active_users_month']])
+    writer.writerow(['New (7 days)', stats['new_users_week']])
+    writer.writerow(['New (30 days)', stats['new_users_month']])
     writer.writerow([])
-    
-    # Post Statistics
+
     writer.writerow(['Post Statistics'])
-    writer.writerow(['Total Posts', TevkilPost.query.count()])
-    writer.writerow(['Active Posts', TevkilPost.query.filter_by(status='active').count()])
-    writer.writerow(['Completed Posts', TevkilPost.query.filter_by(status='completed').count()])
+    writer.writerow(['Total Posts', stats['total_posts']])
+    writer.writerow(['Active Posts', stats['active_posts']])
+    writer.writerow(['Completed Posts', stats['completed_posts']])
+    writer.writerow(['Cancelled Posts', stats['cancelled_posts']])
+    writer.writerow(['Posts (7 days)', stats['posts_this_week']])
+    writer.writerow(['Posts (30 days)', stats['posts_this_month']])
     writer.writerow([])
-    
-    # Application Statistics
+
     writer.writerow(['Application Statistics'])
-    writer.writerow(['Total Applications', Application.query.count()])
-    writer.writerow(['Pending', Application.query.filter_by(status='pending').count()])
-    writer.writerow(['Accepted', Application.query.filter_by(status='accepted').count()])
-    writer.writerow(['Rejected', Application.query.filter_by(status='rejected').count()])
-    
-    # Create response
+    writer.writerow(['Total Applications', stats['total_applications']])
+    writer.writerow(['Pending Applications', stats['pending_applications']])
+    writer.writerow(['Accepted Applications', stats['accepted_applications']])
+    writer.writerow(['Rejected Applications', stats['rejected_applications']])
+    writer.writerow(['Applications (7 days)', stats['applications_this_week']])
+    writer.writerow([])
+
+    writer.writerow(['Messaging'])
+    writer.writerow(['Total Messages', stats['total_messages']])
+    writer.writerow(['Messages (7 days)', stats['messages_this_week']])
+    writer.writerow([])
+
+    avg_rating_value = stats.get('avg_rating') or 0
+    writer.writerow(['Ratings'])
+    writer.writerow(['Total Ratings', stats['total_ratings']])
+    writer.writerow(['Average Rating', round(float(avg_rating_value), 2)])
+    writer.writerow(['Ratings (7 days)', stats['ratings_this_week']])
+    writer.writerow([])
+
+    writer.writerow(['Reports'])
+    writer.writerow(['Total Reports', stats['total_reports']])
+    writer.writerow(['Pending Reports', stats['pending_reports']])
+
     response = make_response(output.getvalue())
-    response.headers['Content-Disposition'] = f'attachment; filename=analytics_export_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv'
+    response.headers['Content-Disposition'] = (
+        f'attachment; filename=analytics_export_{datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")}.csv'
+    )
     response.headers['Content-Type'] = 'text/csv'
-    
+
+    security_utils.log_security_event(
+        current_user.id,
+        'admin_export_analytics',
+        description='Analytics CSV export oluşturuldu',
+    metadata={'filters': filters.get('query_params', {})}
+    )
+
     return response
+
+# ==================== USER MANAGEMENT ====================
+@app.route('/admin/users')
+@login_required
+@admin_required
+def admin_users():
+    """Admin kullanıcı yönetim paneli - tüm kullanıcıları listele"""
+    
+    # Filtreleme parametreleri
+    search = request.args.get('search', '').strip()
+    city = request.args.get('city', '').strip()
+    bar_association = request.args.get('bar_association', '').strip()
+    status = request.args.get('status', '').strip()
+    verified = request.args.get('verified', '').strip()
+    sort_by = request.args.get('sort_by', 'created_at')
+    order = request.args.get('order', 'desc')
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    # Base query
+    query = User.query
+    
+    # Arama filtresi (isim, email, telefon)
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            db.or_(
+                User.full_name.ilike(search_term),
+                User.email.ilike(search_term),
+                User.phone.ilike(search_term),
+                User.bar_registration_number.ilike(search_term)
+            )
+        )
+    
+    # Şehir filtresi
+    if city:
+        query = query.filter(User.city == city)
+    
+    # Baro filtresi
+    if bar_association:
+        query = query.filter(User.bar_association == bar_association)
+    
+    # Durum filtresi
+    if status == 'active':
+        query = query.filter(User.is_active == True)
+    elif status == 'inactive':
+        query = query.filter(User.is_active == False)
+    
+    # Doğrulama filtresi
+    if verified == 'yes':
+        query = query.filter(User.verified == True)
+    elif verified == 'no':
+        query = query.filter(User.verified == False)
+    
+    # Sıralama
+    if sort_by == 'name':
+        order_col = User.full_name
+    elif sort_by == 'email':
+        order_col = User.email
+    elif sort_by == 'city':
+        order_col = User.city
+    elif sort_by == 'rating':
+        order_col = User.rating_average
+    elif sort_by == 'total_jobs':
+        order_col = User.total_jobs
+    else:  # created_at
+        order_col = User.created_at
+    
+    if order == 'asc':
+        query = query.order_by(order_col.asc())
+    else:
+        query = query.order_by(order_col.desc())
+    
+    # Sayfalama
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    users = pagination.items
+    
+    # İstatistikler
+    total_users = User.query.count()
+    active_users = User.query.filter_by(is_active=True).count()
+    verified_users = User.query.filter_by(verified=True).count()
+    admin_users_count = User.query.filter_by(is_admin=True).count()
+    
+    # Benzersiz baro listesi
+    bar_associations = db.session.query(User.bar_association).distinct().filter(
+        User.bar_association.isnot(None),
+        User.bar_association != ''
+    ).all()
+    bar_associations = sorted([b[0] for b in bar_associations])
+    
+    return render_template('phoenix/admin/users.html',
+                         users=users,
+                         pagination=pagination,
+                         search=search,
+                         city=city,
+                         bar_association=bar_association,
+                         status=status,
+                         verified=verified,
+                         sort_by=sort_by,
+                         order=order,
+                         cities=CITIES,
+                         bar_associations=bar_associations,
+                         total_users=total_users,
+                         active_users=active_users,
+                         verified_users=verified_users,
+                         admin_users_count=admin_users_count)
+
+@app.route('/admin/users/<int:user_id>')
+@login_required
+@admin_required
+def admin_user_detail(user_id):
+    """Kullanıcı detay sayfası - admin için"""
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Kullanıcının ilanları
+    posts = TevkilPost.query.filter_by(user_id=user_id).order_by(TevkilPost.created_at.desc()).limit(10).all()
+    
+    # Kullanıcının başvuruları (gönderdiği)
+    applications_sent = Application.query.filter_by(applicant_id=user_id).order_by(
+        Application.created_at.desc()
+    ).limit(10).all()
+    
+    # Kullanıcının aldığı başvurular
+    post_ids = [p.id for p in TevkilPost.query.filter_by(user_id=user_id).all()]
+    applications_received = Application.query.filter(
+        Application.post_id.in_(post_ids)
+    ).order_by(Application.created_at.desc()).limit(10).all() if post_ids else []
+    
+    # Son aktiviteler
+    last_login = None  # Bu özellik eklenebilir
+    
+    return render_template('admin_user_detail.html',
+                         user=user,
+                         posts=posts,
+                         applications_sent=applications_sent,
+                         applications_received=applications_received,
+                         last_login=last_login)
+
+@app.route('/admin/users/<int:user_id>/toggle-status', methods=['POST'])
+@login_required
+@admin_required
+def admin_toggle_user_status(user_id):
+    """Kullanıcı durumunu aktif/pasif yap"""
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Kendi hesabını devre dışı bırakmasın
+    if user.id == current_user.id:
+        flash('Kendi hesabınızın durumunu değiştiremezsiniz.', 'error')
+        return redirect(url_for('admin_user_detail', user_id=user_id))
+    
+    user.is_active = not user.is_active
+    
+    try:
+        db.session.commit()
+        status_text = "aktif" if user.is_active else "pasif"
+        flash(f'{user.full_name} kullanıcısı {status_text} duruma getirildi.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Bir hata oluştu. Lütfen tekrar deneyin.', 'error')
+        print(f"❌ Kullanıcı durum değiştirme hatası: {e}")
+    
+    return redirect(url_for('admin_user_detail', user_id=user_id))
+
+@app.route('/admin/users/<int:user_id>/verify', methods=['POST'])
+@login_required
+@admin_required
+def admin_verify_user(user_id):
+    """Kullanıcıyı doğrula/doğrulamayı kaldır"""
+    
+    user = User.query.get_or_404(user_id)
+    
+    user.verified = not user.verified
+    
+    try:
+        db.session.commit()
+        status_text = "doğrulandı" if user.verified else "doğrulaması kaldırıldı"
+        flash(f'{user.full_name} kullanıcısı {status_text}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Bir hata oluştu. Lütfen tekrar deneyin.', 'error')
+        print(f"❌ Kullanıcı doğrulama hatası: {e}")
+    
+    return redirect(url_for('admin_user_detail', user_id=user_id))
+
+# ==================== REPORT MANAGEMENT ====================
+@app.route('/admin/reports/<int:report_id>/update', methods=['POST'])
+@admin_required
+def update_report_status(report_id):
+    """Allow admins to update report status and log the action."""
+
+    status = (request.form.get('status') or '').strip()
+    admin_note = (request.form.get('admin_note') or '').strip()
+    action_taken = (request.form.get('action_taken') or '').strip()
+
+    redirect_params = {
+        key: value for key in ('start_date', 'end_date', 'city', 'category')
+        if (value := request.form.get(key))
+    }
+
+    try:
+        report = Report.query.get(report_id)
+    except ProgrammingError as exc:
+        db.session.rollback()
+        current_app.logger.warning('Report tablosuna erişilemedi: %s', exc)
+        flash('Rapor tablosu mevcut değil. Lütfen migration komutlarını çalıştırın.', 'error')
+        return redirect(url_for('admin_analytics', **redirect_params))
+
+    if not report:
+        flash('Rapor bulunamadı.', 'error')
+        return redirect(url_for('admin_analytics', **redirect_params))
+
+    valid_statuses = {'pending', 'reviewed', 'resolved', 'dismissed'}
+    if status not in valid_statuses:
+        flash('Geçersiz rapor durumu seçildi.', 'error')
+        return redirect(url_for('admin_analytics', **redirect_params))
+
+    if action_taken and action_taken not in {'none', 'warning', 'content_removed', 'user_banned'}:
+        flash('Geçersiz aksiyon değeri.', 'error')
+        return redirect(url_for('admin_analytics', **redirect_params))
+
+    report.status = status
+    report.admin_note = admin_note or None
+    report.action_taken = action_taken or None
+    report.actioned_by_id = current_user.id
+    report.actioned_at = datetime.now(timezone.utc)
+
+    try:
+        db.session.commit()
+        security_utils.log_security_event(
+            current_user.id,
+            'admin_report_update',
+            description=f'Rapor #{report.id} {status} olarak güncellendi.',
+            metadata={
+                'report_id': report.id,
+                'status': status,
+                'action_taken': report.action_taken,
+            }
+        )
+        flash('Rapor durumu güncellendi.', 'success')
+    except Exception as exc:  # pragma: no cover - rollback guard
+        db.session.rollback()
+        current_app.logger.error('Rapor güncellenemedi: %s', exc)
+        flash('Rapor güncellenirken bir hata oluştu.', 'error')
+
+    return redirect(url_for('admin_analytics', **redirect_params))
 
 # ==================== CONTACT FORM ====================
 @app.route('/api/contact', methods=['POST'])
@@ -4057,3 +6169,4 @@ if __name__ == '__main__':
     # Production mode - debug=False for security
     debug_mode = os.getenv('FLASK_ENV', 'production') == 'development'
     socketio.run(app, host='0.0.0.0', port=5000, debug=debug_mode)
+
