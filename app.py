@@ -1072,7 +1072,7 @@ def applications_received():
         })
 
     return render_template(
-        'applications_received.html',
+        'phoenix/applications/received.html',
         applications=application_cards,
         metrics=metrics,
         filters=filters,
@@ -1247,7 +1247,7 @@ def applications_sent():
         })
 
     return render_template(
-        'applications_sent.html',
+        'phoenix/applications/sent.html',
         applications=application_cards,
         metrics=metrics,
         filters=filters,
@@ -1618,7 +1618,7 @@ def list_posts():
     }
 
     return render_template(
-        'posts_list.html',
+        'phoenix/posts/explore.html',
         post_cards=post_cards,
         metrics=metrics,
         filters=filters,
@@ -3848,7 +3848,7 @@ def chat():
     active_thread = _thread_detail(active_conversation, current_user.id) if active_conversation else None
 
     return render_template(
-        'chat.html',
+        'phoenix/messages/inbox.html',
         threads=threads,
         active_thread=active_thread,
         total_unread=total_unread,
