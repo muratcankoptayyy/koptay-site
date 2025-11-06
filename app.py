@@ -5405,7 +5405,7 @@ def health_check():
 @app.route('/contact')
 def contact():
     """Contact page"""
-    return render_template('contact.html')
+    return render_template('phoenix/static/contact.html')
 
 @app.route('/privacy-policy')
 def privacy_policy():
