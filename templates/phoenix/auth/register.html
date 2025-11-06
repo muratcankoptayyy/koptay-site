@@ -130,6 +130,67 @@
                                 placeholder="05XX XXX XX XX">
                         </div>
 
+                        <!-- TC Kimlik No (Opsiyonel) -->
+                        <div>
+                            <label for="tc_number" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                T.C. Kimlik Numarası <span class="text-slate-400 text-xs">(Opsiyonel)</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="tc_number" 
+                                name="tc_number" 
+                                maxlength="11"
+                                pattern="[0-9]{11}"
+                                value="{{ form_data.tc_number if form_data else '' }}"
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                placeholder="11 haneli T.C. Kimlik No">
+                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Boş bırakabilirsiniz</p>
+                        </div>
+
+                        <!-- Baro -->
+                        <div>
+                            <label for="bar_association" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Bağlı Olduğunuz Baro <span class="text-red-500">*</span>
+                            </label>
+                            <select 
+                                id="bar_association" 
+                                name="bar_association" 
+                                required
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                                <option value="">Baro seçiniz</option>
+                                <option {% if form_data and form_data.bar_association == 'İstanbul Barosu' %}selected{% endif %}>İstanbul Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Ankara Barosu' %}selected{% endif %}>Ankara Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'İzmir Barosu' %}selected{% endif %}>İzmir Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Bursa Barosu' %}selected{% endif %}>Bursa Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Antalya Barosu' %}selected{% endif %}>Antalya Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Adana Barosu' %}selected{% endif %}>Adana Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Konya Barosu' %}selected{% endif %}>Konya Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Gaziantep Barosu' %}selected{% endif %}>Gaziantep Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Şanlıurfa Barosu' %}selected{% endif %}>Şanlıurfa Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Kocaeli Barosu' %}selected{% endif %}>Kocaeli Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Diyarbakır Barosu' %}selected{% endif %}>Diyarbakır Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Mersin Barosu' %}selected{% endif %}>Mersin Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Kayseri Barosu' %}selected{% endif %}>Kayseri Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Eskişehir Barosu' %}selected{% endif %}>Eskişehir Barosu</option>
+                                <option {% if form_data and form_data.bar_association == 'Hatay Barosu' %}selected{% endif %}>Hatay Barosu</option>
+                            </select>
+                        </div>
+
+                        <!-- Baro Sicil Numarası -->
+                        <div>
+                            <label for="bar_registration_number" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Baro Sicil Numarası <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="bar_registration_number" 
+                                name="bar_registration_number" 
+                                required 
+                                value="{{ form_data.bar_registration_number if form_data else '' }}"
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                placeholder="Baro sicil numaranız">
+                        </div>
+
                         <!-- Avukat Tipi -->
                         <div>
                             <label for="lawyer_type" class="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -141,24 +202,110 @@
                                 required
                                 class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                                 <option value="">Seçiniz</option>
-                                <option value="avukat" {% if form_data and form_data.lawyer_type == 'avukat' %}selected{% endif %}>Serbest Avukat</option>
+                                <option value="avukat" {% if form_data and form_data.lawyer_type == 'avukat' %}selected{% endif %}>Avukat</option>
                                 <option value="stajyer" {% if form_data and form_data.lawyer_type == 'stajyer' %}selected{% endif %}>Stajyer Avukat</option>
+                            </select>
+                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Stajyer avukatlar görev açabilir ancak başvuru yapamazlar.</p>
+                        </div>
+
+                        <!-- Şehir -->
+                        <div>
+                            <label for="city" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Şehir <span class="text-red-500">*</span>
+                            </label>
+                            <select 
+                                id="city" 
+                                name="city" 
+                                required
+                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                                <option value="">Şehir seçiniz</option>
+                                <option {% if form_data and form_data.city == 'Adana' %}selected{% endif %}>Adana</option>
+                                <option {% if form_data and form_data.city == 'Adıyaman' %}selected{% endif %}>Adıyaman</option>
+                                <option {% if form_data and form_data.city == 'Afyonkarahisar' %}selected{% endif %}>Afyonkarahisar</option>
+                                <option {% if form_data and form_data.city == 'Ağrı' %}selected{% endif %}>Ağrı</option>
+                                <option {% if form_data and form_data.city == 'Amasya' %}selected{% endif %}>Amasya</option>
+                                <option {% if form_data and form_data.city == 'Ankara' %}selected{% endif %}>Ankara</option>
+                                <option {% if form_data and form_data.city == 'Antalya' %}selected{% endif %}>Antalya</option>
+                                <option {% if form_data and form_data.city == 'Artvin' %}selected{% endif %}>Artvin</option>
+                                <option {% if form_data and form_data.city == 'Aydın' %}selected{% endif %}>Aydın</option>
+                                <option {% if form_data and form_data.city == 'Balıkesir' %}selected{% endif %}>Balıkesir</option>
+                                <option {% if form_data and form_data.city == 'Bilecik' %}selected{% endif %}>Bilecik</option>
+                                <option {% if form_data and form_data.city == 'Bingöl' %}selected{% endif %}>Bingöl</option>
+                                <option {% if form_data and form_data.city == 'Bitlis' %}selected{% endif %}>Bitlis</option>
+                                <option {% if form_data and form_data.city == 'Bolu' %}selected{% endif %}>Bolu</option>
+                                <option {% if form_data and form_data.city == 'Burdur' %}selected{% endif %}>Burdur</option>
+                                <option {% if form_data and form_data.city == 'Bursa' %}selected{% endif %}>Bursa</option>
+                                <option {% if form_data and form_data.city == 'Çanakkale' %}selected{% endif %}>Çanakkale</option>
+                                <option {% if form_data and form_data.city == 'Çankırı' %}selected{% endif %}>Çankırı</option>
+                                <option {% if form_data and form_data.city == 'Çorum' %}selected{% endif %}>Çorum</option>
+                                <option {% if form_data and form_data.city == 'Denizli' %}selected{% endif %}>Denizli</option>
+                                <option {% if form_data and form_data.city == 'Diyarbakır' %}selected{% endif %}>Diyarbakır</option>
+                                <option {% if form_data and form_data.city == 'Edirne' %}selected{% endif %}>Edirne</option>
+                                <option {% if form_data and form_data.city == 'Elazığ' %}selected{% endif %}>Elazığ</option>
+                                <option {% if form_data and form_data.city == 'Erzincan' %}selected{% endif %}>Erzincan</option>
+                                <option {% if form_data and form_data.city == 'Erzurum' %}selected{% endif %}>Erzurum</option>
+                                <option {% if form_data and form_data.city == 'Eskişehir' %}selected{% endif %}>Eskişehir</option>
+                                <option {% if form_data and form_data.city == 'Gaziantep' %}selected{% endif %}>Gaziantep</option>
+                                <option {% if form_data and form_data.city == 'Giresun' %}selected{% endif %}>Giresun</option>
+                                <option {% if form_data and form_data.city == 'Gümüşhane' %}selected{% endif %}>Gümüşhane</option>
+                                <option {% if form_data and form_data.city == 'Hakkari' %}selected{% endif %}>Hakkari</option>
+                                <option {% if form_data and form_data.city == 'Hatay' %}selected{% endif %}>Hatay</option>
+                                <option {% if form_data and form_data.city == 'Isparta' %}selected{% endif %}>Isparta</option>
+                                <option {% if form_data and form_data.city == 'İstanbul' %}selected{% endif %}>İstanbul</option>
+                                <option {% if form_data and form_data.city == 'İzmir' %}selected{% endif %}>İzmir</option>
+                                <option {% if form_data and form_data.city == 'Kahramanmaraş' %}selected{% endif %}>Kahramanmaraş</option>
+                                <option {% if form_data and form_data.city == 'Karabük' %}selected{% endif %}>Karabük</option>
+                                <option {% if form_data and form_data.city == 'Karaman' %}selected{% endif %}>Karaman</option>
+                                <option {% if form_data and form_data.city == 'Kars' %}selected{% endif %}>Kars</option>
+                                <option {% if form_data and form_data.city == 'Kastamonu' %}selected{% endif %}>Kastamonu</option>
+                                <option {% if form_data and form_data.city == 'Kayseri' %}selected{% endif %}>Kayseri</option>
+                                <option {% if form_data and form_data.city == 'Kırklareli' %}selected{% endif %}>Kırklareli</option>
+                                <option {% if form_data and form_data.city == 'Kırşehir' %}selected{% endif %}>Kırşehir</option>
+                                <option {% if form_data and form_data.city == 'Kocaeli' %}selected{% endif %}>Kocaeli</option>
+                                <option {% if form_data and form_data.city == 'Konya' %}selected{% endif %}>Konya</option>
+                                <option {% if form_data and form_data.city == 'Kütahya' %}selected{% endif %}>Kütahya</option>
+                                <option {% if form_data and form_data.city == 'Malatya' %}selected{% endif %}>Malatya</option>
+                                <option {% if form_data and form_data.city == 'Manisa' %}selected{% endif %}>Manisa</option>
+                                <option {% if form_data and form_data.city == 'Mardin' %}selected{% endif %}>Mardin</option>
+                                <option {% if form_data and form_data.city == 'Mersin' %}selected{% endif %}>Mersin</option>
+                                <option {% if form_data and form_data.city == 'Muğla' %}selected{% endif %}>Muğla</option>
+                                <option {% if form_data and form_data.city == 'Muş' %}selected{% endif %}>Muş</option>
+                                <option {% if form_data and form_data.city == 'Nevşehir' %}selected{% endif %}>Nevşehir</option>
+                                <option {% if form_data and form_data.city == 'Niğde' %}selected{% endif %}>Niğde</option>
+                                <option {% if form_data and form_data.city == 'Ordu' %}selected{% endif %}>Ordu</option>
+                                <option {% if form_data and form_data.city == 'Osmaniye' %}selected{% endif %}>Osmaniye</option>
+                                <option {% if form_data and form_data.city == 'Rize' %}selected{% endif %}>Rize</option>
+                                <option {% if form_data and form_data.city == 'Sakarya' %}selected{% endif %}>Sakarya</option>
+                                <option {% if form_data and form_data.city == 'Samsun' %}selected{% endif %}>Samsun</option>
+                                <option {% if form_data and form_data.city == 'Siirt' %}selected{% endif %}>Siirt</option>
+                                <option {% if form_data and form_data.city == 'Sinop' %}selected{% endif %}>Sinop</option>
+                                <option {% if form_data and form_data.city == 'Sivas' %}selected{% endif %}>Sivas</option>
+                                <option {% if form_data and form_data.city == 'Şanlıurfa' %}selected{% endif %}>Şanlıurfa</option>
+                                <option {% if form_data and form_data.city == 'Şırnak' %}selected{% endif %}>Şırnak</option>
+                                <option {% if form_data and form_data.city == 'Tekirdağ' %}selected{% endif %}>Tekirdağ</option>
+                                <option {% if form_data and form_data.city == 'Tokat' %}selected{% endif %}>Tokat</option>
+                                <option {% if form_data and form_data.city == 'Trabzon' %}selected{% endif %}>Trabzon</option>
+                                <option {% if form_data and form_data.city == 'Tunceli' %}selected{% endif %}>Tunceli</option>
+                                <option {% if form_data and form_data.city == 'Uşak' %}selected{% endif %}>Uşak</option>
+                                <option {% if form_data and form_data.city == 'Van' %}selected{% endif %}>Van</option>
+                                <option {% if form_data and form_data.city == 'Yalova' %}selected{% endif %}>Yalova</option>
+                                <option {% if form_data and form_data.city == 'Yozgat' %}selected{% endif %}>Yozgat</option>
+                                <option {% if form_data and form_data.city == 'Zonguldak' %}selected{% endif %}>Zonguldak</option>
                             </select>
                         </div>
 
-                        <!-- Baro -->
+                        <!-- Uzmanlık Alanları (Opsiyonel) -->
                         <div>
-                            <label for="bar" class="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                Baro <span class="text-red-500">*</span>
+                            <label for="specializations" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Uzmanlık Alanlarınız <span class="text-slate-400 text-xs">(Opsiyonel)</span>
                             </label>
                             <input 
                                 type="text" 
-                                id="bar" 
-                                name="bar" 
-                                required 
-                                value="{{ form_data.bar if form_data else '' }}"
+                                id="specializations" 
+                                name="specializations" 
+                                value="{{ form_data.specializations if form_data else '' }}"
                                 class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                placeholder="Örn: Ankara Barosu">
+                                placeholder="Ceza Hukuku, Aile Hukuku (virgülle ayırın)">
                         </div>
 
                         <!-- Şifre -->
@@ -171,25 +318,10 @@
                                 id="password" 
                                 name="password" 
                                 required
-                                minlength="8"
+                                minlength="6"
                                 class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                placeholder="En az 8 karakter">
-                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Şifre en az 8 karakter, büyük harf, küçük harf ve rakam içermelidir</p>
-                        </div>
-
-                        <!-- Şifre Tekrar -->
-                        <div>
-                            <label for="confirm_password" class="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                Şifre Tekrar <span class="text-red-500">*</span>
-                            </label>
-                            <input 
-                                type="password" 
-                                id="confirm_password" 
-                                name="confirm_password" 
-                                required
-                                minlength="8"
-                                class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                placeholder="Şifrenizi tekrar girin">
+                                placeholder="En az 6 karakter">
+                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Şifre en az 6 karakter olmalıdır</p>
                         </div>
 
                         <!-- Kullanım Koşulları -->
