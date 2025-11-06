@@ -825,3 +825,44 @@ URGENCY_LEVELS = {
     'urgent': 'Acil',
     'very_urgent': 'Çok Acil'
 }
+
+# Görev kategorisi tanımlamaları
+TASK_CATEGORY_DEFINITIONS = {
+    'durusma': {
+        'label': 'Duruşma',
+        'description': 'Mahkeme duruşmasına katılım'
+    },
+    'tahsilat': {
+        'label': 'Tahsilat',
+        'description': 'Alacak tahsilatı işlemleri'
+    },
+    'keşif': {
+        'label': 'Keşif',
+        'description': 'Mahkeme keşif işlemleri'
+    },
+    'tebligat': {
+        'label': 'Tebligat',
+        'description': 'Tebligat işlemleri'
+    },
+    'icra_takibi': {
+        'label': 'İcra Takibi',
+        'description': 'İcra takip işlemleri'
+    },
+    'diger': {
+        'label': 'Diğer',
+        'description': 'Diğer hukuki işlemler'
+    }
+}
+
+# Görev kategorisi seçenekleri
+TASK_CATEGORY_OPTIONS = list(TASK_CATEGORY_DEFINITIONS.keys())
+
+# Kategori kısaltmaları
+CATEGORY_ABBREVIATIONS = {
+    'durusma': 'DRŞ',
+    'tahsilat': 'THS',
+    'keşif': 'KŞF',
+    'tebligat': 'TBL',
+    'icra_takibi': 'İCR',
+    'diger': 'DĞR'
+}
