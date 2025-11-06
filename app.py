@@ -6168,5 +6168,7 @@ if __name__ == '__main__':
     # Use socketio.run instead of app.run
     # Production mode - debug=False for security
     debug_mode = os.getenv('FLASK_ENV', 'production') == 'development'
-    socketio.run(app, host='0.0.0.0', port=5000, debug=debug_mode)
+    # Get port from environment variable (Fly.io uses PORT=8080)
+    port = int(os.getenv('PORT', 5000))
+    socketio.run(app, host='0.0.0.0', port=port, debug=debug_mode)
 
