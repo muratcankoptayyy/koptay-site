@@ -703,3 +703,24 @@ class Report(db.Model):
     
     def __repr__(self):
         return f'<Report {self.id} - {self.report_type} by User {self.reporter_id}>'
+
+
+def mask_name(full_name):
+    """
+    KVKK uyumu için isimleri maskeler.
+    Örnek: "Ahmet Yılmaz" -> "A*** Y***"
+    """
+    if not full_name:
+        return "***"
+    
+    parts = full_name.strip().split()
+    if len(parts) == 0:
+        return "***"
+    
+    masked_parts = []
+    for part in parts:
+        if len(part) > 0:
+            masked_parts.append(part[0] + '*' * (len(part) - 1))
+    
+    return ' '.join(masked_parts)
+
