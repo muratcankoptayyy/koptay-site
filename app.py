@@ -179,14 +179,14 @@ def register():
             print(f"❌ Registration validation failed for {email}: {errors}")
             for message in errors:
                 flash(message, 'error')
-            return render_template('register.html', form_data=form_values)
+            return render_template('phoenix/auth/register.html', form_data=form_values)
 
         # ✅ Email'i lowercase yaparak kontrol et
         existing_user = User.query.filter(db.func.lower(User.email) == email.lower()).first()
         if existing_user:
             print(f"❌ Registration blocked: email already exists ({email})")
             flash('Bu e-posta adresiyle daha önce kayıt yapılmış.', 'error')
-            return render_template('register.html', form_data=form_values)
+            return render_template('phoenix/auth/register.html', form_data=form_values)
 
         duplicate_baro = User.query.filter_by(
             bar_association=bar_association,
@@ -195,7 +195,7 @@ def register():
         if duplicate_baro:
             print(f"❌ Registration blocked: bar number already in use - {bar_association}/{bar_registration_number}")
             flash('Bu baro sicil numarası zaten kayıtlı.', 'error')
-            return render_template('register.html', form_data=form_values)
+            return render_template('phoenix/auth/register.html', form_data=form_values)
 
         # ✅ User objesi oluştur - email lowercase
         user = User(
@@ -231,7 +231,7 @@ def register():
             import traceback
             traceback.print_exc()
             flash('Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyiniz.', 'error')
-            return render_template('register.html', form_data=form_values)
+            return render_template('phoenix/auth/register.html', form_data=form_values)
 
         if current_app.config.get('EMAIL_ENABLED'):
             try:
@@ -243,7 +243,7 @@ def register():
         flash('Kayıt başarılı! Giriş yapabilirsiniz.', 'success')
         return redirect(url_for('login'))
 
-    return render_template('register.html')
+    return render_template('phoenix/auth/register.html')
 
 
 @app.route('/login', methods=['GET', 'POST'])
