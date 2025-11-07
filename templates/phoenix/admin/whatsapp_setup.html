@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-4 md:py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center mb-4">
+            <svg class="w-12 h-12 text-green-500 mr-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+            <div>
+                <h1 class="text-xl md:text-3xl font-bold text-gray-900">WhatsApp Entegrasyonu</h1>
+                <p class="text-gray-600 mt-1">Meta WhatsApp Cloud API ile otomatik bildirimler</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Card -->
+    <div class="bg-white p-3 md:p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold">Merkezi WhatsApp Sistemi</h2>
+            <span class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                ✅ Aktif
+            </span>
+        </div>
+        <div class="bg-white p-3 md:p-6">
+            <h3 class="font-semibold text-lg mb-3">📱 Ulusal Tevkil Ağı Resmi WhatsApp Numarası</h3>
+            <p class="text-lg md:text-2xl font-bold text-green-700 mb-4">+90 XXX XXX XX XX</p>
+            <p class="text-gray-700 mb-4">
+                <strong>Tek numara, tüm avukatlar için!</strong> Bu numaraya mesaj göndererek:
+            </p>
+            <ul class="space-y-2 text-gray-700">
+                <li class="flex items-center">
+                    <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    #ILAN ile hızlı ilan oluşturabilirsiniz
+                </li>
+                <li class="flex items-center">
+                    <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    Başvurular otomatik olarak size iletilir
+                </li>
+                <li class="flex items-center">
+                    <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    İlan durumunuzu sorgulayabilirsiniz
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Setup Guide -->
+    <div class="bg-white p-3 md:p-6 mb-8">
+        <h2 class="text-xl font-semibold text-green-900 mb-4">📋 Nasıl Kullanılır?</h2>
+        
+        <div class="space-y-6">
+            <!-- Step 1 -->
+            <div class="bg-white p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold">1</div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="font-semibold text-gray-900 mb-2">Kayıt Olun</h3>
+                        <p class="text-gray-600 mb-2">Web sitesinde hesap oluşturun ve telefon numaranızı doğrulayın.</p>
+                        <div class="bg-gray-50 p-3 mt-2">
+                            <p class="text-sm text-gray-800">
+                                Profil → Telefon numaranızı ekleyin → Kaydet
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="bg-white p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold">2</div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="font-semibold text-gray-900 mb-2">WhatsApp'tan Mesaj Gönderin</h3>
+                        <p class="text-gray-600 mb-2">Ulusal Tevkil Ağı resmi numarasına mesaj atın:</p>
+                        <div class="bg-green-50 p-3 mt-2">
+                            <p class="text-lg font-bold text-green-700">
+                                +90 XXX XXX XX XX
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="bg-white p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold">3</div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="font-semibold text-gray-900 mb-2">İlan Oluşturun</h3>
+                        <p class="text-gray-600 mb-2">WhatsApp'tan #ILAN komutuyla ilan oluşturun:</p>
+                        <div class="bg-gray-900 text-green-400 p-3 mt-2 font-mono text-sm overflow-x-auto">
+<pre>#ILAN
+Başlık: Ankara Adliyesi Duruşma Temsili  
+Kategori: Ceza Hukuku
+Şehir: Ankara
+Açıklama: 25 Ocak saat 14:00 duruşma
+Fiyat: 3500
+Aciliyet: Acil</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="bg-white p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold">4</div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="font-semibold text-gray-900 mb-2">Otomatik Bildirimler Alın</h3>
+                        <p class="text-gray-600 mb-2">Başvurular geldiğinde otomatik WhatsApp bildirimi alırsınız!</p>
+                        <ul class="list-disc list-inside text-gray-700 space-y-1 mt-2">
+                            <li>Yeni başvuru → Anında bildirim</li>
+                            <li>Başvuru kabul → Her iki tarafa bildirim</li>
+                            <li>Başvuru red → Başvuran avukata bildirim</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Section -->
+    <div class="bg-white p-3 md:p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">🧪 Bot Testi</h2>
+        
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Telefon Numaranız (Kayıtlı)
+            </label>
+            <input type="tel" id="testPhone" value="{{ current_user.phone or '' }}" 
+                   class="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-green-500 bg-gray-50"
+                   readonly>
+            <p class="text-sm text-gray-500 mt-1">Bu numara sistemde kayıtlı olmalıdır</p>
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Test Komutu
+            </label>
+            <select id="commandSelect" onchange="updateTestMessage()" class="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-green-500 mb-3">
+                <option value="ilan">#ILAN - Yeni ilan oluştur</option>
+                <option value="yardim">#YARDIM - Yardım menüsü</option>
+                <option value="durum">#DURUM - Hesap durumu</option>
+                <option value="ilanlarim">#ILANLARIM - Aktif ilanlarım</option>
+            </select>
+            
+            <textarea id="testMessage" rows="10" class="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-green-500 font-mono text-sm">#ILAN
+Başlık: Test Duruşma Temsili
+Kategori: Ceza Hukuku
+Şehir: Ankara
+Açıklama: Test amaçlı ilan oluşturma
+Fiyat: 2500
+Aciliyet: Normal</textarea>
+        </div>
+
+        <button onclick="testWhatsApp()" class="w-full bg-green-600 text-white px-6 py-3 hover:bg-green-700 transition font-medium">
+            📤 Test Komutu Gönder
+        </button>
+
+        <div id="testResult" class="mt-4 hidden"></div>
+    </div>
+
+    <!-- Features -->
+    <div class="grid md:grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+        <div class="bg-white p-3 md:p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-blue-100 flex items-center justify-center mr-4">
+                    <svg class="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-900">Otomatik Bildirimler</h3>
+                    <p class="text-sm text-gray-600">Yeni başvurular için anında bildirim</p>
+                </div>
+            </div>
+            <ul class="space-y-2 text-sm text-gray-700">
+                <li class="flex items-center">
+                    <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    Yeni başvuru bildirimi
+                </li>
+                <li class="flex items-center">
+                    <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    Başvuru kabul/red bildirimi
+                </li>
+                <li class="flex items-center">
+                    <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    İlan oluşturma onayı
+                </li>
+            </ul>
+        </div>
+
+        <div class="bg-white p-3 md:p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-purple-100 flex items-center justify-center mr-4">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-900">WhatsApp Bot</h3>
+                    <p class="text-sm text-gray-600">WhatsApp'tan ilan oluşturma</p>
+                </div>
+            </div>
+            <ul class="space-y-2 text-sm text-gray-700">
+                <li class="flex items-center">
+                    <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    #ILAN ile hızlı ilan oluşturma
+                </li>
+                <li class="flex items-center">
+                    <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    Otomatik format kontrolü
+                </li>
+                <li class="flex items-center">
+                    <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    Anlık geri bildirim
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateTestMessage() {
+    const select = document.getElementById('commandSelect');
+    const textarea = document.getElementById('testMessage');
+    
+    const templates = {
+        'ilan': `#ILAN
+Başlık: Ankara Adliyesi Duruşma Temsili
+Kategori: Ceza Hukuku
+Şehir: Ankara
+Açıklama: 25 Ocak 2025 saat 14:00 duruşma temsili gerekiyor
+Fiyat: 3500
+Aciliyet: Acil`,
+        'yardim': '#YARDIM',
+        'durum': '#DURUM',
+        'ilanlarim': '#ILANLARIM'
+    };
+    
+    textarea.value = templates[select.value] || templates['ilan'];
+}
+
+async function testWhatsApp() {
+    const phone = document.getElementById('testPhone').value;
+    const message = document.getElementById('testMessage').value;
+    const resultDiv = document.getElementById('testResult');
+    
+    if (!phone) {
+        resultDiv.innerHTML = '<div class="bg-red-50 text-red-800 p-4">❌ Telefon numaranız kayıtlı değil. Lütfen profilinizi güncelleyin.</div>';
+        resultDiv.classList.remove('hidden');
+        return;
+    }
+    
+    if (!message.trim()) {
+        resultDiv.innerHTML = '<div class="bg-yellow-50 text-yellow-800 p-4">⚠️ Lütfen bir komut girin</div>';
+        resultDiv.classList.remove('hidden');
+        return;
+    }
+    
+    resultDiv.innerHTML = '<div class="bg-blue-50 text-blue-800 p-4">⏳ Test ediliyor...</div>';
+    resultDiv.classList.remove('hidden');
+    
+    try {
+        const formData = new FormData();
+        formData.append('message', message);
+        
+        const response = await fetch('/api/whatsapp/test', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="bg-green-50 text-green-800 p-4">
+                    <p class="font-semibold mb-2">✅ ${data.message}</p>
+                    <pre class="text-sm whitespace-pre-wrap bg-white p-3 mt-2 border border-green-200">${data.response}</pre>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `
+                <div class="bg-red-50 text-red-800 p-4">
+                    <p class="font-semibold">❌ Hata!</p>
+                    <pre class="text-sm mt-2 whitespace-pre-wrap">${data.error}</pre>
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `
+            <div class="bg-red-50 text-red-800 p-4">
+                <p class="font-semibold">❌ Bağlantı Hatası</p>
+                <p class="text-sm mt-2">${error.message}</p>
+            </div>
+        `;
+    }
+}
+</script>
+{% endblock %}

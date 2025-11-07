@@ -1,0 +1,117 @@
+{% extends "phoenix/layout/base.html" %}
+
+{% block title %}Güvenlik Ayarları - Tevkil{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Başlık -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Güvenlik Ayarları</h1>
+            <p class="mt-2 text-sm text-gray-600">Hesabınızın güvenlik ayarlarını yönetin</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- İki Faktörlü Doğrulama -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white shadow rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900">İki Faktörlü Doğrulama (2FA)</h2>
+                            <p class="text-sm text-gray-600 mt-1">Hesabınıza ekstra güvenlik katmanı ekleyin</p>
+                        </div>
+                        {% if user.two_factor_enabled %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Aktif
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            Pasif
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if user.two_factor_enabled %}
+                    <p class="text-sm text-gray-600 mb-4">İki faktörlü doğrulama aktif. Giriş yaparken telefonunuzdaki kodları kullanmanız gerekecek.</p>
+                    <a href="{{ url_for('disable_2fa') }}" class="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        2FA'yı Devre Dışı Bırak
+                    </a>
+                    {% else %}
+                    <p class="text-sm text-gray-600 mb-4">İki faktörlü doğrulama devre dışı. Hesabınızı korumak için etkinleştirmenizi öneririz.</p>
+                    <a href="{{ url_for('setup_2fa') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        2FA'yı Etkinleştir
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Aktif Oturumlar -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Aktif Oturumlar</h2>
+                    <div class="space-y-4">
+                        {% for session in active_sessions %}
+                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                            <div class="flex-1">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">{{ session.ip_address }}</p>
+                                        <p class="text-xs text-gray-500">{{ session.user_agent[:50] }}{% if session.user_agent|length > 50 %}...{% endif %}</p>
+                                        <p class="text-xs text-gray-500">Son aktivite: {{ session.last_activity.strftime('%d.%m.%Y %H:%M') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <form method="POST" action="{{ url_for('terminate_session', session_id=session.id) }}" class="ml-4">
+                                <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-medium">
+                                    Sonlandır
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <p class="text-sm text-gray-600">Aktif oturum bulunamadı.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yan Panel - Son Güvenlik Olayları -->
+            <div class="lg:col-span-1">
+                <div class="bg-white shadow rounded-lg p-6 sticky top-8">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Son Güvenlik Olayları</h2>
+                    <div class="space-y-3">
+                        {% for log in security_logs[:5] %}
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                {% if log.event_type == 'login' %}
+                                <div class="w-2 h-2 mt-2 bg-green-400 rounded-full"></div>
+                                {% elif log.event_type == 'failed_login' %}
+                                <div class="w-2 h-2 mt-2 bg-red-400 rounded-full"></div>
+                                {% else %}
+                                <div class="w-2 h-2 mt-2 bg-blue-400 rounded-full"></div>
+                                {% endif %}
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <p class="text-sm text-gray-900">{{ log.event_type|replace('_', ' ')|title }}</p>
+                                <p class="text-xs text-gray-500">{{ log.ip_address }}</p>
+                                <p class="text-xs text-gray-500">{{ log.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-sm text-gray-600">Henüz güvenlik olayı kaydı yok.</p>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <a href="{{ url_for('security_logs') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                            Tüm olayları görüntüle →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

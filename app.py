@@ -1771,7 +1771,7 @@ def whatsapp_ilan():
     """WhatsApp ile ilan oluşturma bilgilendirmesi"""
     if not current_app.config.get('WHATSAPP_ENABLED'):
         abort(404)
-    return render_template('whatsapp_ilan.html')
+    return render_template('phoenix/admin/whatsapp_ilan.html')
 
 @app.route('/whatsapp/setup')
 @login_required
@@ -1779,7 +1779,7 @@ def whatsapp_setup():
     """WhatsApp entegrasyon kurulum ve test sayfası"""
     if not current_app.config.get('WHATSAPP_ENABLED'):
         abort(404)
-    return render_template('whatsapp_setup.html')
+    return render_template('phoenix/admin/whatsapp_setup.html')
 
 @app.route('/posts/<int:post_id>')
 def post_detail(post_id):
@@ -2798,7 +2798,7 @@ def setup_2fa():
     buffer.seek(0)
     qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
     
-    return render_template('2fa_setup.html', 
+    return render_template('phoenix/security/2fa_setup.html', 
                          qr_code=qr_code_base64, 
                          secret=secret,
                          manual_entry_key=secret)
@@ -4743,7 +4743,7 @@ def verify_2fa():
             )
             flash('Geçersiz doğrulama kodu. Lütfen tekrar deneyin.', 'error')
     
-    return render_template('verify_2fa.html', user=user)
+    return render_template('phoenix/security/verify_2fa.html', user=user)
 
 
 @app.route('/security/settings', methods=['GET'])
@@ -4758,7 +4758,7 @@ def security_settings():
         user_id=current_user.id
     ).order_by(SecurityLog.created_at.desc()).limit(20).all()
     
-    return render_template('security_settings.html',
+    return render_template('phoenix/security/security_settings.html',
                          user=current_user,
                          active_sessions=active_sessions,
                          security_logs=recent_logs)
@@ -4826,7 +4826,7 @@ def security_logs():
         page=page, per_page=per_page, error_out=False
     )
     
-    return render_template('security_logs.html', logs=logs)
+    return render_template('phoenix/security/security_logs.html', logs=logs)
 
 
 # ============================================================
@@ -5721,7 +5721,7 @@ def admin_analytics():
         'post_status_counts': post_status_counts,
     }
 
-    return render_template('admin_analytics.html', **context)
+    return render_template('phoenix/admin/admin_analytics.html', **context)
 
 @app.route('/admin/analytics/export')
 @admin_required
@@ -5933,7 +5933,7 @@ def admin_user_detail(user_id):
     # Son aktiviteler
     last_login = None  # Bu özellik eklenebilir
     
-    return render_template('admin_user_detail.html',
+    return render_template('phoenix/admin/admin_user_detail.html',
                          user=user,
                          posts=posts,
                          applications_sent=applications_sent,

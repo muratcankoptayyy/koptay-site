@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Güvenlik Logları - Tevkil Platform{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-4 md:py-8">
+    <div class="max-w-6xl mx-auto px-4">
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="{{ url_for('settings') }}" class="text-gray-900 hover:text-blue-700 mb-4 inline-flex items-center">
+                <span class="material-symbols-outlined">arrow_back</span>
+                Ayarlara Dön
+            </a>
+            <h1 class="text-xl md:text-3xl font-bold text-gray-900 dark:text-white mt-4 flex items-center gap-3">
+                <span class="material-symbols-outlined text-2xl md:text-4xl text-gray-900">shield</span>
+                Güvenlik Logları
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">
+                Hesabınızdaki tüm güvenlik olaylarını görüntüleyin
+            </p>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white dark:bg-gray-800 p-4 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-green-600 text-xl md:text-3xl">login</span>
+                    <div>
+                        <p class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{{ logs.items|selectattr('event_type', 'equalto', 'login_success')|list|length }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Başarılı Giriş</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-red-600 text-xl md:text-3xl">block</span>
+                    <div>
+                        <p class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{{ logs.items|selectattr('event_type', 'equalto', 'login_failed')|list|length }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Başarısız Deneme</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-gray-900 text-xl md:text-3xl">key</span>
+                    <div>
+                        <p class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{{ logs.items|selectattr('event_type', 'equalto', 'password_change')|list|length }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Şifre Değişikliği</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-purple-600 text-xl md:text-3xl">security</span>
+                    <div>
+                        <p class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{{ logs.items|selectattr('event_severity', 'equalto', 'WARNING')|list|length }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Uyarılar</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Table -->
+        <div class="bg-white dark:bg-gray-800 sm:-2xl border border-gray-300 dark:border-gray-700 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Zaman
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Olay
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Seviye
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                IP Adresi
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Detaylar
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for log in logs.items %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                {{ log.created_at.strftime('%d.%m.%Y %H:%M') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    {% if log.event_type == 'login_success' %}
+                                    <span class="material-symbols-outlined text-green-600">login</span>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">Başarılı Giriş</span>
+                                    {% elif log.event_type == 'login_failed' %}
+                                    <span class="material-symbols-outlined text-red-600">block</span>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">Başarısız Giriş</span>
+                                    {% elif log.event_type == 'logout' %}
+                                    <span class="material-symbols-outlined text-gray-600">logout</span>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">Çıkış</span>
+                                    {% elif log.event_type == 'password_change' %}
+                                    <span class="material-symbols-outlined text-gray-900">key</span>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">Şifre Değişikliği</span>
+                                    {% elif log.event_type == '2fa_enabled' %}
+                                    <span class="material-symbols-outlined text-purple-600">security</span>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">2FA Etkinleştirildi</span>
+                                    {% elif log.event_type == '2fa_disabled' %}
+                                    <span class="material-symbols-outlined text-orange-600">security</span>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">2FA Devre Dışı</span>
+                                    {% elif log.event_type == 'account_locked' %}
+                                    <span class="material-symbols-outlined text-red-600">lock</span>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">Hesap Kilitlendi</span>
+                                    {% else %}
+                                    <span class="material-symbols-outlined text-gray-600">info</span>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ log.event_type }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if log.event_severity == 'INFO' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                                    INFO
+                                </span>
+                                {% elif log.event_severity == 'WARNING' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300">
+                                    UYARI
+                                </span>
+                                {% elif log.event_severity == 'ERROR' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+                                    HATA
+                                </span>
+                                {% elif log.event_severity == 'CRITICAL' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-200 text-red-900 dark:bg-red-900/60 dark:text-red-200">
+                                    KRİTİK
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1">{{ log.ip_address or 'N/A' }}</code>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                {{ log.description or '-' }}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-4 md:py-8 text-center text-gray-500 dark:text-gray-400">
+                                <span class="material-symbols-outlined text-2xl md:text-4xl mb-2">inbox</span>
+                                <p>Henüz güvenlik logu bulunmuyor</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if logs.pages > 1 %}
+            <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex items-center justify-between border-t border-gray-300 dark:border-gray-600">
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                    Sayfa {{ logs.page }} / {{ logs.pages }} (Toplam: {{ logs.total }} kayıt)
+                </div>
+                <div class="flex gap-2">
+                    {% if logs.has_prev %}
+                    <a href="?page={{ logs.prev_num }}" class="px-4 py-2 bg-white dark:bg-gray-600 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors">
+                        Önceki
+                    </a>
+                    {% endif %}
+                    {% if logs.has_next %}
+                    <a href="?page={{ logs.next_num }}" class="px-4 py-2 bg-white dark:bg-gray-600 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors">
+                        Sonraki
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
