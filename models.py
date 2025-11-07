@@ -130,6 +130,17 @@ class User(UserMixin, db.Model):
         # Stajyer avukatlar başvuru yapamaz
         return self.lawyer_type != 'stajyer'
     
+    @property
+    def masked_full_name(self):
+        """KVKK uyumlu - maskelenmiş tam ad"""
+        if not self.full_name:
+            return "Anonim"
+        # Inline mask_name logic
+        parts = self.full_name.strip().split()
+        if not parts:
+            return "Anonim"
+        return ' '.join([part[0] + '*' * (len(part)-1) for part in parts])
+    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
     

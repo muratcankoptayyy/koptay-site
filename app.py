@@ -910,7 +910,7 @@ def stats_page():
             'views': views_count
         })
     
-    return render_template('stats.html', 
+    return render_template('phoenix/dashboard/stats.html', 
                          user_stats=user_stats,
                          platform_stats=platform_stats,
                          daily_stats=daily_stats)
@@ -1658,7 +1658,7 @@ def map_view():
     # Google Maps API anahtarı (opsiyonel, fallback var)
     google_maps_key = os.getenv('GOOGLE_MAPS_API_KEY', '')
     
-    return render_template('map.html', 
+    return render_template('phoenix/posts/map.html', 
                          posts=posts,
                          posts_json=posts_json,
                          google_maps_key=google_maps_key)
@@ -2572,7 +2572,7 @@ def rate_user(user_id):
         return redirect(url_for('user_profile', user_id=user_id))
     
     # GET request - rating formunu göster
-    return render_template('rate_user.html', user=user, existing_rating=existing_rating)
+    return render_template('phoenix/profile/rate_user.html', user=user, existing_rating=existing_rating)
 
 @app.route('/report/<report_type>/<int:item_id>', methods=['GET', 'POST'])
 @login_required
@@ -2644,7 +2644,7 @@ def report_content(report_type, item_id):
         from models import Message
         item = Message.query.get_or_404(item_id)
     
-    return render_template('report.html', report_type=report_type, item=item)
+    return render_template('phoenix/admin/report.html', report_type=report_type, item=item)
 
 @app.route('/settings/avatar', methods=['POST'])
 @login_required
@@ -5410,17 +5410,17 @@ def contact():
 @app.route('/privacy-policy')
 def privacy_policy():
     """Privacy policy page (KVKK compliance)"""
-    return render_template('privacy_policy.html', current_date='2025')
+    return render_template('phoenix/static/legal/privacy_policy.html', current_date='2025')
 
 @app.route('/terms-of-service')
 def terms_of_service():
     """Terms of service page"""
-    return render_template('terms_of_service.html', current_date='2025')
+    return render_template('phoenix/static/legal/terms_of_service.html', current_date='2025')
 
 @app.route('/cookie-policy')
 def cookie_policy():
     """Cookie policy page"""
-    return render_template('cookie_policy.html', current_date='2025')
+    return render_template('phoenix/static/legal/cookie_policy.html', current_date='2025')
 
 # ==================== HEALTH & ANALYTICS HELPERS ====================
 
@@ -6153,14 +6153,14 @@ def submit_contact_form():
 @app.errorhandler(404)
 def page_not_found(e):
     """Custom 404 error page"""
-    return render_template('errors/404.html'), 404
+    return render_template('phoenix/errors/404.html'), 404
 
 @app.errorhandler(500)
 def internal_error(e):
     """Custom 500 error page"""
     db.session.rollback()  # Rollback any failed database operations
     error_message = str(e) if app.debug else None
-    return render_template('errors/500.html', error=error_message), 500
+    return render_template('phoenix/errors/500.html', error=error_message), 500
 
 if __name__ == '__main__':
     with app.app_context():
