@@ -1593,8 +1593,8 @@ def list_posts():
         })
 
     category_options = [
-        {'value': key, 'label': label}
-        for key, label in sorted(TASK_CATEGORY_OPTIONS, key=lambda item: item[1])
+        {'value': key, 'label': TASK_CATEGORY_DEFINITIONS[key]['label']}
+        for key in sorted(TASK_CATEGORY_OPTIONS, key=lambda k: TASK_CATEGORY_DEFINITIONS[k]['label'])
     ]
 
     avg_price_display = f"{int(avg_price_value):,} ₺".replace(',', '.') if avg_price_value else None
