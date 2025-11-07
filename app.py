@@ -509,7 +509,7 @@ def index():
         return redirect(url_for('dashboard'))
     
     recent_posts = TevkilPost.query.filter_by(status='active').order_by(TevkilPost.created_at.desc()).limit(6).all()
-    return render_template('index.html', posts=recent_posts)
+    return render_template('phoenix/static/home.html', posts=recent_posts)
 
 @app.route('/dashboard')
 @login_required
@@ -706,14 +706,15 @@ def dashboard():
         ).order_by(TevkilPost.court_date.asc()).limit(4).all()
 
         hearings = []
+        turkish_months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
         for item in upcoming_posts:
             court_dt = _to_utc(item.court_date) or now
             hearings.append({
-                'date': court_dt.strftime('%d %b %Y'),
+                'day': court_dt.strftime('%d'),
+                'month': turkish_months[court_dt.month - 1],
                 'time': court_dt.strftime('%H:%M'),
                 'title': item.title,
-                'court': item.courthouse or item.city or 'Mahkeme bilgisi yok',
-                'counterpart': item.category,
+                'location': item.courthouse or item.city or 'Mahkeme bilgisi yok',
                 'url': url_for('post_detail', post_id=item.id),
             })
 
@@ -819,7 +820,7 @@ def dashboard():
         }
 
         return render_template(
-            'dashboard.html',
+            'phoenix/dashboard/overview.html',
             metrics=metrics,
             workflows=workflows,
             hearings=hearings,
@@ -839,6 +840,7 @@ def dashboard():
             total_earnings=total_earnings,
             avg_rating=avg_rating,
             unread_notifications=unread_notifications,
+            unread_notif_count=unread_notifications,
             user_stats=user_stats,
         )
     except Exception as e:
@@ -847,10 +849,18 @@ def dashboard():
         traceback.print_exc()
         # Minimal dashboard göster
         return render_template('phoenix/dashboard/overview.html',
+                             metrics=[],
+                             workflows=[],
+                             hearings=[],
+                             notifications_feed=[],
+                             activity_timeline=[],
+                             quick_actions=[],
+                             stats={},
                              my_posts=my_posts,
                              my_applications=my_applications,
                              incoming_applications=incoming_applications,
                              unread_notifications=unread_notifications,
+                             unread_notif_count=unread_notifications,
                              chart_months=[],
                              chart_incoming=[],
                              chart_outgoing=[],
@@ -1029,8 +1039,18 @@ def applications_received():
         {'key': 'rejected', 'label': 'Reddedilen', 'count': rejected_count},
     ]
 
+    status_filter = request.args.get('status', 'all')
+    valid_filter_keys = {item['key'] for item in filters}
+    if status_filter not in valid_filter_keys:
+        status_filter = 'all'
+
+    filtered_applications = (
+        incoming_applications if status_filter == 'all'
+        else [item for item in incoming_applications if item.status == status_filter]
+    )
+
     application_cards = []
-    for item in incoming_applications:
+    for item in filtered_applications:
         post = item.post
         applicant = item.applicant
         created_at_utc = _to_utc(item.created_at) or now
@@ -1054,6 +1074,7 @@ def applications_received():
             'message': item.message,
             'proposed_price': item.proposed_price,
             'post': {
+                'id': post.id if post else None,
                 'title': post.title if post else 'İlan kaldırıldı',
                 'category': post.category if post else 'Kategori yok',
                 'city': (post.city or post.location) if post else None,
@@ -1061,6 +1082,7 @@ def applications_received():
                 'deadline': deadline_display,
             },
             'applicant': {
+                'id': applicant.id if applicant else None,
                 'masked_name': applicant.masked_full_name if applicant else 'Başvuru sahibi',
                 'full_name': applicant.full_name if applicant else None,
                 'initials': _initials(applicant.full_name if applicant else None),
@@ -1069,7 +1091,10 @@ def applications_received():
                 'bar': applicant.bar_association if applicant else None,
             },
             'can_manage': item.status == 'pending',
+            'chat_url': url_for('start_chat', user_id=applicant.id, post_id=post.id) if applicant and post else None,
         })
+
+    displayed_count = len(application_cards)
 
     return render_template(
         'phoenix/applications/received.html',
@@ -1083,6 +1108,8 @@ def applications_received():
             'accepted': accepted_count,
             'rejected': rejected_count,
         },
+        active_filter=status_filter,
+        displayed_count=displayed_count,
     )
 
 @app.route('/applications/sent')
@@ -1196,8 +1223,18 @@ def applications_sent():
         {'key': 'rejected', 'label': 'Reddedilen', 'count': rejected_count},
     ]
 
+    status_filter = request.args.get('status', 'all')
+    valid_filter_keys = {item['key'] for item in filters}
+    if status_filter not in valid_filter_keys:
+        status_filter = 'all'
+
+    filtered_applications = (
+        my_applications if status_filter == 'all'
+        else [item for item in my_applications if item.status == status_filter]
+    )
+
     application_cards = []
-    for item in my_applications:
+    for item in filtered_applications:
         post = item.post
         owner = post.user if post else None
         created_at_utc = _to_utc(item.created_at) or now
@@ -1230,6 +1267,7 @@ def applications_sent():
             'proposed_price': item.proposed_price,
             'response_time': response_time,
             'post': {
+                'id': post.id if post else None,
                 'title': post.title if post else 'İlan kaldırıldı',
                 'category': post.category if post else 'Kategori yok',
                 'city': (post.city or post.location) if post else None,
@@ -1237,6 +1275,7 @@ def applications_sent():
                 'deadline': deadline_display,
             },
             'owner': {
+                'id': owner.id if owner else None,
                 'masked_name': owner.masked_full_name if owner else 'İlan sahibi',
                 'full_name': owner.full_name if owner else None,
                 'initials': _initials(owner.full_name if owner else None),
@@ -1244,7 +1283,11 @@ def applications_sent():
                 'bar': owner.bar_association if owner else None,
                 'city': owner.city if owner else None,
             },
+            'can_withdraw': item.status == 'pending',
+            'chat_url': url_for('start_chat', user_id=owner.id, post_id=post.id) if owner and post else None,
         })
+
+    displayed_count = len(application_cards)
 
     return render_template(
         'phoenix/applications/sent.html',
@@ -1260,7 +1303,9 @@ def applications_sent():
         rates={
             'acceptance': acceptance_rate,
             'decision': decision_rate,
-        }
+        },
+        active_filter=status_filter,
+        displayed_count=displayed_count,
     )
 
 # ============================================
@@ -1757,7 +1802,7 @@ def create_post():
         return redirect(url_for('post_detail', post_id=post.id))
     
     return render_template(
-        'post_create.html',
+        'phoenix/posts/create.html',
         cities=CITIES,
         courthouses=COURTHOUSES,
         task_category_options=TASK_CATEGORY_OPTIONS,
@@ -1953,7 +1998,7 @@ def post_detail(post_id):
     google_maps_key = os.getenv('GOOGLE_MAPS_API_KEY', '')
     
     return render_template(
-        'post_detail.html',
+        'phoenix/posts/detail.html',
         post=post,
         applications=applications,
         is_favorited=is_favorited,
@@ -2044,7 +2089,7 @@ def edit_post(post_id):
         return redirect(url_for('post_detail', post_id=post_id))
 
     return render_template(
-        'post_edit.html',
+        'phoenix/posts/edit.html',
         post=post,
         cities=CITIES,
         courthouses=COURTHOUSES,
@@ -3458,7 +3503,7 @@ def notifications():
     ]
 
     return render_template(
-        'notifications_new.html',
+        'phoenix/notifications/index.html',
         notifications=notification_cards,
         stats=stats,
         filters=filters,
@@ -3647,7 +3692,8 @@ def _thread_detail(conversation, current_user_id):
         "messages": [
             {
                 "id": msg.id,
-                "body": msg.message,
+                "body": msg.message,  # Template uses 'body'
+                "message": msg.message,  # Keep for backward compatibility
                 "timestamp": _normalise_to_utc(msg.created_at).strftime('%d.%m.%Y %H:%M') if msg.created_at else "",
                 "is_owner": msg.sender_id == current_user_id,
                 "type": msg.message_type or "text",
@@ -3658,6 +3704,61 @@ def _thread_detail(conversation, current_user_id):
             for msg in messages
         ],
     }
+
+
+def _build_message_payload(message, sender, other_user, message_text, message_type,
+                           file_url, file_name, file_size, file_type, reply_to_id):
+    """Serialise a Message instance for realtime transport."""
+    masked_sender_name = sender.masked_full_name if hasattr(sender, "masked_full_name") else sender.full_name
+    sender_avatar = (
+        sender.avatar_url
+        if getattr(sender, "avatar_url", None)
+        else f"https://ui-avatars.com/api/?name={masked_sender_name.replace(' ', '+')}&background=1f2937&color=fff"
+    )
+    created_at = _normalise_to_utc(message.created_at)
+    read_at = _normalise_to_utc(message.read_at)
+
+    return {
+        'id': message.id,
+        'conversation_id': message.conversation_id,
+        'sender_id': sender.id,
+        'sender_name': masked_sender_name,
+        'sender_avatar': sender_avatar,
+        'receiver_id': other_user.id if other_user else None,
+        'text': message_text,
+        'message_type': message_type or 'text',
+        'file_url': file_url,
+        'file_name': file_name,
+        'file_size': file_size,
+        'file_type': file_type,
+        'reply_to_id': reply_to_id,
+        'created_at': created_at.isoformat() if created_at else None,
+        'created_at_display': created_at.strftime('%H:%M') if created_at else '',
+        'read_at': read_at.isoformat() if read_at else None,
+        'read_at_display': read_at.strftime('%H:%M') if read_at else None,
+    }
+
+
+def _serialize_conversation_state(conversation):
+    """Expose conversation counters and timestamps for UI refresh."""
+    last_dt = _normalise_to_utc(conversation.last_message_at)
+    state = {
+        'id': conversation.id,
+        'user1_id': conversation.user1_id,
+        'user2_id': conversation.user2_id,
+        'unread_count_user1': conversation.unread_count_user1,
+        'unread_count_user2': conversation.unread_count_user2,
+        'last_message_text': conversation.last_message_text,
+        'last_message_sender_id': conversation.last_message_sender_id,
+        'last_message_at': last_dt.isoformat() if last_dt else None,
+        'last_message_at_clock': last_dt.strftime('%H:%M') if last_dt else None,
+        'last_message_at_human': _format_relative_time(last_dt) if last_dt else '',
+        'meta': _conversation_meta(conversation),
+    }
+    if conversation.post_id:
+        state['post_id'] = conversation.post_id
+        state['post_title'] = conversation.post.title if conversation.post else None
+    return state
 
 
 class ChatMessageError(Exception):
@@ -3751,48 +3852,47 @@ def _create_chat_message(
         db.session.rollback()
         raise ChatMessageError("Mesaj kaydedilemedi") from exc
 
-    masked_sender_name = sender.masked_full_name if hasattr(sender, "masked_full_name") else sender.full_name
-    masked_other_name = other_user.masked_full_name if hasattr(other_user, "masked_full_name") else other_user.full_name
-    sender_avatar = (
-        sender.avatar_url
-        if getattr(sender, "avatar_url", None)
-        else f"https://ui-avatars.com/api/?name={masked_sender_name.replace(' ', '+')}&background=1f2937&color=fff"
+    message_payload = _build_message_payload(
+        message=message,
+        sender=sender,
+        other_user=other_user,
+        message_text=message_text,
+        message_type=message_type,
+        file_url=file_url,
+        file_name=file_name,
+        file_size=file_size,
+        file_type=file_type,
+        reply_to_id=reply_to_id,
     )
-    other_user_avatar = (
-        other_user.avatar_url
-        if getattr(other_user, "avatar_url", None)
-        else f"https://ui-avatars.com/api/?name={masked_other_name.replace(' ', '+')}&background=1f2937&color=fff"
-    )
+    conversation_state = _serialize_conversation_state(conversation)
 
-    socketio.emit(
-        'new_message',
-        {
-            'conversation_id': conversation.id,
-            'sender_id': sender.id,
-            'sender_name': masked_sender_name,
-            'sender_avatar': sender_avatar,
-            'content': message_text,
-            'message': message_text,
-            'timestamp': message.created_at.strftime('%H:%M'),
-            'created_at': message.created_at.isoformat(),
-            'id': message.id,
-            'is_mine': False,
-            'read_at': None,
-            'message_type': message_type,
-            'file_url': file_url,
-            'file_name': file_name,
-            'file_size': file_size,
-            'file_type': file_type,
-        },
-        room=f'conversation_{conversation.id}',
-    )
+    event_payload = {
+        'conversation_id': conversation.id,
+        'message': message_payload,
+        'conversation_state': conversation_state,
+        'sender_id': message_payload['sender_id'],
+        'sender_name': message_payload['sender_name'],
+        'sender_avatar': message_payload['sender_avatar'],
+        'text': message_text,
+        'message_text': message_text,
+        'timestamp': message_payload['created_at_display'],
+        'created_at': message_payload['created_at'],
+        'message_type': message_payload['message_type'],
+        'file_url': message_payload['file_url'],
+        'file_name': message_payload['file_name'],
+        'file_size': message_payload['file_size'],
+        'file_type': message_payload['file_type'],
+        'preview': conversation.last_message_text,
+    }
+
+    socketio.emit('new_message', event_payload, room=f'conversation_{conversation.id}')
 
     try:
         create_notification(
             user_id=other_user.id,
             notification_type='new_message',
             title='💬 Yeni Mesaj',
-            message=f'{masked_sender_name}: {message_text[:50]}...',
+            message=f"{message_payload['sender_name']}: {message_text[:50]}...",
             related_user_id=sender.id,
             action_url=url_for('chat_conversation', conversation_id=conversation.id),
             action_text='Mesajı Görüntüle',
@@ -3805,15 +3905,19 @@ def _create_chat_message(
         "message": message,
         "other_user": other_user,
         "payload": {
+            'conversation_id': conversation.id,
             'message_id': message.id,
-            'created_at': message.created_at.strftime('%H:%M'),
-            'sender_name': masked_sender_name,
+            'created_at': message_payload['created_at_display'],
+            'sender_id': sender.id,
+            'sender_name': message_payload['sender_name'],
             'message_text': message_text,
             'message_type': message_type,
             'file_url': file_url,
             'file_name': file_name,
             'file_size': file_size,
             'file_type': file_type,
+            'message': message_payload,
+            'conversation_state': conversation_state,
         },
     }
 
@@ -3846,12 +3950,20 @@ def chat():
         for conv in user_convs
     ]
     active_thread = _thread_detail(active_conversation, current_user.id) if active_conversation else None
+    if active_thread:
+        print(f"[chat] active_thread messages={len(active_thread['messages'])}")
+    messages = []
+    if active_conversation:
+        messages = Message.query.filter_by(conversation_id=active_conversation.id).order_by(Message.created_at.asc()).all()
 
     return render_template(
         'phoenix/messages/inbox.html',
         threads=threads,
         active_thread=active_thread,
         total_unread=total_unread,
+        conversations=user_convs,
+        active_conversation=active_conversation,
+        messages=messages,
     )
 
 
@@ -3909,6 +4021,7 @@ def chat_conversation(conversation_id: int):
         for conv in user_convs
     ]
     active_thread = _thread_detail(conversation, current_user.id)
+    messages = Message.query.filter_by(conversation_id=conversation.id).order_by(Message.created_at.asc()).all()
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.args.get('ajax') == '1':
         panel_html = render_template(
@@ -3924,10 +4037,13 @@ def chat_conversation(conversation_id: int):
         })
 
     return render_template(
-        'chat.html',
+        'phoenix/messages/inbox.html',
         threads=threads,
         active_thread=active_thread,
         total_unread=total_unread,
+        conversations=user_convs,
+        active_conversation=conversation,
+        messages=messages,
     )
 
 
@@ -4410,7 +4526,7 @@ def favorites():
     }
 
     return render_template(
-        'favorites.html',
+        'phoenix/posts/favorites.html',
         favorites=favorite_cards,
         metrics=metrics,
         filters=filters,
@@ -4968,42 +5084,46 @@ def handle_send_message(data):
         
         db.session.commit()
         
-        # Get sender avatar with fallback
-        masked_sender_name = current_user.masked_full_name
-        sender_avatar = current_user.avatar_url if current_user.avatar_url else f"https://ui-avatars.com/api/?name={masked_sender_name.replace(' ', '+')}&background=1f2937&color=fff"
-        
-        # Prepare message data
-        message_data = {
-            'id': message.id,
-            'conversation_id': conversation_id,
-            'sender_id': current_user.id,
-            'sender_name': masked_sender_name,
-            'sender_avatar': sender_avatar,
-            'receiver_id': receiver_id,
-            'content': content,
-            'message': content,  # Both for compatibility
-            'timestamp': message.created_at.strftime('%H:%M'),
-            'created_at': message.created_at.isoformat(),
-            'is_read': False,
-            'read_at': None,
-            # 📎 Dosya bilgileri (şimdilik None - gelecekte eklenecek)
-            'message_type': message.message_type or 'text',
-            'file_url': message.file_url,
-            'file_name': message.file_name,
-            'file_size': message.file_size,
-            'file_type': message.file_type
-        }
-        
-        # Send to conversation room
+        message_payload = _build_message_payload(
+            message=message,
+            sender=current_user,
+            other_user=other_user,
+            message_text=content,
+            message_type=message.message_type,
+            file_url=message.file_url,
+            file_name=message.file_name,
+            file_size=message.file_size,
+            file_type=message.file_type,
+            reply_to_id=message.reply_to_id,
+        )
+        conversation_state = _serialize_conversation_state(conversation)
+
         room = f'conversation_{conversation_id}'
-        emit('new_message', message_data, room=room)
+        emit('new_message', {
+            'conversation_id': conversation_id,
+            'message': message_payload,
+            'conversation_state': conversation_state,
+            'sender_id': message_payload['sender_id'],
+            'sender_name': message_payload['sender_name'],
+            'sender_avatar': message_payload['sender_avatar'],
+            'text': content,
+            'message_text': content,
+            'timestamp': message_payload['created_at_display'],
+            'created_at': message_payload['created_at'],
+            'message_type': message_payload['message_type'],
+            'file_url': message_payload['file_url'],
+            'file_name': message_payload['file_name'],
+            'file_size': message_payload['file_size'],
+            'file_type': message_payload['file_type'],
+            'preview': conversation.last_message_text,
+        }, room=room)
         
         # Send notification to receiver if online but not in room
         if receiver_id in active_users:
             emit('new_message_notification', {
                 'conversation_id': conversation_id,
-                'sender_name': masked_sender_name,
-                'sender_avatar': sender_avatar,
+                'sender_name': message_payload['sender_name'],
+                'sender_avatar': message_payload['sender_avatar'],
                 'preview': content[:50]
             }, room=active_users[receiver_id])
         
@@ -5011,13 +5131,13 @@ def handle_send_message(data):
         try:
             send_push_notification(
                 user_id=receiver_id,
-                title=f'💬 {masked_sender_name}',
+                title=f"💬 {message_payload['sender_name']}",
                 body=content[:100],  # İlk 100 karakter
                 data={
                     'type': 'new_message',
                     'conversation_id': str(conversation_id),
                     'sender_id': str(current_user.id),
-                    'sender_name': masked_sender_name,
+                    'sender_name': message_payload['sender_name'],
                     'page': f'/chat?conversation_id={conversation_id}'
                 }
             )
