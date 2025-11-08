@@ -3677,9 +3677,13 @@ def _thread_summary(conversation, current_user_id, active_id):
 
 def _thread_detail(conversation, current_user_id):
     """Build the payload required to render the active chat panel."""
+    print(f"[DEBUG _thread_detail] conversation: {conversation}, user_id: {current_user_id}")
     other_user = conversation.get_other_user(current_user_id)
+    print(f"[DEBUG _thread_detail] other_user: {other_user}")
     messages = Message.query.filter_by(conversation_id=conversation.id).order_by(Message.created_at.asc()).all()
-    return {
+    print(f"[DEBUG _thread_detail] messages count: {len(messages)}")
+    
+    result = {
         "id": conversation.id,
         "name": other_user.masked_full_name if hasattr(other_user, "masked_full_name") else other_user.full_name,
         "initials": _user_initials(other_user),
@@ -3704,6 +3708,8 @@ def _thread_detail(conversation, current_user_id):
             for msg in messages
         ],
     }
+    print(f"[DEBUG _thread_detail] result keys: {result.keys()}, messages in result: {len(result['messages'])}")
+    return result
 
 
 def _build_message_payload(message, sender, other_user, message_text, message_type,
@@ -3950,11 +3956,19 @@ def chat():
         for conv in user_convs
     ]
     active_thread = _thread_detail(active_conversation, current_user.id) if active_conversation else None
+    
+    # Debug logging
+    print(f"[DEBUG chat] user_convs count: {len(user_convs)}")
+    print(f"[DEBUG chat] active_conversation: {active_conversation}")
+    print(f"[DEBUG chat] active_thread: {active_thread}")
     if active_thread:
-        print(f"[chat] active_thread messages={len(active_thread['messages'])}")
+        print(f"[DEBUG chat] active_thread messages count: {len(active_thread['messages'])}")
+        print(f"[DEBUG chat] active_thread keys: {active_thread.keys()}")
+    
     messages = []
     if active_conversation:
         messages = Message.query.filter_by(conversation_id=active_conversation.id).order_by(Message.created_at.asc()).all()
+        print(f"[DEBUG chat] messages count from query: {len(messages)}")
 
     return render_template(
         'phoenix/messages/inbox.html',
