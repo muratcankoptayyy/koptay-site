@@ -62,6 +62,8 @@ class Config:
     SOCKETIO_ALLOWED_ORIGINS = [
         "https://tevkil.fly.dev",
         "https://www.tevkil.fly.dev",
+        "https://utap.com.tr",
+        "https://www.utap.com.tr",
         os.getenv("FRONTEND_URL", "https://tevkil.fly.dev"),
     ]
 
