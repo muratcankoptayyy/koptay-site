@@ -5,68 +5,62 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://koptay.av.tr/</loc>
-    <lastmod>2025-11-06</lastmod>
+    <lastmod>2025-11-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://koptay.av.tr/hakkimizda</loc>
-    <lastmod>2025-11-06</lastmod>
+    <lastmod>2025-11-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://koptay.av.tr/hizmetlerimiz</loc>
-    <lastmod>2025-11-06</lastmod>
+    <lastmod>2025-11-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://koptay.av.tr/ekibimiz</loc>
-    <lastmod>2025-11-06</lastmod>
+    <lastmod>2025-11-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://koptay.av.tr/makaleler</loc>
-    <lastmod>2025-11-06</lastmod>
+    <lastmod>2025-11-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://koptay.av.tr/iletisim</loc>
-    <lastmod>2025-11-06</lastmod>
+    <lastmod>2025-11-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://koptay.av.tr/hesaplama-araclari</loc>
-    <lastmod>2025-11-06</lastmod>
+    <lastmod>2025-11-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://koptay.av.tr/hesaplama-araclari/infaz-yatar</loc>
-    <lastmod>2025-11-06</lastmod>
+    <lastmod>2025-11-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://koptay.av.tr/hesaplama-araclari/tazminat-hesaplama</loc>
-    <lastmod>2025-11-06</lastmod>
+    <lastmod>2025-11-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://koptay.av.tr/muvekkil-paneli</loc>
-    <lastmod>2025-11-06</lastmod>
+    <lastmod>2025-11-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://koptay.av.tr/makale/2026-avukatlik-asgari-ucret-tarifesi-detayli-analiz-ve-uygulama-rehberi</loc>
-    <lastmod>2025-11-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
   </url>
 </urlset>
