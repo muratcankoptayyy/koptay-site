@@ -17,6 +17,7 @@ const TazminatHesaplamaPage = lazy(() => import('./pages/TazminatHesaplamaPage')
 const MakalelerPage = lazy(() => import('./pages/MakalelerPage'))
 const IletisimPage = lazy(() => import('./pages/IletisimPage'))
 const MuvekkilPaneliPage = lazy(() => import('./pages/MuvekkilPaneliPage'))
+const LogoShowcasePage = lazy(() => import('./pages/LogoShowcasePage'))
 
 // Loading component
 const PageLoader = () => (
@@ -43,6 +44,7 @@ function App() {
             <Route path="/makale/:slug" element={<ArticlePage />} />
             <Route path="/iletisim" element={<IletisimPage />} />
             <Route path="/muvekkil-paneli" element={<MuvekkilPaneliPage />} />
+            <Route path="/logo-showcase" element={<LogoShowcasePage />} />
           </Routes>
         </Suspense>
       </main>
