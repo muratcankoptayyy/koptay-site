@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 import { Menu, X } from "lucide-react"
+import KoptayLogoExecutive from "../assets/logos/KoptayLogo6-Executive"
 
 const Nav = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -50,18 +51,7 @@ const Nav = () => {
             className="flex items-center"
             onClick={closeMenu}
           >
-            <div>
-              <h1 className={`text-2xl md:text-3xl font-light transition-colors duration-300 ${
-                shouldUseDarkMode ? "text-lawDark" : "text-white"
-              }`}>
-                <span className="font-serif">KOPTAY</span>
-              </h1>
-              <p className={`text-sm md:text-base font-light uppercase tracking-wider transition-colors duration-300 ${
-                shouldUseDarkMode ? "text-lawSecondary" : "text-white/80"
-              }`}>
-                Hukuk Bürosu
-              </p>
-            </div>
+            <KoptayLogoExecutive className="h-12 md:h-14 w-auto" />
           </Link>
 
           <nav className="hidden lg:flex space-x-4 xl:space-x-6">
