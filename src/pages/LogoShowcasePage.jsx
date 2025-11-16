@@ -2,6 +2,10 @@ import KoptayLogoClassic from '../assets/logos/KoptayLogo1-Classic'
 import KoptayLogoModern from '../assets/logos/KoptayLogo2-Modern'
 import KoptayLogoPillars from '../assets/logos/KoptayLogo3-Pillars'
 import KoptayLogoElegant from '../assets/logos/KoptayLogo4-Elegant'
+import KoptayLogoPremiumBadge from '../assets/logos/KoptayLogo5-PremiumBadge'
+import KoptayLogoExecutive from '../assets/logos/KoptayLogo6-Executive'
+import KoptayLogoContemporary from '../assets/logos/KoptayLogo7-Contemporary'
+import KoptayLogoPrestige from '../assets/logos/KoptayLogo8-Prestige'
 import SEO from '../components/SEO'
 
 const LogoShowcasePage = () => {
@@ -12,7 +16,8 @@ const LogoShowcasePage = () => {
       component: KoptayLogoClassic,
       description: 'Geleneksel hukuk firması logosu. Adalet terazisi ve kalkan sembolleri ile profesyonel ve güvenilir bir görünüm.',
       features: ['Adalet terazisi', 'Kalkan simgesi', 'Klasik tipografi', 'Kurumsal görünüm'],
-      bestFor: 'Geleneksel ve kurumsal bir imaj arayan firmalar için ideal'
+      bestFor: 'Geleneksel ve kurumsal bir imaj arayan firmalar için ideal',
+      isPremium: false
     },
     {
       id: 2,
@@ -20,7 +25,8 @@ const LogoShowcasePage = () => {
       component: KoptayLogoModern,
       description: 'Geometrik "K" harfi ile modern ve çağdaş bir tasarım. Minimalist yaklaşımla dikkat çekici.',
       features: ['Geometrik K harfi', 'Minimal tasarım', 'Modern çizgiler', 'Akılda kalıcı'],
-      bestFor: 'Modern, dinamik ve yenilikçi bir imaj için uygun'
+      bestFor: 'Modern, dinamik ve yenilikçi bir imaj için uygun',
+      isPremium: false
     },
     {
       id: 3,
@@ -28,7 +34,8 @@ const LogoShowcasePage = () => {
       component: KoptayLogoPillars,
       description: 'Üç Yunan sütunu ile güç, istikrar ve adaleti simgeleyen tasarım. Hukuk ve demokrasinin temel değerlerine gönderme.',
       features: ['Klasik sütunlar', 'Güç simgesi', 'İstikrar vurgusu', 'Tarihsel referans'],
-      bestFor: 'Güçlü, köklü ve istikrarlı bir kurum imajı için'
+      bestFor: 'Güçlü, köklü ve istikrarlı bir kurum imajı için',
+      isPremium: false
     },
     {
       id: 4,
@@ -36,7 +43,44 @@ const LogoShowcasePage = () => {
       component: KoptayLogoElegant,
       description: 'İç içe geçmiş K harfi ve terazi tasarımı ile şık ve sofistike bir görünüm. Hatırlanabilir monogram.',
       features: ['Monogram tasarım', 'Terazi entegrasyonu', 'Altıgen çerçeve', 'Şık ve sofistike'],
-      bestFor: 'Prestijli, lüks ve sofistike bir imaj için'
+      bestFor: 'Prestijli, lüks ve sofistike bir imaj için',
+      isPremium: false
+    },
+    {
+      id: 5,
+      name: 'Premium Rozet',
+      component: KoptayLogoPremiumBadge,
+      description: 'Ultra-profesyonel dairesel rozet tasarımı. Zarafet ve prestiji bir arada sunan, yüksek kalite vurgusu yapan tasarım.',
+      features: ['Dairesel rozet', 'Yasal kitap ikonu', 'Kavisli tipografi', 'Premium detaylar'],
+      bestFor: 'Prestijli, seçkin ve yüksek kalite odaklı kurumlar için',
+      isPremium: true
+    },
+    {
+      id: 6,
+      name: 'Executive Serif',
+      component: KoptayLogoExecutive,
+      description: 'Yüksek seviye yönetici tarzı, tipografi odaklı tasarım. Profesyonellik ve otoritenin en üst düzeyde vurgulandığı logo.',
+      features: ['Premium tipografi', 'Minimalist adalet terazisi', 'Dekoratif köşe detayları', 'Yatay yerleşim'],
+      bestFor: 'Üst düzey, kurumsal ve lider hukuk firmaları için',
+      isPremium: true
+    },
+    {
+      id: 7,
+      name: 'Contemporary Law',
+      component: KoptayLogoContemporary,
+      description: 'Çağdaş ve temiz geometrik tasarım. Modern hukuk pratiğinin dinamizmini yansıtan, keskin çizgilerle tasarlanmış logo.',
+      features: ['Geometrik çerçeve', 'Modern K tasarımı', 'Paragraf simgesi', 'Keskin profesyonellik'],
+      bestFor: 'Modern, yenilikçi ve genç müvekkil kitlesi olan firmalar için',
+      isPremium: true
+    },
+    {
+      id: 8,
+      name: 'Prestige Crest',
+      component: KoptayLogoPrestige,
+      description: 'Lüks arma tasarımı ile aristokrat görünüm. Defne dalları ve kalkan ile yüksek prestij ve güvenilirlik simgesi.',
+      features: ['Heraldik kalkan', 'Defne dalları', 'Şerit banner', 'Arma tarzı'],
+      bestFor: 'En prestijli, köklü ve lüks segment için',
+      isPremium: true
     }
   ]
 
@@ -54,8 +98,11 @@ const LogoShowcasePage = () => {
           <h1 className="text-4xl md:text-5xl font-light mb-4 font-serif">
             Logo Tasarım Seçenekleri
           </h1>
-          <p className="text-xl max-w-3xl mx-auto">
+          <p className="text-xl max-w-3xl mx-auto mb-4">
             Koptay Hukuk Bürosu için hazırlanmış profesyonel logo tasarımları
+          </p>
+          <p className="text-lg max-w-2xl mx-auto opacity-90">
+            4 yeni premium tasarım eklendi! Daha sofistike ve prestijli seçenekler için aşağıya bakın.
           </p>
         </div>
       </section>
@@ -82,9 +129,16 @@ const LogoShowcasePage = () => {
                       <h3 className="text-2xl font-semibold text-lawPrimary font-serif">
                         Seçenek {logo.id}: {logo.name}
                       </h3>
-                      <span className="bg-lawSecondary text-white px-4 py-1 rounded-full text-sm">
-                        SVG
-                      </span>
+                      <div className="flex gap-2">
+                        <span className="bg-lawSecondary text-white px-4 py-1 rounded-full text-sm">
+                          SVG
+                        </span>
+                        {logo.isPremium && (
+                          <span className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                            ⭐ Premium
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
                     <p className="text-gray-700 mb-6 leading-relaxed">
