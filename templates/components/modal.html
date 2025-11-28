@@ -1,0 +1,53 @@
+{# Modal Component - Reusable Modal Template #}
+{# Usage: 
+   {% include 'components/modal.html' with 
+      modal_id='myModal',
+      modal_title='Başlık',
+      modal_body='İçerik',
+      modal_footer_buttons=[
+        {'text': 'Kapat', 'class': 'btn btn-secondary', 'action': '@click="showModal = false"'},
+        {'text': 'Kaydet', 'class': 'btn btn-primary', 'action': '@click="saveData()"'}
+      ]
+   %}
+#}
+
+<div x-show="{{ modal_show_var or 'showModal' }}" 
+     x-cloak
+     class="modal-overlay"
+     @click.self="{{ modal_show_var or 'showModal' }} = false"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0">
+  
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ modal_title or 'Modal Başlık' }}</h3>
+      <button class="modal-close" @click="{{ modal_show_var or 'showModal' }} = false">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      {{ modal_body or caller() if caller else 'Modal içerik buraya gelecek' }}
+    </div>
+    
+    {% if modal_footer_buttons or modal_footer %}
+    <div class="modal-footer">
+      {% if modal_footer %}
+        {{ modal_footer }}
+      {% else %}
+        {% for button in modal_footer_buttons %}
+          <button class="{{ button.class or 'btn btn-primary' }}" {{ button.action or '' }}>
+            {{ button.text }}
+          </button>
+        {% endfor %}
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+[x-cloak] { display: none !important; }
+</style>

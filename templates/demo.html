@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTAP - Ulusal Tevkil Ağı</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/design-system.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* Landing Page Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(to right bottom, rgb(69, 124, 125), rgb(84, 140, 141));
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background Patterns */
+        .bg-patterns {
+            position: fixed;
+            inset: 0;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.1; transform: scale(1); }
+            50% { opacity: 0.15; transform: scale(1.05); }
+        }
+
+        @keyframes slideRight {
+            from { transform: rotate(45deg) translateX(-100%); }
+            to { transform: rotate(45deg) translateX(100%); }
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: var(--space-6);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-logo {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, rgb(69, 124, 125) 0%, rgb(84, 140, 141) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-nav {
+            padding: var(--space-6);
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            color: var(--gray-700);
+            text-decoration: none;
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-2);
+            transition: all 0.2s;
+        }
+
+        .sidebar-nav a:hover {
+            background: rgba(84, 140, 141, 0.1);
+            color: rgb(69, 124, 125);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .menu-toggle {
+            position: fixed;
+            top: var(--space-6);
+            left: var(--space-6);
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: none;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .menu-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .menu-icon {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .menu-icon span {
+            width: 24px;
+            height: 2px;
+            background: rgb(69, 124, 125);
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        /* Content Area */
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+            background: transparent;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding: var(--space-4) 0;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-left: 80px;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding-left: var(--space-4);
+            }
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: var(--space-16) 0;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-xl);
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: var(--space-6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .hero-title {
+            margin-bottom: var(--space-6);
+            color: white;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-description {
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: var(--space-8);
+            font-size: 1.25rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: var(--space-4);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn-white {
+            background: white;
+            color: rgb(69, 124, 125);
+        }
+
+        .btn-white:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            background: var(--gray-50);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-outline:hover {
+            background: white;
+            color: rgb(69, 124, 125);
+        }
+
+        /* Features */
+        .features {
+            padding: var(--space-16) 0;
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: var(--space-12);
+        }
+
+        .section-subtitle {
+            color: rgb(69, 124, 125);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--space-3);
+        }
+
+        .feature-card {
+            text-align: center;
+        }
+
+        .feature-icon {
+            margin: 0 auto var(--space-4);
+            background: linear-gradient(135deg, rgb(69, 124, 125), rgb(84, 140, 141));
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: var(--space-3);
+        }
+
+        .feature-text {
+            color: var(--gray-600);
+            line-height: 1.7;
+        }
+
+        /* Stats */
+        .stats {
+            background: linear-gradient(135deg, rgb(69, 124, 125) 0%, rgb(84, 140, 141) 100%);
+            padding: var(--space-16) 0;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="none" stroke="white" stroke-width="1" opacity="0.1"/></svg>');
+            opacity: 0.3;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-8);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-number {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-label {
+            opacity: 0.9;
+            font-size: 1.125rem;
+        }
+
+        /* CTA */
+        .cta {
+            padding: var(--space-16) 0;
+            background: white;
+            text-align: center;
+        }
+
+        .cta-card {
+            background: linear-gradient(135deg, rgb(69, 124, 125) 0%, rgb(84, 140, 141) 100%);
+            color: white;
+            padding: var(--space-12);
+            border-radius: var(--radius-2xl);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            color: white;
+            margin-bottom: var(--space-4);
+        }
+
+        .cta-text {
+            opacity: 0.95;
+            margin-bottom: var(--space-8);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--gray-900);
+            color: var(--gray-400);
+            padding: var(--space-8) 0;
+            text-align: center;
+        }
+
+        .footer-logo {
+            color: white;
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: var(--space-4);
+        }
+    </style>
+</head>
+<body x-data="{ sidebarOpen: false }">
+    <!-- Animated Background Patterns -->
+    <div class="bg-patterns">
+        <!-- Terazi (Scale) 1 -->
+        <svg class="pattern-scale" style="position: absolute; top: 10%; left: 5%; width: 120px; height: 120px; animation: float 8s ease-in-out infinite;" viewBox="0 0 100 100">
+            <path d="M20,60 L35,40 L50,60 Z M50,60 L65,40 L80,60 Z M50,40 L50,80" fill="none" stroke="white" stroke-width="2"/>
+            <circle cx="35" cy="60" r="3" fill="white"/>
+            <circle cx="65" cy="60" r="3" fill="white"/>
+        </svg>
+
+        <!-- Tokmak (Gavel) 1 -->
+        <svg class="pattern-gavel" style="position: absolute; top: 30%; right: 10%; width: 100px; height: 100px; animation: spin 20s linear infinite;" viewBox="0 0 100 100">
+            <rect x="20" y="40" width="40" height="15" rx="2" fill="none" stroke="white" stroke-width="2"/>
+            <rect x="55" y="50" width="30" height="8" rx="2" fill="none" stroke="white" stroke-width="2"/>
+            <rect x="10" y="70" width="60" height="5" rx="1" fill="none" stroke="white" stroke-width="1.5"/>
+        </svg>
+
+        <!-- Kitap (Book) 1 -->
+        <svg class="pattern-book" style="position: absolute; bottom: 20%; left: 15%; width: 110px; height: 110px; animation: pulse 6s ease-in-out infinite;" viewBox="0 0 100 100">
+            <rect x="25" y="30" width="50" height="45" rx="2" fill="none" stroke="white" stroke-width="2"/>
+            <line x1="25" y1="35" x2="75" y2="35" stroke="white" stroke-width="1.5"/>
+            <line x1="50" y1="30" x2="50" y2="75" stroke="white" stroke-width="1.5"/>
+            <line x1="35" y1="45" x2="45" y2="45" stroke="white" stroke-width="1"/>
+            <line x1="55" y1="45" x2="65" y2="45" stroke="white" stroke-width="1"/>
+        </svg>
+
+        <!-- Paragraf (§) 1 -->
+        <svg class="pattern-paragraph" style="position: absolute; top: 50%; left: 40%; width: 90px; height: 90px; animation: float 10s ease-in-out infinite;" viewBox="0 0 100 100">
+            <text x="50" y="65" font-size="60" fill="none" stroke="white" stroke-width="2" text-anchor="middle" font-family="serif">§</text>
+        </svg>
+
+        <!-- Terazi (Scale) 2 -->
+        <svg class="pattern-scale" style="position: absolute; bottom: 30%; right: 25%; width: 100px; height: 100px; animation: spin 25s linear infinite reverse;" viewBox="0 0 100 100">
+            <path d="M20,60 L35,40 L50,60 Z M50,60 L65,40 L80,60 Z M50,40 L50,80" fill="none" stroke="white" stroke-width="2"/>
+            <circle cx="35" cy="60" r="3" fill="white"/>
+            <circle cx="65" cy="60" r="3" fill="white"/>
+        </svg>
+
+        <!-- Tokmak (Gavel) 2 -->
+        <svg class="pattern-gavel" style="position: absolute; top: 70%; left: 30%; width: 95px; height: 95px; animation: pulse 7s ease-in-out infinite;" viewBox="0 0 100 100">
+            <rect x="20" y="40" width="40" height="15" rx="2" fill="none" stroke="white" stroke-width="2"/>
+            <rect x="55" y="50" width="30" height="8" rx="2" fill="none" stroke="white" stroke-width="2"/>
+            <rect x="10" y="70" width="60" height="5" rx="1" fill="none" stroke="white" stroke-width="1.5"/>
+        </svg>
+
+        <!-- Kitap (Book) 2 -->
+        <svg class="pattern-book" style="position: absolute; top: 15%; right: 35%; width: 105px; height: 105px; animation: float 12s ease-in-out infinite;" viewBox="0 0 100 100">
+            <rect x="25" y="30" width="50" height="45" rx="2" fill="none" stroke="white" stroke-width="2"/>
+            <line x1="25" y1="35" x2="75" y2="35" stroke="white" stroke-width="1.5"/>
+            <line x1="50" y1="30" x2="50" y2="75" stroke="white" stroke-width="1.5"/>
+            <line x1="35" y1="45" x2="45" y2="45" stroke="white" stroke-width="1"/>
+            <line x1="55" y1="45" x2="65" y2="45" stroke="white" stroke-width="1"/>
+        </svg>
+
+        <!-- Paragraf (§) 2 -->
+        <svg class="pattern-paragraph" style="position: absolute; bottom: 40%; left: 60%; width: 85px; height: 85px; animation: spin 30s linear infinite;" viewBox="0 0 100 100">
+            <text x="50" y="65" font-size="60" fill="none" stroke="white" stroke-width="2" text-anchor="middle" font-family="serif">§</text>
+        </svg>
+
+        <!-- Belge (Document) -->
+        <svg class="pattern-document" style="position: absolute; top: 40%; right: 15%; width: 95px; height: 95px; animation: float 9s ease-in-out infinite;" viewBox="0 0 100 100">
+            <rect x="30" y="25" width="40" height="50" rx="2" fill="none" stroke="white" stroke-width="2"/>
+            <line x1="38" y1="35" x2="62" y2="35" stroke="white" stroke-width="1.5"/>
+            <line x1="38" y1="45" x2="62" y2="45" stroke="white" stroke-width="1.5"/>
+            <line x1="38" y1="55" x2="62" y2="55" stroke="white" stroke-width="1.5"/>
+            <line x1="38" y1="65" x2="55" y2="65" stroke="white" stroke-width="1.5"/>
+        </svg>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" :class="{ 'active': sidebarOpen }" @click="sidebarOpen = false"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" :class="{ 'open': sidebarOpen }">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">UTAP</div>
+            <button @click="sidebarOpen = false" style="background: none; border: none; cursor: pointer; color: var(--gray-600); font-size: 1.5rem;">&times;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#anasayfa">
+                <span>🏠</span>
+                <span>Ana Sayfa</span>
+            </a>
+            <a href="#ozellikler">
+                <span>⚙️</span>
+                <span>Özellikler</span>
+            </a>
+            <a href="#hakkimizda">
+                <span>ℹ️</span>
+                <span>Hakkımızda</span>
+            </a>
+            <a href="#iletisim">
+                <span>📧</span>
+                <span>İletişim</span>
+            </a>
+            <a href="#giris">
+                <span>🔐</span>
+                <span>Giriş Yap</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Menu Toggle Button -->
+    <button class="menu-toggle" @click="sidebarOpen = !sidebarOpen">
+        <div class="menu-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        🚀 Türkiye'nin İlk Ulusal Tevkil Ağı
+                    </div>
+                    <h1 class="heading-xl hero-title">
+                        Avukatlık Hizmetlerinde Yeni Dönem
+                    </h1>
+                    <p class="text-lg hero-description">
+                        Müvekkillerinizi güvenle başka şehirlerdeki meslektaşlarınıza devredin. 
+                        Profesyonel ağınızı genişletin, işbirliği yapın.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="#" class="btn btn-white btn-lg">Hemen Başla</a>
+                        <a href="#" class="btn btn-outline btn-lg">Nasıl Çalışır?</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features" id="ozellikler">
+            <div class="container">
+                <div class="section-title">
+                    <div class="section-subtitle">ÖZELLİKLER</div>
+                    <h2 class="heading-lg">Neden UTAP?</h2>
+                </div>
+                <div class="grid grid-cols-3">
+                    <div class="card feature-card">
+                        <div class="icon feature-icon">⚖️</div>
+                        <h3 class="feature-title">Güvenli Tevkil</h3>
+                        <p class="feature-text">
+                            Barolarımız aracılığıyla doğrulanmış avukatlarla güvenle çalışın
+                        </p>
+                    </div>
+                    <div class="card feature-card">
+                        <div class="icon feature-icon">🌍</div>
+                        <h3 class="feature-title">Geniş Ağ</h3>
+                        <p class="feature-text">
+                            Türkiye genelindeki meslektaşlarınızla hızlıca iletişime geçin
+                        </p>
+                    </div>
+                    <div class="card feature-card">
+                        <div class="icon feature-icon">📱</div>
+                        <h3 class="feature-title">Kolay Kullanım</h3>
+                        <p class="feature-text">
+                            Basit ve kullanıcı dostu arayüz ile hızlı işlem yapın
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats -->
+        <section class="stats">
+            <div class="container">
+                <div class="stats-grid">
+                    <div>
+                        <div class="stat-number">1,500+</div>
+                        <div class="stat-label">Kayıtlı Avukat</div>
+                    </div>
+                    <div>
+                        <div class="stat-number">81</div>
+                        <div class="stat-label">İl Kapsamı</div>
+                    </div>
+                    <div>
+                        <div class="stat-number">5,000+</div>
+                        <div class="stat-label">Başarılı Tevkil</div>
+                    </div>
+                    <div>
+                        <div class="stat-number">%98</div>
+                        <div class="stat-label">Memnuniyet Oranı</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta">
+            <div class="container">
+                <div class="cta-card">
+                    <h2 class="heading-lg cta-title">Hemen Başlayın</h2>
+                    <p class="text-lg cta-text">
+                        Profesyonel avukat ağımıza katılın ve hizmetlerinizi genişletin
+                    </p>
+                    <a href="#" class="btn btn-white btn-lg">Ücretsiz Kayıt Ol</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-logo">UTAP</div>
+                <p>© 2025 UTAP - Ulusal Tevkil Ağı Projesi. Tüm hakları saklıdır.</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

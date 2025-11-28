@@ -1,0 +1,273 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Dashboard - {{ config.SITE_NAME or 'UTAP' }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">📋</div>
+            <div class="stat-content">
+                <h3>{{ stats.active_posts }}</h3>
+                <p>Aktif İlanım</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));">📨</div>
+            <div class="stat-content">
+                <h3>{{ stats.applications }}</h3>
+                <p>Gelen Başvuru</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, var(--accent), #F97316);">✉️</div>
+            <div class="stat-content">
+                <h3>{{ stats.messages }}</h3>
+                <p>Yeni Mesaj</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, var(--secondary-light), var(--secondary));">⭐</div>
+            <div class="stat-content">
+                <h3>{{ "%.1f"|format(stats.rating) }}</h3>
+                <p>Ortalama Puan</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-main">
+            <div class="quick-actions">
+                <a href="{{ url_for('posts.create') }}" class="action-btn action-primary">
+                    <span class="action-icon">➕</span>
+                    <span>Yeni İlan Oluştur</span>
+                </a>
+                <a href="{{ url_for('posts.list') }}" class="action-btn action-secondary">
+                    <span class="action-icon">🔍</span>
+                    <span>İlanları Keşfet</span>
+                </a>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h2>Son İlanlarım</h2>
+                    <a href="{{ url_for('posts.my_posts') }}" class="view-all">Tümü →</a>
+                </div>
+                {% if recent_posts %}
+                    <div class="recent-list">
+                        {% for post in recent_posts %}
+                        <div class="recent-item">
+                            <div class="recent-info">
+                                <h4><a href="{{ url_for('posts.detail', id=post.id) }}">{{ post.title }}</a></h4>
+                                <p class="recent-meta">
+                                    <span class="meta-badge">{{ post.get_category_display() }}</span>
+                                    <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                                    <span>{{ post.applications.count() }} başvuru</span>
+                                </p>
+                            </div>
+                            <span class="status-badge {% if post.is_active %}active{% else %}inactive{% endif %}">
+                                {% if post.is_active %}✓ Aktif{% else %}○ Pasif{% endif %}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <h3>Henüz İlan Yok</h3>
+                        <p>İlk ilanınızı oluşturarak başlayın</p>
+                        <a href="{{ url_for('posts.create') }}" class="btn-create">İlan Oluştur</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h2>Son Başvurular</h2>
+                    <a href="{{ url_for('applications.list') }}" class="view-all">Tümü →</a>
+                </div>
+                {% if recent_applications %}
+                    <div class="recent-list">
+                        {% for app in recent_applications %}
+                        <div class="recent-item">
+                            <div class="recent-info">
+                                <h4>{{ app.post.title }}</h4>
+                                <p class="recent-meta">
+                                    <span>{{ app.applicant.masked_full_name }}</span>
+                                    <span>{{ app.created_at.strftime('%d.%m.%Y') }}</span>
+                                </p>
+                            </div>
+                            <span class="status-badge-{{ app.status }}">
+                                {% if app.status == 'pending' %}⏳ Beklemede
+                                {% elif app.status == 'accepted' %}✅ Kabul
+                                {% elif app.status == 'rejected' %}❌ Red
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">📨</div>
+                        <h3>Henüz Başvuru Yok</h3>
+                        <p>İlanlarınıza gelen başvurular burada görünecek</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="dashboard-sidebar">
+            <div class="profile-summary">
+                <div class="profile-avatar">
+                    {{ current_user.full_name[0] if current_user and current_user.full_name else 'U' }}
+                </div>
+                <h3>{{ current_user.full_name if current_user else 'Kullanıcı' }}</h3>
+                <p>{{ current_user.bar_association if current_user and current_user.bar_association else 'Avukat' }}</p>
+                <a href="{{ url_for('profile.my_profile') }}" class="profile-link">Profili Görüntüle →</a>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h2>Bildirimler</h2>
+                    <span class="badge-count">0</span>
+                </div>
+                <div class="empty-state small">
+                    <div class="empty-icon small">🔔</div>
+                    <p>Yeni bildirim yok</p>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h2>Mesajlar</h2>
+                    <a href="{{ url_for('messages.list') }}" class="view-all">Tümü →</a>
+                </div>
+                <div class="empty-state small">
+                    <div class="empty-icon small">💬</div>
+                    <p>Henüz mesaj yok</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-container {max-width:1400px;margin:0 auto;padding:1.5rem}
+.stats-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.25rem;margin-bottom:2rem}
+.stat-card {background:#fafbfc;border-radius:16px;padding:1.5rem;display:flex;align-items:center;gap:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.06);transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s}
+.stat-card:hover {transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.06);border-color:rgba(48,105,108,0.15)}
+.stat-icon {width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.75rem;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.stat-content h3 {font-size:2rem;font-weight:800;color:var(--gray-900);margin:0 0 0.25rem 0}
+.stat-content p {font-size:0.9rem;color:var(--gray-600);margin:0}
+.dashboard-grid {display:grid;grid-template-columns:1fr;gap:1.5rem}
+@media (min-width:1024px) {.dashboard-grid {grid-template-columns:2fr 1fr;gap:2rem}}
+.quick-actions {display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.action-btn {display:flex;align-items:center;justify-content:center;gap:0.75rem;padding:1.25rem 1.5rem;border-radius:14px;font-weight:600;font-size:0.95rem;text-decoration:none;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.action-primary {background:linear-gradient(135deg,rgb(48,105,108),rgb(58,118,121));color:#fff}
+.action-primary:hover {transform:translateY(-2px);box-shadow:0 8px 20px rgba(48,105,108,0.35)}
+.action-secondary {background:#fafbfc;color:rgb(48,105,108);border:2px solid rgba(48,105,108,0.2)}
+.action-secondary:hover {background:rgb(48,105,108);color:#fff;transform:translateY(-2px);border-color:rgb(48,105,108)}
+.action-icon {font-size:1.25rem}
+.content-card {background:#f8f9fa;border-radius:16px;padding:1.75rem;margin-bottom:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.05)}
+.card-header {display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.card-header h2 {font-size:1.25rem;font-weight:700;color:var(--gray-900);margin:0}
+.view-all {color:rgb(48,105,108);text-decoration:none;font-weight:600;font-size:0.9rem;transition:color 0.2s}
+.view-all:hover {color:rgb(58,118,121)}
+.badge-count {background:linear-gradient(135deg,#EF4444,#DC2626);color:#fff;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:600;box-shadow:0 2px 6px rgba(239,68,68,0.3)}
+.empty-state {text-align:center;padding:3rem 1.5rem}
+.empty-state.small {padding:2rem 1rem}
+.empty-icon {font-size:4rem;margin-bottom:1rem;opacity:0.5}
+.empty-icon.small {font-size:2.5rem;margin-bottom:0.75rem}
+.empty-state h3 {font-size:1.25rem;font-weight:700;color:var(--gray-900);margin:0 0 0.5rem 0}
+.empty-state p {color:var(--gray-600);font-size:0.95rem;margin:0 0 1.5rem 0}
+.btn-create {display:inline-block;background:linear-gradient(135deg,rgb(48,105,108),rgb(58,118,121));color:#fff;padding:0.75rem 2rem;border-radius:10px;font-weight:600;text-decoration:none;transition:all 0.2s;box-shadow:0 2px 8px rgba(48,105,108,0.2)}
+.btn-create:hover {transform:translateY(-2px);box-shadow:0 8px 20px rgba(48,105,108,0.35)}
+.profile-summary {background:linear-gradient(135deg,rgb(48,105,108),rgb(58,118,121));border-radius:16px;padding:2rem;text-align:center;color:#fff;margin-bottom:1.5rem;box-shadow:0 4px 16px rgba(48,105,108,0.35),0 2px 6px rgba(48,105,108,0.2)}
+.profile-avatar {width:80px;height:80px;border-radius:50%;background:#fff;color:rgb(48,105,108);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;margin:0 auto 1rem auto;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.profile-summary h3 {font-size:1.35rem;font-weight:700;margin:0 0 0.5rem 0}
+.profile-summary p {font-size:0.95rem;opacity:0.9;margin:0 0 1.5rem 0}
+.profile-link {display:inline-block;background:#fff;color:rgb(48,105,108);padding:0.75rem 1.5rem;border-radius:10px;font-weight:600;text-decoration:none;font-size:0.9rem;transition:all 0.2s;box-shadow:0 2px 6px rgba(0,0,0,0.1)}
+.profile-link:hover {transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.recent-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s;
+}
+
+.recent-item:hover {
+    border-color: rgba(48,105,108,0.2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.recent-info {
+    flex: 1;
+}
+
+.recent-info h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 0.25rem 0;
+}
+
+.recent-info h4 a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.recent-info h4 a:hover {
+    color: rgb(48,105,108);
+}
+
+.recent-meta {
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    margin: 0;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.status-badge-pending {
+    padding: 0.25rem 0.75rem;
+    background: #FEF3C7;
+    color: #92400E;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge-accepted {
+    padding: 0.25rem 0.75rem;
+    background: #D1FAE5;
+    color: #065F46;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge-rejected {
+    padding: 0.25rem 0.75rem;
+    background: #FEE2E2;
+    color: #991B1B;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+@media (max-width:640px) {.dashboard-container {padding:1rem}.stats-grid {grid-template-columns:1fr;gap:1rem}.stat-card {padding:1.25rem}.quick-actions {grid-template-columns:1fr}}
+</style>
+{% endblock %}

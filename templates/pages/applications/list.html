@@ -1,0 +1,571 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Başvurularım - Tevkil{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+.applications-page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="applications-page-container">
+    <!-- Sayfa Başlığı -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Başvurular</h1>
+            <p class="page-subtitle">Gönderdiğiniz ve aldığınız başvuruları yönetin</p>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tabs" x-data="{ activeTab: 'received' }">
+        <div class="tab-buttons">
+            <button 
+                @click="activeTab = 'received'" 
+                :class="{ 'active': activeTab === 'received' }"
+                class="tab-btn"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+                    <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                </svg>
+                Gelen Başvurular
+                <span class="badge">{{ received_applications|length }}</span>
+            </button>
+            <button 
+                @click="activeTab = 'sent'" 
+                :class="{ 'active': activeTab === 'sent' }"
+                class="tab-btn"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                Gönderilen Başvurular
+                <span class="badge">{{ sent_applications|length }}</span>
+            </button>
+        </div>
+
+        <!-- Gelen Başvurular -->
+        <div x-show="activeTab === 'received'" class="tab-content">
+            {% if received_applications %}
+                <div class="applications-list">
+                    {% for app in received_applications %}
+                    <div class="application-card status-{{ app.status }} hover-lift fade-in" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                        <!-- Başvuru Başlığı -->
+                        <div class="app-header">
+                            <div class="app-info">
+                                <h3 class="app-title">
+                                    <a href="{{ url_for('posts.detail', id=app.post.id) }}">{{ app.post.title }}</a>
+                                </h3>
+                                <div class="app-meta">
+                                    <span class="meta-badge">{{ app.post.get_category_display() }}</span>
+                                    <span class="meta-text">{{ app.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                </div>
+                            </div>
+                            <div class="app-status status-badge-{{ app.status }}">
+                                {% if app.status == 'pending' %}⏳ Beklemede
+                                {% elif app.status == 'accepted' %}✅ Kabul Edildi
+                                {% elif app.status == 'rejected' %}❌ Reddedildi
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Başvuru Sahibi -->
+                        <div class="applicant-info">
+                            <div class="applicant-avatar">
+                                {{ app.applicant.first_name[0] }}{{ app.applicant.last_name[0] }}
+                            </div>
+                            <div class="applicant-details">
+                                <div class="applicant-name">{{ app.applicant.get_masked_name() }}</div>
+                                <div class="applicant-specs">
+                                    {{ app.applicant.law_specialization_display() }} • 
+                                    {{ app.applicant.experience_years }} • 
+                                    {{ app.applicant.bar_association }}
+                                    {% if app.applicant.rating_average %}
+                                    <span class="rating">⭐ {{ app.applicant.rating_average }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Başvuru Mektubu -->
+                        {% if app.cover_letter %}
+                        <div class="cover-letter">
+                            <strong>Başvuru Mektubu:</strong>
+                            <p>{{ app.cover_letter }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Aksiyonlar -->
+                        <div class="app-actions">
+                            {% if app.status == 'pending' %}
+                                <form method="POST" action="{{ url_for('applications.accept', id=app.id) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        Kabul Et
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('applications.reject', id=app.id) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                        Reddet
+                                    </button>
+                                </form>
+                                <a href="{{ url_for('profile.view', user_id=app.applicant.id) }}" class="btn btn-ghost btn-sm">
+                                    Profili Görüntüle
+                                </a>
+                            {% elif app.status == 'accepted' %}
+                                <a href="{{ url_for('messages.start_conversation', user_id=app.applicant.id) }}" class="btn btn-primary btn-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                    Mesaj Gönder
+                                </a>
+                                <a href="{{ url_for('profile.view', user_id=app.applicant.id) }}" class="btn btn-ghost btn-sm">
+                                    Profili Görüntüle
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Başvuru reddedildi</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+                        <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                    </svg>
+                    <h3>Henüz Başvuru Yok</h3>
+                    <p>İlanlarınıza henüz başvuru yapılmadı. İlanlarınızı paylaşmaya devam edin.</p>
+                    <a href="{{ url_for('posts.create') }}" class="btn btn-primary">Yeni İlan Oluştur</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Gönderilen Başvurular -->
+        <div x-show="activeTab === 'sent'" class="tab-content">
+            {% if sent_applications %}
+                <div class="applications-list">
+                    {% for app in sent_applications %}
+                    <div class="application-card status-{{ app.status }} hover-lift fade-in" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                        <!-- Başvuru Başlığı -->
+                        <div class="app-header">
+                            <div class="app-info">
+                                <h3 class="app-title">
+                                    <a href="{{ url_for('posts.detail', id=app.post.id) }}">{{ app.post.title }}</a>
+                                </h3>
+                                <div class="app-meta">
+                                    <span class="meta-badge">{{ app.post.get_category_display() }}</span>
+                                    <span class="meta-text">Başvuru: {{ app.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                </div>
+                            </div>
+                            <div class="app-status status-badge-{{ app.status }}">
+                                {% if app.status == 'pending' %}⏳ Beklemede
+                                {% elif app.status == 'accepted' %}✅ Kabul Edildi
+                                {% elif app.status == 'rejected' %}❌ Reddedildi
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- İlan Sahibi -->
+                        <div class="applicant-info">
+                            <div class="applicant-avatar">
+                                {{ app.post.user.first_name[0] }}{{ app.post.user.last_name[0] }}
+                            </div>
+                            <div class="applicant-details">
+                                <div class="applicant-name">{{ app.post.user.get_masked_name() }}</div>
+                                <div class="applicant-specs">
+                                    {{ app.post.user.law_specialization_display() }} • 
+                                    {{ app.post.user.experience_years }} • 
+                                    {{ app.post.user.bar_association }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gönderdiğiniz Mesaj -->
+                        {% if app.cover_letter %}
+                        <div class="cover-letter">
+                            <strong>Gönderdiğiniz Mesaj:</strong>
+                            <p>{{ app.cover_letter }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Aksiyonlar -->
+                        <div class="app-actions">
+                            {% if app.status == 'pending' %}
+                                <form method="POST" action="{{ url_for('applications.cancel', id=app.id) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Başvurunuzu iptal etmek istediğinize emin misiniz?')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                        Başvuruyu İptal Et
+                                    </button>
+                                </form>
+                                <a href="{{ url_for('posts.detail', id=app.post.id) }}" class="btn btn-ghost btn-sm">
+                                    İlanı Görüntüle
+                                </a>
+                            {% elif app.status == 'accepted' %}
+                                <a href="{{ url_for('messages.start_conversation', user_id=app.post.user.id) }}" class="btn btn-primary btn-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                    Mesaj Gönder
+                                </a>
+                                <span class="success-text">🎉 Tebrikler! Başvurunuz kabul edildi.</span>
+                            {% else %}
+                                <span class="text-muted">Başvurunuz reddedildi</span>
+                                <a href="{{ url_for('posts.list') }}" class="btn btn-ghost btn-sm">Diğer İlanlara Bak</a>
+                            {% endif %}
+                        </div>
+
+                        {% if app.responded_at %}
+                        <div class="response-time">
+                            Yanıtlandı: {{ app.responded_at.strftime('%d.%m.%Y %H:%M') }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    <h3>Henüz Başvuru Yapmadınız</h3>
+                    <p>İlanlara göz atın ve uygun olanları için başvuru yapın.</p>
+                    <a href="{{ url_for('posts.list') }}" class="btn btn-primary">İlanları İncele</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Tabs */
+.tabs {
+    margin-top: 1.5rem;
+    max-width: 100%;
+}
+
+.tab-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.tab-btn::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.tab-btn:hover {
+    color: var(--primary);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+}
+
+.tab-btn.active::before {
+    transform: scaleX(1);
+}
+
+.tab-btn .badge {
+    background: var(--primary);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Applications List */
+.applications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.application-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-left: 4px solid var(--border-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.application-card:hover {
+    box-shadow: 0 8px 24px rgba(48, 105, 108, 0.12);
+}
+
+.application-card.status-pending {
+    border-left-color: var(--secondary);
+    background: linear-gradient(to right, rgba(245, 158, 11, 0.02), white);
+}
+
+.application-card.status-accepted {
+    border-left-color: #10b981;
+    background: linear-gradient(to right, rgba(16, 185, 129, 0.02), white);
+}
+
+.application-card.status-rejected {
+    border-left-color: #ef4444;
+    background: linear-gradient(to right, rgba(239, 68, 68, 0.02), white);
+}
+
+/* Application Header */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+.app-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.app-title a {
+    color: var(--text-dark);
+    text-decoration: none;
+}
+
+.app-title a:hover {
+    color: var(--primary);
+}
+
+.app-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.meta-badge {
+    padding: 0.25rem 0.75rem;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.meta-text {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.app-status {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge-accepted {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Applicant Info */
+.applicant-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-light);
+    border-radius: 8px;
+}
+
+.applicant-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.applicant-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+}
+
+.applicant-specs {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.rating {
+    font-weight: 600;
+    color: #f59e0b;
+}
+
+/* Cover Letter */
+.cover-letter {
+    background: var(--bg-light);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.cover-letter strong {
+    display: block;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.cover-letter p {
+    margin: 0;
+    color: var(--text-dark);
+    line-height: 1.6;
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+}
+
+/* Actions */
+.app-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.response-time {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.success-text {
+    color: #10b981;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+}
+
+.empty-state svg {
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .app-header {
+        flex-direction: column;
+    }
+    
+    .tab-buttons {
+        flex-direction: column;
+    }
+    
+    .tab-btn {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

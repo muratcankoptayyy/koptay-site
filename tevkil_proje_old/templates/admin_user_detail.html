@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.full_name }} - Kullanıcı Detayı{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-background-dark py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Breadcrumb ve Geri Dön -->
+        <div class="mb-6">
+            <a href="{{ url_for('admin_users') }}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-2">
+                <span class="material-symbols-outlined">arrow_back</span>
+                Kullanıcı Listesine Dön
+            </a>
+        </div>
+
+        <!-- Kullanıcı Profil Kartı -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-6 mb-6">
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Avatar ve Temel Bilgiler -->
+                <div class="flex-shrink-0">
+                    {% if user.avatar_url %}
+                    <img class="h-32 w-32 rounded-full" src="{{ user.avatar_url }}" alt="{{ user.full_name }}" loading="eager" width="128" height="128">
+                    {% else %}
+                    <div class="h-32 w-32 rounded-full bg-blue-600 flex items-center justify-center">
+                        <span class="text-white font-bold text-4xl">{{ user.full_name[0] }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Kullanıcı Bilgileri -->
+                <div class="flex-1">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ user.full_name }}</h1>
+                            <p class="text-gray-600 dark:text-gray-400 mt-1">ID: {{ user.id }}</p>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            {% if user.is_admin %}
+                            <span class="inline-flex items-center px-3 py-1 text-sm font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                                <span class="material-symbols-outlined text-sm mr-1">admin_panel_settings</span>
+                                Admin
+                            </span>
+                            {% endif %}
+                            {% if user.verified %}
+                            <span class="inline-flex items-center px-3 py-1 text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                <span class="material-symbols-outlined text-sm mr-1">verified</span>
+                                Doğrulanmış
+                            </span>
+                            {% endif %}
+                            {% if user.is_active %}
+                            <span class="inline-flex items-center px-3 py-1 text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                <span class="material-symbols-outlined text-sm mr-1">check_circle</span>
+                                Aktif
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-3 py-1 text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                <span class="material-symbols-outlined text-sm mr-1">cancel</span>
+                                Pasif
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Email</p>
+                            <p class="text-gray-900 dark:text-white font-medium">{{ user.email }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Telefon</p>
+                            <p class="text-gray-900 dark:text-white font-medium">{{ user.phone or '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Şehir</p>
+                            <p class="text-gray-900 dark:text-white font-medium">{{ user.city or '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">İlçe</p>
+                            <p class="text-gray-900 dark:text-white font-medium">{{ user.district or '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Baro</p>
+                            <p class="text-gray-900 dark:text-white font-medium">{{ user.bar_association or '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Sicil No</p>
+                            <p class="text-gray-900 dark:text-white font-medium">{{ user.bar_registration_number or '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Avukat Tipi</p>
+                            <p class="text-gray-900 dark:text-white font-medium">{{ user.lawyer_type or 'avukat' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Kayıt Tarihi</p>
+                            <p class="text-gray-900 dark:text-white font-medium">{{ user.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                        </div>
+                    </div>
+
+                    {% if user.bio %}
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Biyografi</p>
+                        <p class="text-gray-900 dark:text-white mt-1">{{ user.bio }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Yönetim Butonları -->
+            <div class="flex flex-wrap gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <form method="POST" action="{{ url_for('admin_toggle_user_status', user_id=user.id) }}" class="inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if user.is_active %}
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 flex items-center gap-2 transition-colors"
+                            data-role="confirm-submit"
+                            data-confirm-message="{{ user.full_name }} kullanıcısını pasif duruma getirmek istediğinize emin misiniz?">
+                        <span class="material-symbols-outlined">block</span>
+                        Pasif Yap
+                    </button>
+                    {% else %}
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 flex items-center gap-2 transition-colors"
+                            data-role="confirm-submit"
+                            data-confirm-message="{{ user.full_name }} kullanıcısını aktif duruma getirmek istediğinize emin misiniz?">
+                        <span class="material-symbols-outlined">check_circle</span>
+                        Aktif Yap
+                    </button>
+                    {% endif %}
+                </form>
+
+                <form method="POST" action="{{ url_for('admin_verify_user', user_id=user.id) }}" class="inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if user.verified %}
+                    <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 flex items-center gap-2 transition-colors"
+                            data-role="confirm-submit"
+                            data-confirm-message="{{ user.full_name }} kullanıcısının doğrulamasını kaldırmak istediğinize emin misiniz?">
+                        <span class="material-symbols-outlined">remove_moderator</span>
+                        Doğrulamayı Kaldır
+                    </button>
+                    {% else %}
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 flex items-center gap-2 transition-colors"
+                            data-role="confirm-submit"
+                            data-confirm-message="{{ user.full_name }} kullanıcısını doğrulamak istediğinize emin misiniz?">
+                        <span class="material-symbols-outlined">verified</span>
+                        Doğrula
+                    </button>
+                    {% endif %}
+                </form>
+
+                <a href="{{ url_for('profile', user_id=user.id) }}" target="_blank"
+                   class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 flex items-center gap-2 transition-colors">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                    Profili Görüntüle
+                </a>
+            </div>
+        </div>
+
+        <!-- İstatistikler -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">Ortalama Puan</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                            {{ "%.1f"|format(user.rating_average) }}
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ user.rating_count }} değerlendirme</p>
+                    </div>
+                    <span class="material-symbols-outlined text-yellow-500 text-4xl">star</span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">Toplam Görev</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ user.total_jobs }}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ user.completed_jobs }} tamamlandı</p>
+                    </div>
+                    <span class="material-symbols-outlined text-blue-600 text-4xl">work</span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">İlan Sayısı</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ user.total_posts_created }}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Oluşturulan</p>
+                    </div>
+                    <span class="material-symbols-outlined text-green-600 text-4xl">post_add</span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 border border-gray-300 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">Başarı Oranı</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                            {{ "%.0f"|format(user.success_rate) }}%
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Tamamlama</p>
+                    </div>
+                    <span class="material-symbols-outlined text-purple-600 text-4xl">trending_up</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+            <div class="border-b border-gray-200 dark:border-gray-700">
+                <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs" role="tablist">
+                    <button id="tab-posts"
+                            class="tab-button border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                            data-role="admin-tab"
+                            data-target="posts"
+                            data-default="true"
+                            role="tab"
+                            aria-controls="content-posts"
+                            aria-selected="true">
+                        İlanlar ({{ posts|length }})
+                    </button>
+                    <button id="tab-applications-sent"
+                            class="tab-button border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                            data-role="admin-tab"
+                            data-target="applications-sent"
+                            role="tab"
+                            aria-controls="content-applications-sent"
+                            aria-selected="false">
+                        Gönderilen Başvurular ({{ applications_sent|length }})
+                    </button>
+                    <button id="tab-applications-received"
+                            class="tab-button border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                            data-role="admin-tab"
+                            data-target="applications-received"
+                            role="tab"
+                            aria-controls="content-applications-received"
+                            aria-selected="false">
+                        Alınan Başvurular ({{ applications_received|length }})
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab İçerikleri -->
+            <div class="p-6">
+                <!-- İlanlar Tab -->
+                <div id="content-posts" class="tab-content" data-role="admin-tab-panel" data-tab="posts" role="tabpanel" aria-labelledby="tab-posts">
+                    {% if posts %}
+                    <div class="space-y-4">
+                        {% for post in posts %}
+                        <div class="border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ post.title }}</h3>
+                                    <p class="text-gray-600 dark:text-gray-400 mt-1">{{ post.description[:100] }}...</p>
+                                    <div class="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                        <span>{{ post.city }}</span>
+                                        <span>•</span>
+                                        <span>{{ post.category }}</span>
+                                        <span>•</span>
+                                        <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-2">
+                                    <span class="inline-flex items-center px-3 py-1 text-xs font-medium 
+                                        {% if post.status == 'active' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                        {% elif post.status == 'completed' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                        {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200{% endif %}">
+                                        {{ post.status }}
+                                    </span>
+                                    <a href="{{ url_for('post_detail', post_id=post.id) }}" target="_blank"
+                                       class="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm">
+                                        Görüntüle →
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 dark:text-gray-400 text-center py-8">Henüz ilan oluşturulmamış.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Gönderilen Başvurular Tab -->
+                <div id="content-applications-sent" class="tab-content hidden" data-role="admin-tab-panel" data-tab="applications-sent" role="tabpanel" aria-labelledby="tab-applications-sent" aria-hidden="true">
+                    {% if applications_sent %}
+                    <div class="space-y-4">
+                        {% for app in applications_sent %}
+                        <div class="border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ app.post.title }}</h3>
+                                    <p class="text-gray-600 dark:text-gray-400 mt-1">{{ app.message[:100] }}...</p>
+                                    <div class="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                        <span>{{ app.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                    </div>
+                                </div>
+                                <span class="inline-flex items-center px-3 py-1 text-xs font-medium
+                                    {% if app.status == 'pending' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                    {% elif app.status == 'accepted' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                    {% elif app.status == 'rejected' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                                    {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200{% endif %}">
+                                    {{ app.status }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 dark:text-gray-400 text-center py-8">Henüz başvuru gönderilmemiş.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Alınan Başvurular Tab -->
+                <div id="content-applications-received" class="tab-content hidden" data-role="admin-tab-panel" data-tab="applications-received" role="tabpanel" aria-labelledby="tab-applications-received" aria-hidden="true">
+                    {% if applications_received %}
+                    <div class="space-y-4">
+                        {% for app in applications_received %}
+                        <div class="border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                        {{ app.applicant.full_name }} - {{ app.post.title }}
+                                    </h3>
+                                    <p class="text-gray-600 dark:text-gray-400 mt-1">{{ app.message[:100] }}...</p>
+                                    <div class="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                        <span>{{ app.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                    </div>
+                                </div>
+                                <span class="inline-flex items-center px-3 py-1 text-xs font-medium
+                                    {% if app.status == 'pending' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                    {% elif app.status == 'accepted' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                    {% elif app.status == 'rejected' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                                    {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200{% endif %}">
+                                    {{ app.status }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 dark:text-gray-400 text-center py-8">Henüz başvuru alınmamış.</p>
+                    {% endif %}
+                </div>
+                </div>
+                </div>
+                </div>
+                </div>
+                {% endblock %}
+
+                {% block scripts %}
+                <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const tabs = document.querySelectorAll('[data-role="admin-tab"]');
+                    const panels = document.querySelectorAll('[data-role="admin-tab-panel"]');
+
+                    const activateAdminDetailTab = (targetKey) => {
+                        tabs.forEach((tab) => {
+                            const isActive = tab.dataset.target === targetKey;
+                            tab.classList.toggle('border-blue-500', isActive);
+                            tab.classList.toggle('text-blue-600', isActive);
+                            tab.classList.toggle('dark:text-blue-400', isActive);
+                            tab.classList.toggle('border-transparent', !isActive);
+                            tab.classList.toggle('text-gray-500', !isActive);
+                            tab.classList.toggle('dark:text-gray-400', !isActive);
+                            tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                            tab.setAttribute('tabindex', isActive ? '0' : '-1');
+                        });
+
+                        panels.forEach((panel) => {
+                            const matches = panel.dataset.tab === targetKey;
+                            panel.classList.toggle('hidden', !matches);
+                            panel.setAttribute('aria-hidden', matches ? 'false' : 'true');
+                        });
+                    };
+
+                    tabs.forEach((tab) => {
+                        if (tab.dataset.listenerAttached === 'true') {
+                            return;
+                        }
+
+                        tab.addEventListener('click', () => {
+                            activateAdminDetailTab(tab.dataset.target || 'posts');
+                        });
+
+                        tab.dataset.listenerAttached = 'true';
+                    });
+
+                    document.querySelectorAll('[data-role="confirm-submit"]').forEach((button) => {
+                        if (button.dataset.confirmListenerAttached === 'true') {
+                            return;
+                        }
+
+                        button.addEventListener('click', (event) => {
+                            const message = button.dataset.confirmMessage;
+                            if (message && !window.confirm(message)) {
+                                event.preventDefault();
+                                event.stopImmediatePropagation();
+                            }
+                        });
+
+                        button.dataset.confirmListenerAttached = 'true';
+                    });
+
+                    const defaultTab = document.querySelector('[data-role="admin-tab"][data-default="true"]');
+                    if (defaultTab) {
+                        activateAdminDetailTab(defaultTab.dataset.target || 'posts');
+                    }
+                });
+                </script>
+                {% endblock %}

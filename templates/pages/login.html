@@ -1,0 +1,80 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Giriş Yap - {{ config.SITE_NAME or 'UTAP' }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-4" style="padding-top: 6rem; padding-bottom: 6rem;">
+    <div class="max-w-md w-full">
+        <div class="card" style="background: white; padding: var(--space-8); border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl);">
+            {# Header #}
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style="background: linear-gradient(135deg, rgb(69, 124, 125), rgb(84, 140, 141));">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" x2="3" y1="12" y2="12"></line>
+                    </svg>
+                </div>
+                <h1 class="heading-lg" style="margin-bottom: var(--space-2);">Hoş Geldiniz</h1>
+                <p style="color: var(--gray-600);">Hesabınıza giriş yapın</p>
+            </div>
+
+            {# Login Form #}
+            <form method="POST" action="{{ url_for('auth.login') if 'auth' in blueprints else '' }}" class="space-y-6">
+                {{ form.hidden_tag() if form else '' }}
+                
+                <div class="form-group">
+                    <label for="username" class="form-label">Kullanıcı Adı veya E-posta</label>
+                    <input 
+                        id="username" 
+                        name="username"
+                        type="text" 
+                        required 
+                        class="form-input" 
+                        placeholder="ornek@email.com"
+                        value="{{ request.form.get('username', '') }}">
+                    <small class="form-help">TC Kimlik No, Baro Sicil No veya Email ile giriş yapabilirsiniz</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Şifre</label>
+                    <input 
+                        id="password" 
+                        name="password"
+                        type="password" 
+                        required 
+                        class="form-input" 
+                        placeholder="••••••••">
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <label class="form-checkbox">
+                        <input type="checkbox" name="remember" id="remember">
+                        <span style="color: var(--gray-700); font-size: 0.875rem;">Beni Hatırla</span>
+                    </label>
+                    <a href="{{ url_for('auth.forgot_password') if 'auth' in blueprints else '#' }}" style="color: rgb(69, 124, 125); font-size: 0.875rem; text-decoration: none;">
+                        Şifremi Unuttum
+                    </a>
+                </div>
+
+                <button 
+                    type="submit" 
+                    class="btn btn-primary btn-lg w-full"
+                    style="background: linear-gradient(135deg, rgb(69, 124, 125), rgb(84, 140, 141));">
+                    Giriş Yap
+                </button>
+            </form>
+
+            {# Register Link #}
+            <div class="mt-6 text-center" style="margin-top: var(--space-6);">
+                <p style="color: var(--gray-600); font-size: 0.875rem;">
+                    Hesabınız yok mu? 
+                    <a href="{{ url_for('auth.register') if 'auth' in blueprints else '#' }}" style="color: rgb(69, 124, 125); font-weight: 600; text-decoration: none;">
+                        Kayıt Olun
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

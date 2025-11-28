@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block page_title %}Mesajlar{% endblock %}
+{% block page_subtitle %}<p class="text-sm text-slate-500 dark:text-slate-400">Gelen ve gönderilen mesajlarınızı yönetin.</p>{% endblock %}
+
+{% block title %}Mesajlar - Ulusal Tevkil Ağı Projesi{% endblock %}
+
+{% block content %}
+<div class="layout-content-container flex flex-col w-full max-w-6xl mx-auto flex-1 px-3 sm:px-4" id="messages-root" x-data="{ activeTab: 'received' }" x-init="setTimeout(()=>{ if($refs.received && $refs.received.classList.contains('hidden')) switchTab('received'); }, 100);">
+    <div class="flex flex-wrap justify-between gap-3 p-3 sm:p-4">
+        <div class="flex items-center gap-3 sm:gap-4 min-w-0 overflow-hidden">
+            <span class="material-symbols-outlined text-gray-900 text-2xl sm:text-3xl md:text-4xl flex-shrink-0">mail</span>
+            <div class="min-w-0 overflow-hidden">
+                <p class="text-gray-900 dark:text-white tracking-light text-xl sm:text-2xl md:text-[32px] font-bold leading-tight truncate">Mesajlar</p>
+                <p class="text-gray-600 dark:text-gray-300 text-xs sm:text-sm font-normal leading-normal truncate">
+                    {% if unread_count > 0 %}
+                    <span class="text-red-600 dark:text-red-400 font-bold">{{ unread_count }} okunmamış mesaj</span>
+                    {% else %}
+                    Tüm mesajlarınızı görüntüleyin
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="border-b border-gray-300 dark:border-gray-700 px-3 sm:px-4 overflow-x-auto">
+        <div class="flex gap-3 sm:gap-4 md:gap-8 min-w-max">
+            <button onclick="switchTab('received')" id="tab-received" class="tab-button py-2 sm:py-3 px-1 border-b-2 border-primary text-gray-900 font-semibold text-sm sm:text-base whitespace-nowrap">
+                Gelen Kutusu ({{ received|length }})
+            </button>
+            <button onclick="switchTab('sent')" id="tab-sent" class="tab-button py-2 sm:py-3 px-1 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-semibold text-sm sm:text-base whitespace-nowrap">
+                Gönderilmiş ({{ sent|length }})
+            </button>
+        </div>
+    </div>
+    
+    <!-- Received Messages -->
+    <div id="content-received" x-ref="received" class="tab-content p-3 sm:p-4">
+        {% if received %}
+            <div class="space-y-3">
+                {% for msg in received %}
+                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 border border-gray-300 dark:border-gray-700 {% if not msg.read_at %}border-l-4 border-l-primary{% endif %}">
+                    <div class="flex justify-between items-start mb-3 gap-3">
+                        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center text-white font-bold text-sm sm:text-base flex-shrink-0">
+                                {{ msg.sender.full_name[0] }}
+                            </div>
+                            <div class="min-w-0 overflow-hidden">
+                                <p class="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate">{{ msg.sender.full_name }}</p>
+                                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{{ msg.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+                            </div>
+                        </div>
+                        {% if not msg.read_at %}
+                        <span class="px-2 py-1 text-xs font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded-full flex-shrink-0">YENİ</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if msg.post_id %}
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-2 sm:p-3 mb-3">
+                        <p class="text-xs sm:text-sm text-gray-900 dark:text-blue-400 font-medium mb-1">İlan Hakkında:</p>
+                        <a href="{{ url_for('posts.post_detail', post_id=msg.post_id) }}" class="text-xs sm:text-sm text-gray-900 dark:text-blue-400 hover:underline font-medium break-words">
+                            {{ msg.post.title if msg.post else 'İlan' }}
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-3 sm:mb-4 break-words">{{ msg.message }}</p>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ url_for('main.send_message', receiver_id=msg.sender_id) }}" class="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-gray-900 text-white hover:bg-gray-900 transition-colors text-xs sm:text-sm font-medium">
+                            <span class="material-symbols-outlined text-base sm:text-lg">reply</span>
+                            <span>Yanıtla</span>
+                        </a>
+                        {% if msg.post_id %}
+                        <a href="{{ url_for('posts.post_detail', post_id=msg.post_id) }}" class="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-xs sm:text-sm font-medium">
+                            <span class="material-symbols-outlined text-base sm:text-lg">open_in_new</span>
+                            <span class="hidden sm:inline">İlana Git</span>
+                            <span class="sm:hidden">İlan</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-8 sm:py-12">
+                <span class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-5xl sm:text-6xl mb-4">inbox</span>
+                <p class="text-gray-500 dark:text-gray-400 text-base sm:text-lg">Henüz gelen mesajınız yok</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sent Messages -->
+    <div id="content-sent" x-ref="sent" class="tab-content hidden p-3 sm:p-4">
+        {% if sent %}
+            <div class="space-y-3">
+                {% for msg in sent %}
+                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 border border-gray-300 dark:border-gray-700">
+                    <div class="flex justify-between items-start mb-3 gap-3">
+                        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center text-white font-bold text-sm sm:text-base flex-shrink-0">
+                                {{ msg.receiver.full_name[0] }}
+                            </div>
+                            <div class="min-w-0 overflow-hidden">
+                                <p class="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate">{{ msg.receiver.full_name }}</p>
+                                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{{ msg.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+                            </div>
+                        </div>
+                        {% if msg.read_at %}
+                        <span class="px-2 py-1 text-xs font-bold bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 rounded-full flex-shrink-0">OKUNDU</span>
+                        {% else %}
+                        <span class="px-2 py-1 text-xs font-bold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded-full flex-shrink-0">GÖNDERİLDİ</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if msg.post_id %}
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-2 sm:p-3 mb-3">
+                        <p class="text-xs sm:text-sm text-gray-900 dark:text-blue-400 font-medium mb-1">İlan Hakkında:</p>
+                        <a href="{{ url_for('post_detail', post_id=msg.post_id) }}" class="text-xs sm:text-sm text-gray-900 dark:text-blue-400 hover:underline font-medium break-words">
+                            {{ msg.post.title if msg.post else 'İlan' }}
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300 break-words">{{ msg.message }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-8 sm:py-12">
+                <span class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-5xl sm:text-6xl mb-4">send</span>
+                <p class="text-gray-500 dark:text-gray-400 text-base sm:text-lg">Henüz mesaj göndermediniz</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function switchTab(tab) {
+    // Hide all content
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    
+    // Remove active from all tabs
+    document.querySelectorAll('.tab-button').forEach(el => {
+        el.classList.remove('border-primary', 'text-primary');
+        el.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+    });
+    
+    // Show selected content
+    document.getElementById('content-' + tab).classList.remove('hidden');
+    
+    // Activate selected tab
+    const activeTab = document.getElementById('tab-' + tab);
+    activeTab.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+    activeTab.classList.add('border-primary', 'text-primary');
+}
+// Auto-initialize the first tab and add a defensive unhide in case of race conditions
+document.addEventListener('DOMContentLoaded', () => {
+    // Auto-select received tab ensuring visibility
+    switchTab('received');
+    // Force unhide if collapsed
+    const container = document.getElementById('messages-root');
+    if (container && container.getBoundingClientRect().height < 40) {
+        container.classList.remove('hidden');
+        if (getComputedStyle(container).display === 'none') container.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}
+
+

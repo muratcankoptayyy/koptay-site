@@ -1,0 +1,204 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Mesajlar - Tevkil{% endblock %}
+
+{% block content %}
+<div class="messages-page-container">
+    <!-- Sayfa Başlığı -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Mesajlarım</h1>
+            <p class="page-subtitle">Avukatlarla iletişime geçin</p>
+        </div>
+    </div>
+
+    <!-- Mesajlaşma Container -->
+    <div class="messages-container">
+        {% if conversations %}
+            <div class="conversations-list">
+                {% for conv in conversations %}
+                {% set other_user = conv.user2 if conv.user1_id == current_user.id else conv.user1 %}
+                <a href="{{ url_for('messages.conversation', conversation_id=conv.id) }}" class="conversation-item {% if conv.has_unread_messages(current_user.id) %}unread{% endif %} fade-in" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                    <div class="conv-avatar">
+                        {{ other_user.first_name[0] }}{{ other_user.last_name[0] }}
+                    </div>
+                    <div class="conv-info">
+                        <div class="conv-header">
+                            <h3 class="conv-name">{{ other_user.get_masked_name() }}</h3>
+                            <span class="conv-time">{{ conv.updated_at.strftime('%d.%m.%Y') }}</span>
+                        </div>
+                        <div class="conv-preview">
+                            <p class="conv-title">{{ other_user.law_specialization_display() }}</p>
+                            {% if conv.has_unread_messages(current_user.id) %}
+                            <span class="unread-badge">Yeni</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <h3>Henüz Mesaj Yok</h3>
+                <p>Başvurularınızı kabul ettikten sonra avukatlarla mesajlaşabilirsiniz.</p>
+                <a href="{{ url_for('applications.list') }}" class="btn btn-primary">Başvuruları Görüntüle</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.messages-page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+/* Page Header */
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.messages-container {
+    margin-top: 1.5rem;
+    max-width: 100%;
+}
+
+.conversations-list {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.conversation-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.conversation-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--primary), var(--secondary));
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.conversation-item:hover {
+    background: linear-gradient(to right, rgba(48, 105, 108, 0.03), white);
+    transform: translateX(4px);
+}
+
+.conversation-item:hover::before {
+    transform: scaleY(1);
+}
+
+.conversation-item.unread {
+    background: linear-gradient(to right, rgba(48, 105, 108, 0.05), rgba(245, 158, 11, 0.02));
+    font-weight: 600;
+}
+
+.conversation-item:last-child {
+    border-bottom: none;
+}
+
+.conv-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+
+.conv-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.conv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.conv-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.conv-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.conv-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.conv-title {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.unread-badge {
+    padding: 0.25rem 0.5rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+}
+
+.empty-state svg {
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+</style>
+{% endblock %}

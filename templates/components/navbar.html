@@ -1,0 +1,68 @@
+{# Sidebar Navigation Component - Sadece giriş yapmış kullanıcılara göster #}
+{% if current_user.is_authenticated %}
+<aside class="sidebar" :class="{ 'open': sidebarOpen }">
+    <div class="sidebar-header">
+        <div class="sidebar-logo" style="display: flex; align-items: center; gap: 0.75rem;">
+            <img src="{{ url_for('static', filename='images/logo-icon.svg') }}" alt="Logo" style="width: 40px; height: 40px;">
+            <span>{{ config.SITE_NAME or 'UTAP' }}</span>
+        </div>
+        <button @click="sidebarOpen = false" style="background: none; border: none; cursor: pointer; color: white; font-size: 1.5rem;">&times;</button>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="{{ url_for('index') }}">
+            <span>🏠</span>
+            <span>Ana Sayfa</span>
+        </a>
+        <a href="{{ url_for('dashboard') }}">
+            <span>📊</span>
+            <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('posts.list') }}">
+            <span>📋</span>
+            <div style="flex: 1;">
+                <div>İlanlar</div>
+                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-top: 2px;">{{ stats.active_posts if stats else '0' }} aktif</div>
+            </div>
+        </a>
+        <a href="{{ url_for('applications.list') }}">
+            <span>📨</span>
+            <div style="flex: 1;">
+                <div>Başvurular</div>
+                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-top: 2px;">{{ stats.new_applications if stats else '0' }} yeni</div>
+            </div>
+        </a>
+        <a href="{{ url_for('messages.list') }}">
+            <span>💬</span>
+            <div style="flex: 1;">
+                <div>Mesajlar</div>
+                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-top: 2px;">{{ stats.unread_messages if stats else '0' }} mesaj</div>
+            </div>
+        </a>
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: var(--space-4) 0;"></div>
+        <a href="{{ url_for('profile.my_profile') }}">
+            <span>👤</span>
+            <span>Profilim</span>
+        </a>
+        <a href="{{ url_for('settings.index') }}">
+            <span>⚙️</span>
+            <span>Ayarlar</span>
+        </a>
+        <a href="{{ url_for('auth.logout') }}">
+            <span>🚪</span>
+            <span>Çıkış Yap</span>
+        </a>
+    </nav>
+</aside>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" :class="{ 'active': sidebarOpen }" @click="sidebarOpen = false"></div>
+
+<!-- Menu Toggle Button -->
+<button class="menu-toggle" @click="sidebarOpen = !sidebarOpen">
+    <div class="menu-icon">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+</button>
+{% endif %}

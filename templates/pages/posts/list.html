@@ -1,0 +1,527 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}İlanlar - Tevkil{% endblock %}
+
+{% block content %}
+<div class="posts-page-container">
+    <!-- Sayfa Başlığı -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Tevkil İlanları</h1>
+            <p class="page-subtitle">Avukatların paylaştığı tevkil ilanlarını inceleyin</p>
+        </div>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('posts.create') }}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Yeni İlan Oluştur
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filtreler -->
+    <div class="filter-section">
+        <form method="GET" class="filters-form">
+            <div class="filter-group">
+                <label for="category">Hukuk Dalı</label>
+                <select name="category" id="category" class="form-select">
+                    <option value="">Tümü</option>
+                    <option value="ceza" {% if request.args.get('category') == 'ceza' %}selected{% endif %}>Ceza Hukuku</option>
+                    <option value="medeni" {% if request.args.get('category') == 'medeni' %}selected{% endif %}>Medeni Hukuku</option>
+                    <option value="ticaret" {% if request.args.get('category') == 'ticaret' %}selected{% endif %}>Ticaret Hukuku</option>
+                    <option value="idare" {% if request.args.get('category') == 'idare' %}selected{% endif %}>İdare Hukuku</option>
+                    <option value="icra_iflas" {% if request.args.get('category') == 'icra_iflas' %}selected{% endif %}>İcra İflas</option>
+                    <option value="aile" {% if request.args.get('category') == 'aile' %}selected{% endif %}>Aile Hukuku</option>
+                    <option value="is" {% if request.args.get('category') == 'is' %}selected{% endif %}>İş Hukuku</option>
+                    <option value="tazminat" {% if request.args.get('category') == 'tazminat' %}selected{% endif %}>Tazminat Hukuku</option>
+                    <option value="gayrimenkul" {% if request.args.get('category') == 'gayrimenkul' %}selected{% endif %}>Gayrimenkul Hukuku</option>
+                    <option value="bilisim" {% if request.args.get('category') == 'bilisim' %}selected{% endif %}>Bilişim Hukuku</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="city">Şehir</label>
+                <input type="text" name="city" id="city" class="form-input" placeholder="Şehir ara..." value="{{ request.args.get('city', '') }}">
+            </div>
+
+            <div class="filter-group">
+                <label for="urgency">Aciliyet</label>
+                <select name="urgency" id="urgency" class="form-select">
+                    <option value="">Tümü</option>
+                    <option value="dusuk" {% if request.args.get('urgency') == 'dusuk' %}selected{% endif %}>Düşük</option>
+                    <option value="orta" {% if request.args.get('urgency') == 'orta' %}selected{% endif %}>Orta</option>
+                    <option value="yuksek" {% if request.args.get('urgency') == 'yuksek' %}selected{% endif %}>Yüksek</option>
+                    <option value="acil" {% if request.args.get('urgency') == 'acil' %}selected{% endif %}>Acil</option>
+                </select>
+            </div>
+
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-secondary">Filtrele</button>
+                <a href="{{ url_for('posts.list') }}" class="btn btn-ghost">Temizle</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- İlan Listesi -->
+    <div class="posts-grid">
+        {% if posts.items %}
+            {% for post in posts.items %}
+            <div class="post-card hover-lift fade-in" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                <!-- Aciliyet Badge -->
+                <div class="post-urgency urgency-{{ post.urgency_level }}">
+                    {% if post.urgency_level == 'acil' %}🔴 Acil
+                    {% elif post.urgency_level == 'yuksek' %}🟠 Yüksek
+                    {% elif post.urgency_level == 'orta' %}🟡 Orta
+                    {% else %}🟢 Düşük
+                    {% endif %}
+                </div>
+
+                <!-- İlan Başlığı -->
+                <h3 class="post-title">
+                    <a href="{{ url_for('posts.detail', id=post.id) }}">{{ post.title }}</a>
+                </h3>
+
+                <!-- İlan Kategorisi -->
+                <div class="post-category">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span>{{ post.get_category_display() }}</span>
+                </div>
+
+                <!-- Açıklama -->
+                <p class="post-description">{{ post.description[:150] }}{% if post.description|length > 150 %}...{% endif %}</p>
+
+                <!-- Meta Bilgiler -->
+                <div class="post-meta">
+                    <div class="meta-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span>{{ post.city }}{% if post.district %}, {{ post.district }}{% endif %}</span>
+                    </div>
+
+                    {% if post.budget_min or post.budget_max %}
+                    <div class="meta-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span>
+                            {% if post.budget_min and post.budget_max %}
+                                {{ '{:,.0f}'.format(post.budget_min) }} - {{ '{:,.0f}'.format(post.budget_max) }} ₺
+                            {% elif post.budget_min %}
+                                Min {{ '{:,.0f}'.format(post.budget_min) }} ₺
+                            {% elif post.budget_max %}
+                                Max {{ '{:,.0f}'.format(post.budget_max) }} ₺
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <div class="meta-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                    </div>
+                </div>
+
+                <!-- İlan Sahibi Bilgisi -->
+                <div class="post-owner">
+                    <div class="owner-avatar">
+                        {{ post.user.first_name[0] }}{{ post.user.last_name[0] }}
+                    </div>
+                    <div class="owner-info">
+                        <div class="owner-name">{{ post.user.get_masked_name() }}</div>
+                        <div class="owner-details">
+                            {{ post.user.law_specialization_display() }} • {{ post.user.experience_years }}
+                            {% if post.user.rating_average %}
+                            <span class="rating">⭐ {{ post.user.rating_average }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Başvuru Sayısı -->
+                <div class="post-footer">
+                    <span class="application-count">
+                        {{ post.total_applications_count }} başvuru
+                    </span>
+                    <a href="{{ url_for('posts.detail', id=post.id) }}" class="btn btn-sm btn-primary">
+                        Detayları Gör
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Boş Durum -->
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <h3>İlan Bulunamadı</h3>
+                <p>Aradığınız kriterlere uygun ilan bulunamadı. Filtreleri değiştirip tekrar deneyin.</p>
+                <a href="{{ url_for('posts.list') }}" class="btn btn-secondary">Tüm İlanlar</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Sayfalama -->
+    {% if posts.pages > 1 %}
+    <div class="pagination">
+        {% if posts.has_prev %}
+        <a href="{{ url_for('posts.list', page=posts.prev_num, category=request.args.get('category', ''), city=request.args.get('city', ''), urgency=request.args.get('urgency', '')) }}" class="pagination-btn">
+            ‹ Önceki
+        </a>
+        {% endif %}
+
+        <div class="pagination-numbers">
+            {% for page_num in posts.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                    <a href="{{ url_for('posts.list', page=page_num, category=request.args.get('category', ''), city=request.args.get('city', ''), urgency=request.args.get('urgency', '')) }}" 
+                       class="pagination-number {% if page_num == posts.page %}active{% endif %}">
+                        {{ page_num }}
+                    </a>
+                {% else %}
+                    <span class="pagination-ellipsis">...</span>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if posts.has_next %}
+        <a href="{{ url_for('posts.list', page=posts.next_num, category=request.args.get('category', ''), city=request.args.get('city', ''), urgency=request.args.get('urgency', '')) }}" class="pagination-btn">
+            Sonraki ›
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.posts-page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+/* İlan Listesi Stilleri */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 0.5rem 0;
+}
+
+.page-subtitle {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Filtreler */
+.filter-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.filter-section:hover {
+    box-shadow: 0 4px 16px rgba(48, 105, 108, 0.1);
+}
+
+.filters-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.filter-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+/* İlan Grid */
+.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .posts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* İlan Kartı */
+.post-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid transparent;
+}
+
+.post-card:hover {
+    box-shadow: 0 12px 32px rgba(48, 105, 108, 0.15);
+    transform: translateY(-4px);
+    border-color: var(--primary);
+}
+
+.post-urgency {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.urgency-acil { 
+    background: linear-gradient(135deg, #fee2e2, #fecaca); 
+    color: #991b1b; 
+    animation: pulse 2s ease-in-out infinite;
+}
+.urgency-yuksek { 
+    background: linear-gradient(135deg, #fed7aa, #fdba74); 
+    color: #92400e; 
+}
+.urgency-orta { 
+    background: linear-gradient(135deg, #fef3c7, #fde68a); 
+    color: #92400e; 
+}
+.urgency-dusuk { 
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0); 
+    color: #065f46; 
+}
+
+.post-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem 0;
+    padding-right: 5rem;
+}
+
+.post-title a {
+    color: var(--text-dark);
+    text-decoration: none;
+}
+
+.post-title a:hover {
+    color: var(--primary);
+}
+
+.post-category {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.post-description {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+}
+
+.post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.meta-item svg {
+    opacity: 0.6;
+}
+
+.post-owner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.owner-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.owner-info {
+    flex: 1;
+}
+
+.owner-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+.owner-details {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.rating {
+    font-weight: 600;
+    color: #f90;
+}
+
+.post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.application-count {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+/* Boş Durum */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-state svg {
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+/* Sayfalama */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 3rem;
+}
+
+.pagination-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: white;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.pagination-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.pagination-numbers {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.pagination-number {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: white;
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.pagination-number:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.pagination-number.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.pagination-ellipsis {
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    color: var(--text-muted);
+}
+</style>
+{% endblock %}

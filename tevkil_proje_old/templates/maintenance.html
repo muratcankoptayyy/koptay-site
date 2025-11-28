@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çok Yakında Sizlerle - UTAP | Ulusal Tevkil Ağı Projesi</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="description" content="UTAP - Ulusal Tevkil Ağı Projesi çok yakında sizlerle. Türkiye'nin en güvenli avukat tevkil platformu için bizi takipte kalın.">
+    <meta name="keywords" content="avukat tevkil, UTAP, tevkil platformu, yakında">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Çok Yakında Sizlerle - UTAP">
+    <meta property="og:description" content="Türkiye'nin en güvenli avukat tevkil platformu çok yakında hizmetinizde.">
+    <meta property="og:image" content="{{ url_for('static', filename='logo-icon.svg', _external=True) }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo-icon.svg') }}">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Animated gradient background */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Floating animation */
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        /* Pulse animation for logo */
+        .pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.05); }
+        }
+        
+        /* Fade in animation */
+        .fade-in {
+            animation: fadeIn 1.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Glass morphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        /* Particles background */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: rise 15s infinite ease-in;
+        }
+        
+        @keyframes rise {
+            0% {
+                bottom: -100px;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                bottom: 110%;
+                opacity: 0;
+            }
+        }
+        
+        .particle:nth-child(1) { left: 10%; width: 10px; height: 10px; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; }
+        .particle:nth-child(3) { left: 30%; width: 8px; height: 8px; animation-delay: 4s; }
+        .particle:nth-child(4) { left: 40%; width: 12px; height: 12px; animation-delay: 6s; }
+        .particle:nth-child(5) { left: 50%; width: 10px; height: 10px; animation-delay: 8s; }
+        .particle:nth-child(6) { left: 60%; width: 14px; height: 14px; animation-delay: 10s; }
+        .particle:nth-child(7) { left: 70%; width: 9px; height: 9px; animation-delay: 12s; }
+        .particle:nth-child(8) { left: 80%; width: 11px; height: 11px; animation-delay: 14s; }
+        .particle:nth-child(9) { left: 90%; width: 13px; height: 13px; animation-delay: 1s; }
+        .particle:nth-child(10) { left: 95%; width: 10px; height: 10px; animation-delay: 3s; }
+        
+        /* Shine effect */
+        .shine {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shine::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <!-- Animated particles background -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+    
+    <!-- Main content -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-4xl w-full text-center fade-in">
+            <!-- Logo -->
+            <div class="mb-12 flex justify-center">
+                <div class="pulse-slow">
+                    <img src="{{ url_for('static', filename='utap-logo-modern.svg') }}" 
+                         alt="UTAP Logo" 
+                         class="h-24 w-auto md:h-32 lg:h-40 drop-shadow-2xl"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div style="display:none;" class="text-white text-6xl font-bold">UTAP</div>
+                </div>
+            </div>
+            
+            <!-- Main heading -->
+            <div class="glass rounded-3xl p-8 md:p-12 lg:p-16 shine">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight">
+                    Çok Yakında Sizlerle
+                </h1>
+                
+                <div class="w-24 h-1 bg-white mx-auto mb-6 rounded-full"></div>
+                
+                <h2 class="text-xl md:text-2xl lg:text-3xl font-semibold text-white/90 mb-6">
+                    Ulusal Tevkil Ağı Projesi
+                </h2>
+                
+                <p class="text-base md:text-lg lg:text-xl text-white/80 max-w-2xl mx-auto mb-8 leading-relaxed">
+                    Platformumuz şu anda yenileniyor. Sizlere daha iyi bir deneyim sunabilmek için 
+                    çalışmalarımızı sürdürüyoruz. Çok yakında, daha güçlü ve kullanıcı dostu bir 
+                    platformla hizmetinizdeyiz.
+                </p>
+                
+                <!-- Features -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-white/90">
+                    <div class="float" style="animation-delay: 0s;">
+                        <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                        <h3 class="font-semibold text-lg mb-2">Güvenli</h3>
+                        <p class="text-sm text-white/70">En yüksek güvenlik standartları</p>
+                    </div>
+                    
+                    <div class="float" style="animation-delay: 0.5s;">
+                        <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        <h3 class="font-semibold text-lg mb-2">Hızlı</h3>
+                        <p class="text-sm text-white/70">Anında bağlantı ve işlem</p>
+                    </div>
+                    
+                    <div class="float" style="animation-delay: 1s;">
+                        <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <h3 class="font-semibold text-lg mb-2">Kapsamlı</h3>
+                        <p class="text-sm text-white/70">Geniş avukat ağı</p>
+                    </div>
+                </div>
+                
+                <!-- Status badge -->
+                <div class="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full">
+                    <div class="flex space-x-1">
+                        <div class="w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></div>
+                        <div class="w-2 h-2 bg-yellow-300 rounded-full animate-pulse" style="animation-delay: 0.2s;"></div>
+                        <div class="w-2 h-2 bg-yellow-300 rounded-full animate-pulse" style="animation-delay: 0.4s;"></div>
+                    </div>
+                    <span class="text-white font-medium">Geliştirme Devam Ediyor</span>
+                </div>
+            </div>
+            
+            <!-- Footer info -->
+            <div class="mt-12 text-white/60 text-sm">
+                <p class="mb-2">© 2025 UTAP - Ulusal Tevkil Ağı Projesi. Tüm hakları saklıdır.</p>
+                <p>Sorularınız için: <a href="mailto:info@utap.com.tr" class="text-white/80 hover:text-white underline transition-colors">info@utap.com.tr</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Prevent back button navigation
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+    </script>
+</body>
+</html>

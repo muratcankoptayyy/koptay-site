@@ -1,0 +1,450 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Ayarlar - Tevkil{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+.settings-page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-page-container" x-data="{ activeTab: 'profile' }">
+    <!-- Sayfa Başlığı -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Ayarlar</h1>
+            <p class="page-subtitle">Hesabınızı ve tercihlerinizi yönetin</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="settings-tabs">
+        <button 
+            @click="activeTab = 'profile'" 
+            :class="{ 'active': activeTab === 'profile' }"
+            class="tab-button">
+            <span>👤</span>
+            <span>Profil Bilgileri</span>
+        </button>
+        <button 
+            @click="activeTab = 'security'" 
+            :class="{ 'active': activeTab === 'security' }"
+            class="tab-button">
+            <span>🔒</span>
+            <span>Güvenlik</span>
+        </button>
+        <button 
+            @click="activeTab = 'notifications'" 
+            :class="{ 'active': activeTab === 'notification' }"
+            class="tab-button">
+            <span>🔔</span>
+            <span>Bildirimler</span>
+        </button>
+    </div>
+
+    <!-- Profil Bilgileri Tab -->
+    <div x-show="activeTab === 'profile'" x-cloak class="tab-content">
+        <form method="POST" action="{{ url_for('settings.update_profile') }}" class="settings-form">
+            
+            <div class="form-section">
+                <h2 class="section-title">Kişisel Bilgiler</h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Ad Soyad *</label>
+                        <input type="text" name="full_name" value="{{ current_user.full_name }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>E-posta</label>
+                        <input type="email" value="{{ current_user.email }}" disabled>
+                        <small>E-posta değiştirmek için destek ile iletişime geçin</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Telefon</label>
+                        <input type="tel" name="phone" value="{{ current_user.phone or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>WhatsApp</label>
+                        <input type="tel" name="whatsapp_number" value="{{ current_user.whatsapp_number or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>İl</label>
+                        <input type="text" name="city" value="{{ current_user.city or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>İlçe</label>
+                        <input type="text" name="district" value="{{ current_user.district or '' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">Mesleki Bilgiler</h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Baro</label>
+                        <input type="text" name="bar_association" value="{{ current_user.bar_association or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Sicil No</label>
+                        <input type="text" name="registration_number" value="{{ current_user.registration_number or '' }}">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Uzmanlık Alanı</label>
+                        <input type="text" name="specialization" value="{{ current_user.specialization or '' }}" placeholder="Örn: Ceza Hukuku, Aile Hukuku">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Hakkımda</label>
+                        <textarea name="about" rows="4">{{ current_user.about or '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+                <a href="{{ url_for('profile.my_profile') }}" class="btn btn-ghost">İptal</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Güvenlik Tab -->
+    <div x-show="activeTab === 'security'" x-cloak class="tab-content">
+        <form method="POST" action="{{ url_for('settings.update_password') }}" class="settings-form">
+            
+            <div class="form-section">
+                <h2 class="section-title">Şifre Değiştir</h2>
+                
+                <div class="form-grid single-column">
+                    <div class="form-group">
+                        <label>Mevcut Şifre *</label>
+                        <input type="password" name="current_password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Yeni Şifre *</label>
+                        <input type="password" name="new_password" required minlength="6">
+                        <small>En az 6 karakter olmalıdır</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Yeni Şifre (Tekrar) *</label>
+                        <input type="password" name="confirm_password" required minlength="6">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Şifreyi Güncelle</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bildirimler Tab -->
+    <div x-show="activeTab === 'notifications'" x-cloak class="tab-content">
+        <div class="form-section">
+            <h2 class="section-title">Bildirim Tercihleri</h2>
+            <p class="section-description">Bildirim ayarları yakında eklenecektir.</p>
+            
+            <div class="notification-preview">
+                <div class="notification-item">
+                    <div class="notification-icon">📧</div>
+                    <div class="notification-info">
+                        <h4>E-posta Bildirimleri</h4>
+                        <p>Yeni başvuru ve mesajlar için e-posta bildirimleri alın</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked disabled>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="notification-item">
+                    <div class="notification-icon">🔔</div>
+                    <div class="notification-info">
+                        <h4>Push Bildirimleri</h4>
+                        <p>Tarayıcı üzerinden anında bildirim alın</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" disabled>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0 0 0.5rem 0;
+}
+
+.page-subtitle {
+    font-size: 1rem;
+    color: var(--gray-600);
+}
+
+.settings-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e5e7eb;
+    overflow-x: auto;
+}
+
+.tab-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    color: var(--gray-600);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.tab-button span:first-child {
+    font-size: 1.25rem;
+}
+
+.tab-button:hover {
+    color: rgb(48, 105, 108);
+}
+
+.tab-button.active {
+    color: rgb(48, 105, 108);
+    border-bottom-color: rgb(48, 105, 108);
+}
+
+.tab-content {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.settings-form {
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.form-section {
+    margin-bottom: 2.5rem;
+}
+
+.form-section:last-of-type {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0 0 1.5rem 0;
+}
+
+.section-description {
+    color: var(--gray-600);
+    margin-bottom: 1.5rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.form-grid.single-column {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea {
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: rgb(48, 105, 108);
+    box-shadow: 0 0 0 3px rgba(48, 105, 108, 0.1);
+}
+
+.form-group input:disabled {
+    background: #e5e7eb;
+    cursor: not-allowed;
+    color: var(--gray-500);
+}
+
+.form-group small {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    margin-top: 0.25rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.notification-preview {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.notification-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border-radius: 12px;
+}
+
+.notification-info {
+    flex: 1;
+}
+
+.notification-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 0.25rem 0;
+}
+
+.notification-info p {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 28px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: rgb(48, 105, 108);
+}
+
+input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+input:disabled + .slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
+{% endblock %}

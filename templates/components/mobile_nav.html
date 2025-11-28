@@ -1,0 +1,172 @@
+{# Mobile Bottom Navigation Component #}
+<nav class="mobile-bottom-nav" x-show="window.innerWidth < 1024" x-cloak>
+    <div class="mobile-nav-container">
+        <a href="{{ url_for('index') }}" class="mobile-nav-item" :class="{ 'active': window.location.pathname === '/' }">
+            <span class="mobile-nav-icon">🏠</span>
+            <span class="mobile-nav-label">Ana Sayfa</span>
+        </a>
+        
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.posts') if 'main' in blueprints else '#' }}" class="mobile-nav-item">
+                <span class="mobile-nav-icon">📋</span>
+                <span class="mobile-nav-label">İlanlar</span>
+                {% if stats and stats.active_posts %}
+                <span class="mobile-nav-badge">{{ stats.active_posts }}</span>
+                {% endif %}
+            </a>
+            
+            <a href="{{ url_for('main.create_post') if 'main' in blueprints else '#' }}" class="mobile-nav-item mobile-nav-item-primary">
+                <div class="mobile-nav-fab">
+                    <span class="mobile-nav-icon">+</span>
+                </div>
+                <span class="mobile-nav-label">Oluştur</span>
+            </a>
+            
+            <a href="{{ url_for('main.messages') if 'main' in blueprints else '#' }}" class="mobile-nav-item">
+                <span class="mobile-nav-icon">💬</span>
+                <span class="mobile-nav-label">Mesajlar</span>
+                {% if stats and stats.messages %}
+                <span class="mobile-nav-badge">{{ stats.messages }}</span>
+                {% endif %}
+            </a>
+            
+            <a href="{{ url_for('main.profile') if 'main' in blueprints else '#' }}" class="mobile-nav-item">
+                <span class="mobile-nav-icon">👤</span>
+                <span class="mobile-nav-label">Profil</span>
+            </a>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="mobile-nav-item">
+                <span class="mobile-nav-icon">🔐</span>
+                <span class="mobile-nav-label">Giriş</span>
+            </a>
+            
+            <a href="{{ url_for('register') }}" class="mobile-nav-item mobile-nav-item-primary">
+                <div class="mobile-nav-fab">
+                    <span class="mobile-nav-icon">📝</span>
+                </div>
+                <span class="mobile-nav-label">Kayıt Ol</span>
+            </a>
+        {% endif %}
+    </div>
+</nav>
+
+<style>
+/* Mobile Bottom Navigation Styles */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: white;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.mobile-nav-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    padding: 0.5rem 0.25rem;
+    max-width: 100%;
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    text-decoration: none;
+    color: var(--gray-600);
+    transition: all 0.2s ease;
+    padding: 0.5rem 0.25rem;
+    position: relative;
+    min-width: 0;
+}
+
+.mobile-nav-item.active {
+    color: rgb(69, 124, 125);
+}
+
+.mobile-nav-item:active {
+    transform: scale(0.95);
+}
+
+.mobile-nav-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.mobile-nav-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.mobile-nav-badge {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.5rem;
+    background: #ef4444;
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.125rem 0.375rem;
+    border-radius: 10px;
+    min-width: 1.25rem;
+    text-align: center;
+}
+
+.mobile-nav-item-primary {
+    margin-top: -1.5rem;
+}
+
+.mobile-nav-fab {
+    width: 3.5rem;
+    height: 3.5rem;
+    background: linear-gradient(135deg, rgb(69, 124, 125), rgb(84, 140, 141));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(69, 124, 125, 0.4);
+    margin-bottom: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.mobile-nav-fab .mobile-nav-icon {
+    color: white;
+    font-size: 2rem;
+    font-weight: 300;
+    margin: 0;
+}
+
+.mobile-nav-item-primary:active .mobile-nav-fab {
+    transform: scale(0.9);
+}
+
+.mobile-nav-item-primary .mobile-nav-label {
+    color: rgb(69, 124, 125);
+    font-weight: 700;
+}
+
+/* Desktop'ta gizle */
+@media (min-width: 1024px) {
+    .mobile-bottom-nav {
+        display: none !important;
+    }
+}
+
+/* Mobilde main content'e padding ekle */
+@media (max-width: 1023px) {
+    body {
+        padding-bottom: 80px;
+    }
+}
+</style>

@@ -1,0 +1,14 @@
+{# Alert Component - Flash Messages (Auto-converted to Toasts) #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {# Hidden flash messages container - JavaScript will convert these to toasts #}
+    <div class="flash-messages-container" style="display: none;">
+      {% for category, message in messages %}
+        <div class="flash-message" data-category="{{ category if category in ['success', 'error', 'warning', 'info'] else 'info' }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+

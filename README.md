@@ -1,275 +1,176 @@
-# ULUSAL TEVKİL AĞI PROJESİ
+# UTAP - Ulusal Tevkil Ağı Projesi
 
-## 🎯 Proje Hakkında
-Avukatların duruşma temsili, tevkil ve görev devri yapabildiği **merkezi WhatsApp bot** destekli platform.
+Modern, profesyonel ve kullanıcı dostu avukat tevkil platformu.
 
-**Öne Çıkan Özellik:** Tek WhatsApp numarası üzerinden tüm avukatlar için otomatik ilan oluşturma ve bildirim sistemi!
+## 🎨 Yeni Tasarım Sistemi
 
----
+### Renk Paleti
+- **Primary**: `rgb(69, 124, 125)` → `rgb(84, 140, 141)` (Turkuaz-Yeşil Gradient)
+- **Success**: `#10b981`
+- **Warning**: `#f59e0b`
+- **Danger**: `#ef4444`
 
-## 🚀 Hızlı Kurulum
-
-### 1. Projeyi İndirin
-```bash
-git clone https://github.com/your-repo/tevkil-proje.git
-cd tevkil-proje
-```
-
-### 2. Bağımlılıkları Yükleyin
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Veritabanını Oluşturun
-```bash
-python setup_db.py
-```
-
-### 4. **WhatsApp Credentials Ekleyin** ⭐ ÖNEMLİ
-
-**Otomatik (Önerilen):**
-```bash
-python setup_whatsapp.py
-```
-
-**Manuel:**
-```bash
-copy .env.example .env
-# .env dosyasını düzenleyin ve Meta credentials'larınızı ekleyin
-```
-
-📚 **Detaylı rehber:** `CREDENTIALS_NASIL_ALINIR.md`
-
-### 5. Uygulamayı Başlatın
-```bash
-python app.py
-```
-
-🌐 **Tarayıcıda açın:** http://127.0.0.1:5000
-
----
-
-## 📱 Özellikler
-
-### ✅ Temel Özellikler
-- Duruşma temsili ilan oluşturma
-- İlanlara başvurma sistemi
-- Kullanıcı profilleri ve değerlendirmeler
-- 81 il, 595 adliye verisi
-- Gerçek zamanlı bildirimler
-- Arama ve filtreleme
-
-### ⭐ WhatsApp Entegrasyonu (Merkezi Bot)
-- **TEK NUMARA** - Tüm avukatlar için WhatsApp hizmeti
-- **#ILAN komutu** - WhatsApp'tan hızlı ilan oluşturma
-- **Otomatik bildirimler** - Yeni başvuru, kabul, red
-- **Akıllı komutlar** - #YARDIM, #DURUM, #ILANLARIM
-- **Telefon doğrulama** - Kullanıcı otomatik tanınır
-
----
-
-## 📋 WhatsApp Komutları
-
-| Komut | İşlev |
-|-------|-------|
-| `#ILAN` | Yeni ilan oluştur |
-| `#YARDIM` | Yardım menüsü |
-| `#DURUM` | Hesap durumunu gör |
-| `#ILANLARIM` | Aktif ilanlarımı listele |
-| `#BASVURULARIM` | Başvurularımı göster |
-
-**Örnek kullanım:**
-```
-#ILAN
-Başlık: Ankara Adliyesi Duruşma Temsili
-Kategori: Ceza Hukuku
-Şehir: Ankara
-Açıklama: 25 Ocak saat 14:00 duruşma
-Fiyat: 3500
-Aciliyet: Acil
-```
-
----
-
-## 🛠️ Teknolojiler
-
-**Backend:**
-- Flask (Python web framework)
-- SQLAlchemy (ORM)
-- Flask-Login (Authentication)
-- Meta WhatsApp Cloud API
-
-**Frontend:**
-- HTML5 / CSS3
-- Tailwind CSS
-- Alpine.js
-- Chart.js
-
-**Database:**
-- SQLite (development)
-- PostgreSQL (production)
-
-**Deployment:**
-- Railway.app / Render.com
-- Ngrok (local test)
-
----
-
-## 📚 Dokümantasyon
-
-### Başlangıç Rehberleri
-- 📖 **[Credentials Nasıl Alınır](CREDENTIALS_NASIL_ALINIR.md)** - En basit anlatım
-- 🚀 **[Hızlı Başlangıç](WHATSAPP_HIZLI_BASLANGIC.md)** - 3 dakikada kurulum
-- 📋 **[Detaylı Kurulum](WHATSAPP_KURULUM.md)** - Adım adım ekran görüntülü
-
-### Teknik Dökümanlar
-- `app.py` - Ana Flask uygulaması
-- `whatsapp_central_bot.py` - Merkezi WhatsApp bot
-- `whatsapp_meta_api.py` - Meta API wrapper
-- `models.py` - Database modelleri
-
----
-
-## 🧪 Test Etme
-
-### Web Arayüzü ile Test
-```
-http://127.0.0.1:5000/whatsapp/setup
-```
-
-### Script ile Test
-```bash
-python setup_whatsapp.py test
-```
-
-### Gerçek WhatsApp ile Test
-1. Profilinize telefon numaranızı ekleyin
-2. Meta'da test numarası olarak kaydedin
-3. Meta WhatsApp numarasına `#YARDIM` gönderin
-
----
-
-## 🔑 .env Dosyası Örneği
-
-```env
-# Flask
-FLASK_SECRET_KEY=dev-secret-key-2025
-
-# Database
-DATABASE_URL=sqlite:///tevkil.db
-
-# Meta WhatsApp API
-META_PHONE_NUMBER_ID=123456789012345
-META_ACCESS_TOKEN=EAAxxxxxxxxxxxxx...
-META_WEBHOOK_VERIFY_TOKEN=tevkil_webhook_2025
-```
-
-**NOT:** Gerçek credentials için `python setup_whatsapp.py` çalıştırın
-
----
+### Özellikler
+✅ Sol tarafta açılır/kapanır sidebar navigation
+✅ Animasyonlu arka plan desenleri (daireler, altıgenler, diagonal çizgiler)
+✅ Mobile-first responsive tasarım
+✅ Modern component library
+✅ Alpine.js ile interaktif UI
+✅ Flask template inheritance sistemi
 
 ## 📁 Proje Yapısı
 
 ```
 tevkil_proje/
-├── app.py                          # Ana Flask uygulaması
-├── models.py                       # Database modelleri
-├── whatsapp_central_bot.py         # Merkezi WhatsApp bot
-├── whatsapp_meta_api.py            # Meta API wrapper
-├── setup_whatsapp.py               # Otomatik kurulum script
-├── templates/                      # HTML şablonları
-│   ├── base.html
-│   ├── index.html
-│   ├── dashboard.html
-│   ├── whatsapp_setup.html
-│   └── ...
-├── static/                         # CSS, JS, resimler
-│   └── logo.svg
-├── instance/                       # SQLite veritabanı
-│   └── tevkil.db
-├── .env                           # Environment variables
-├── .env.example                   # Örnek env dosyası
-├── requirements.txt               # Python bağımlılıkları
-└── README.md                      # Bu dosya
+├── templates/
+│   ├── layouts/
+│   │   └── base.html          # Ana layout template
+│   ├── components/
+│   │   ├── navbar.html        # Sidebar navigation
+│   │   ├── footer.html        # Footer component
+│   │   ├── alert.html         # Flash messages
+│   │   └── modal.html         # Modal component
+│   ├── pages/
+│   │   ├── login.html         # Giriş sayfası
+│   │   ├── register.html      # Kayıt sayfası
+│   │   └── ...
+│   └── demo.html              # Demo landing page
+├── static/
+│   ├── css/
+│   │   └── design-system.css  # Complete design system
+│   ├── js/
+│   └── img/
+├── app.py                     # Flask application
+├── .env                       # Environment variables
+└── requirements.txt           # Python dependencies
 ```
 
+## 🚀 Kurulum
+
+### 1. Virtual Environment
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+### 2. Dependencies
+```powershell
+pip install flask python-dotenv
+```
+
+### 3. Environment Variables
+`.env` dosyası oluşturun:
+```
+FLASK_SECRET_KEY=your-secret-key-here
+FLASK_ENV=development
+DATABASE_URL=sqlite:///tevkil.db
+```
+
+### 4. Çalıştırma
+```powershell
+python app.py
+```
+
+Tarayıcıda açın: http://localhost:5000
+
+## 📦 Component Kullanımı
+
+### Base Layout
+```jinja
+{% extends 'layouts/base.html' %}
+
+{% block title %}Sayfa Başlığı{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <!-- İçerik buraya -->
+  </div>
+{% endblock %}
+```
+
+### Flash Messages (Otomatik)
+```python
+from flask import flash
+flash('İşlem başarılı!', 'success')
+flash('Uyarı mesajı', 'warning')
+flash('Hata oluştu', 'danger')
+```
+
+### Modal
+```jinja
+{% include 'components/modal.html' with 
+   modal_id='myModal',
+   modal_title='Başlık',
+   modal_body='İçerik'
+%}
+```
+
+## 🎯 CSS Classes
+
+### Buttons
+```html
+<button class="btn btn-primary">Primary</button>
+<button class="btn btn-secondary">Secondary</button>
+<button class="btn btn-lg">Large Button</button>
+```
+
+### Forms
+```html
+<div class="form-group">
+  <label class="form-label">Label</label>
+  <input type="text" class="form-input">
+  <small class="form-help">Yardım metni</small>
+</div>
+```
+
+### Cards
+```html
+<div class="card">
+  <h3>Başlık</h3>
+  <p>İçerik</p>
+</div>
+```
+
+### Alerts
+```html
+<div class="alert alert-success">Başarılı!</div>
+<div class="alert alert-warning">Uyarı!</div>
+<div class="alert alert-danger">Hata!</div>
+```
+
+### Badges
+```html
+<span class="badge badge-primary">Primary</span>
+<span class="badge badge-success">Aktif</span>
+```
+
+## 🔄 Backend Entegrasyonu (Sonraki Adım)
+
+Eski projeden (`tevkil_proje_old/`) getirilecekler:
+- ✅ `models.py` - Database modelleri
+- ✅ `blueprints/` - Route'lar (auth, main, chat, vb.)
+- ✅ `utils/` - Yardımcı fonksiyonlar
+- ✅ Business logic
+
+## 📝 Yapılacaklar
+
+- [x] Design system CSS
+- [x] Component templates
+- [x] Base layout
+- [x] Login/Register pages
+- [ ] Dashboard page
+- [ ] Backend entegrasyonu
+- [ ] Database migration
+- [ ] Test ve deployment
+
+## 🎨 Design Inspiration
+
+- **Tevkilapp**: Modern Next.js patterns
+- **Avutap**: Professional color scheme & components
+- **Custom**: Animated background patterns
+
 ---
 
-## ❗ Sık Sorulan Sorular
-
-### WhatsApp için Meta hesabı gerekli mi?
-Evet, ancak tamamen ücretsiz! Detaylı rehber: `CREDENTIALS_NASIL_ALINIR.md`
-
-### Test numarası limiti var mı?
-Evet, Meta'da 5 test numarası ekleyebilirsiniz (ücretsiz).
-
-### Production'da nasıl kullanılır?
-1. Kalıcı Access Token alın
-2. Domain adınızı Meta'ya webhook olarak kaydedin
-3. HTTPS kullanın
-
-### Local test için ngrok şart mı?
-Evet, Meta webhook'ları için public URL gerekir. Ngrok ücretsiz!
-
----
-
-## 🔒 Güvenlik
-
-- ⚠️ `.env` dosyasını ASLA GitHub'a yüklemeyin
-- ⚠️ `.gitignore`'da `.env` olduğundan emin olun
-- ⚠️ Production'da güçlü SECRET_KEY kullanın
-- ⚠️ Access Token'ları güvenli saklayın
-
----
-
-## 🤝 Katkıda Bulunma
-
-1. Fork edin
-2. Feature branch oluşturun (`git checkout -b feature/amazing`)
-3. Commit yapın (`git commit -m 'Add amazing feature'`)
-4. Push edin (`git push origin feature/amazing`)
-5. Pull Request açın
-
----
-
-## 📞 Destek
-
-- 📧 E-posta: destek@utap.com.tr
-- 🌐 Website: https://utap.com.tr
-- 📚 Dokümantasyon: `WHATSAPP_KURULUM.md`
-
----
-
-## 📝 Lisans
-MIT License - Özgürce kullanabilirsiniz!
-
----
-
-## 👨‍💻 Geliştirme Ekibi
-**Ulusal Tevkil Ağı Projesi** - 2025
-
-**Özel Teşekkürler:**
-- Meta WhatsApp Cloud API
-- Flask Community
-- Tailwind CSS
-
----
-
-## 🎉 Başlangıç Checklist
-
-- [ ] Projeyi indirdim
-- [ ] Bağımlılıkları yükledim
-- [ ] Veritabanını oluşturdum
-- [ ] `CREDENTIALS_NASIL_ALINIR.md` okudum
-- [ ] Meta Developer hesabı açtım
-- [ ] WhatsApp credentials aldım
-- [ ] `.env` dosyasını oluşturdum
-- [ ] `python app.py` ile başlattım
-- [ ] Web arayüzünde test ettim
-- [ ] WhatsApp'tan `#YARDIM` gönderdim
-
-**Hepsi tamamsa: Hazırsınız! 🚀**
-
----
-
-**İyi çalışmalar!** 💼⚖️
+**Geliştirici**: UTAP Team
+**Tarih**: Kasım 2025
+**Versiyon**: 2.0 (Yeni Tasarım)

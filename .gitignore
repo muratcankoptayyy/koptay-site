@@ -1,14 +1,13 @@
-# Environment variables (NEVER commit this!)
-.env
-.env.local
-.env.production
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+env/
+venv/
+.venv/
+ENV/
 build/
 develop-eggs/
 dist/
@@ -25,10 +24,19 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
-venv/
-ENV/
-env/
+# Flask
+instance/
+.webassets-cache
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.env.local
+.env.*.local
 
 # IDE
 .vscode/
@@ -37,34 +45,19 @@ env/
 *.swo
 *~
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Logs
-*.log
-logs/
-
 # OS
 .DS_Store
 Thumbs.db
 
 # Uploads
-uploads/
-static/uploads/
+static/uploads/*
+!static/uploads/.gitkeep
 
-# Secrets & Keys
-*.pem
-*.key
-*.cert
-secrets/
+# Logs
+*.log
+logs/
 
-# Node modules (Phoenix theme)
-node_modules/
-themes/phoenix/node_modules/
-themes/phoenix/static/css/main.css
-
-# Temporary files
-*.udf
-tmp_*.py
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/

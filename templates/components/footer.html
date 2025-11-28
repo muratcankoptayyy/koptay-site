@@ -1,0 +1,48 @@
+{# Footer Component #}
+<footer class="footer">
+    <div class="container">
+        <div class="footer-logo">{{ config.SITE_NAME or 'UTAP' }}</div>
+        <p>© {{ now.year if now else '2025' }} {{ config.SITE_NAME or 'UTAP - Ulusal Tevkil Ağı Projesi' }}. Tüm hakları saklıdır.</p>
+        {% if config.FOOTER_LINKS %}
+        <div class="footer-links mt-4">
+            {% for link in config.FOOTER_LINKS %}
+            <a href="{{ link.url }}">{{ link.text }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</footer>
+
+<style>
+.footer {
+    background: var(--gray-900);
+    color: var(--gray-400);
+    padding: var(--space-8) 0;
+    text-align: center;
+}
+
+.footer-logo {
+    color: white;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: var(--space-4);
+}
+
+.footer-links {
+    display: flex;
+    gap: var(--space-6);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.footer-links a {
+    color: var(--gray-400);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover {
+    color: white;
+}
+</style>

@@ -1,0 +1,260 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}İlanlarım - Tevkil{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">İlanlarım</h1>
+            <p class="page-subtitle">Oluşturduğunuz tüm ilanları görüntüleyin ve yönetin</p>
+        </div>
+        <a href="{{ url_for('posts.create') }}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Yeni İlan Oluştur
+        </a>
+    </div>
+
+    {% if posts.items %}
+        <div class="posts-grid">
+            {% for post in posts.items %}
+            <div class="post-card {% if not post.is_active %}inactive{% endif %}">
+                <div class="post-card-header">
+                    <h3 class="post-card-title">
+                        <a href="{{ url_for('posts.detail', id=post.id) }}">{{ post.title }}</a>
+                    </h3>
+                    <div class="post-status">
+                        {% if post.is_active %}
+                            <span class="status-badge active">✓ Aktif</span>
+                        {% else %}
+                            <span class="status-badge inactive">○ Pasif</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="post-card-meta">
+                    <span class="meta-badge">{{ post.get_category_display() }}</span>
+                    <span class="meta-text">{{ post.city }}</span>
+                    <span class="meta-text">{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                </div>
+
+                <p class="post-card-description">{{ post.description[:150] }}...</p>
+
+                <div class="post-card-stats">
+                    <div class="stat-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span>{{ post.applications.count() }} Başvuru</span>
+                    </div>
+                    <div class="stat-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>{{ post.urgency_level }}</span>
+                    </div>
+                </div>
+
+                <div class="post-card-actions">
+                    <a href="{{ url_for('posts.detail', id=post.id) }}" class="btn btn-sm btn-ghost">
+                        Görüntüle
+                    </a>
+                    <a href="{{ url_for('posts.edit', id=post.id) }}" class="btn btn-sm btn-secondary">
+                        Düzenle
+                    </a>
+                    <form method="POST" action="{{ url_for('posts.toggle_status', id=post.id) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-ghost">
+                            {% if post.is_active %}Pasifleştir{% else %}Aktifleştir{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if posts.pages > 1 %}
+        <div class="pagination">
+            {% if posts.has_prev %}
+                <a href="{{ url_for('posts.my_posts', page=posts.prev_num) }}" class="btn btn-ghost">Önceki</a>
+            {% endif %}
+            
+            <span class="pagination-info">
+                Sayfa {{ posts.page }} / {{ posts.pages }}
+            </span>
+            
+            {% if posts.has_next %}
+                <a href="{{ url_for('posts.my_posts', page=posts.next_num) }}" class="btn btn-ghost">Sonraki</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>Henüz İlan Yok</h3>
+            <p>İlk ilanınızı oluşturarak başlayın</p>
+            <a href="{{ url_for('posts.create') }}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Yeni İlan Oluştur
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.post-card {
+    background: #fafbfc;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: all 0.2s;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-color: rgba(48,105,108,0.2);
+}
+
+.post-card.inactive {
+    opacity: 0.6;
+}
+
+.post-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.post-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+    flex: 1;
+}
+
+.post-card-title a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.post-card-title a:hover {
+    color: rgb(48,105,108);
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-badge.active {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.status-badge.inactive {
+    background: #F3F4F6;
+    color: #6B7280;
+}
+
+.post-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.meta-badge {
+    padding: 0.25rem 0.75rem;
+    background: rgba(48,105,108,0.1);
+    color: rgb(48,105,108);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.meta-text {
+    font-size: 0.85rem;
+    color: var(--gray-600);
+}
+
+.post-card-description {
+    color: var(--gray-700);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.post-card-stats {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1rem 0;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    margin-bottom: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--gray-600);
+}
+
+.stat-item svg {
+    color: rgb(48,105,108);
+}
+
+.post-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.pagination-info {
+    color: var(--gray-600);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .posts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
