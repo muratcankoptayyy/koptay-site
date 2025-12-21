@@ -49,6 +49,9 @@ instance/
 .DS_Store
 Thumbs.db
 
+# Old project backup
+tevkil_proje_old/
+
 # Uploads
 static/uploads/*
 !static/uploads/.gitkeep
