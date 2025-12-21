@@ -1,0 +1,72 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Bildirimler - {{ config.SITE_NAME or 'UTAP' }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-gray-900">Bildirimler</h1>
+            <span class="text-sm text-gray-500">{{ notifications|length }} bildirim</span>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {% if notifications %}
+                <div class="divide-y divide-gray-100">
+                    {% for notification in notifications %}
+                    <div class="p-4 hover:bg-gray-50 transition-colors {{ 'bg-blue-50/50' if not notification.read_at else '' }}">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 mt-1">
+                                {% if notification.type == 'new_application' %}
+                                    <span class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                                        📨
+                                    </span>
+                                {% elif notification.type == 'message' %}
+                                    <span class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                        💬
+                                    </span>
+                                {% elif notification.type == 'system' %}
+                                    <span class="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center">
+                                        🔔
+                                    </span>
+                                {% else %}
+                                    <span class="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center">
+                                        📢
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-1">
+                                    <h3 class="text-sm font-semibold text-gray-900">
+                                        {{ notification.title }}
+                                    </h3>
+                                    <span class="text-xs text-gray-500 whitespace-nowrap ml-2">
+                                        {{ notification.created_at.strftime('%d.%m.%Y %H:%M') }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-2">
+                                    {{ notification.message }}
+                                </p>
+                                {% if notification.action_url %}
+                                <a href="{{ notification.action_url }}" class="inline-flex items-center text-xs font-medium text-primary hover:text-primary-dark">
+                                    Görüntüle →
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-12 text-center">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">🔕</span>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-1">Bildiriminiz Yok</h3>
+                    <p class="text-gray-500">Henüz size ulaşan bir bildirim bulunmuyor.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,233 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}İlan Oluştur - Ofis & Paylaşım{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+    #map { height: 400px; width: 100%; border-radius: 0.5rem; z-index: 1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <a href="{{ url_for('office.index') }}" class="text-gray-500 hover:text-gray-700 mb-4 inline-block">← İlanlara Dön</a>
+        <h1 class="text-3xl font-bold text-gray-900">Yeni İlan Oluştur</h1>
+        <p class="text-gray-600">Ofis, oda veya mobilya ilanı verin</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form method="POST" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+
+            <!-- Temel Bilgiler -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">Temel Bilgiler</h3>
+                
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.title.label }}</label>
+                        {{ form.title(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50") }}
+                        {% if form.title.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.title.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.category.label }}</label>
+                            {{ form.category(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50") }}
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.price.label }}</label>
+                                {{ form.price(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50") }}
+                            </div>
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.currency.label }}</label>
+                                {{ form.currency(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.description.label }}</label>
+                        {{ form.description(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50", rows="4") }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.images.label }}</label>
+                        {{ form.images(class="w-full rounded-lg border border-gray-300 p-2 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50", multiple=True) }}
+                        <p class="text-sm text-gray-500 mt-1">Birden fazla fotoğraf seçebilirsiniz (JPG, PNG).</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Konum -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">Konum Bilgileri</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.city.label }}</label>
+                        {{ form.city(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50") }}
+                    </div>
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.district.label }}</label>
+                        {{ form.district(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50") }}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.address.label }}</label>
+                    {{ form.address(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50", rows="2", id="address-input") }}
+                </div>
+
+                <div class="mt-2 flex justify-end">
+                    <button type="button" id="find-location-btn" class="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Adresi Haritada Bul
+                    </button>
+                </div>
+
+                <!-- Harita Seçimi -->
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Harita Konumu</label>
+                    <p class="text-sm text-gray-500 mb-2">Konumu belirlemek için harita üzerinde tıklayın.</p>
+                    <div id="map" class="border border-gray-300"></div>
+                    {{ form.latitude(type="hidden", id="latitude") }}
+                    {{ form.longitude(type="hidden", id="longitude") }}
+                </div>
+            </div>
+
+            <!-- Detaylar -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">Detaylar</h3>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.square_meters.label }}</label>
+                        {{ form.square_meters(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50") }}
+                    </div>
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.room_count.label }}</label>
+                        {{ form.room_count(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50") }}
+                    </div>
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.floor.label }}</label>
+                        {{ form.floor(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50") }}
+                    </div>
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.heating_type.label }}</label>
+                        {{ form.heating_type(class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50") }}
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label class="inline-flex items-center">
+                        {{ form.is_furnished(class="rounded border-gray-300 text-primary focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50") }}
+                        <span class="ml-2 text-gray-700">{{ form.is_furnished.label }}</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-4 pt-4 border-t">
+                <a href="{{ url_for('office.index') }}" class="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">İptal</a>
+                <button type="submit" class="px-6 py-2 rounded-lg bg-primary text-white hover:bg-primary-dark">İlanı Yayınla</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Harita Başlatma (Varsayılan: İstanbul)
+    var map = L.map('map').setView([41.0082, 28.9784], 10);
+    var marker;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Haritaya tıklama olayı
+    map.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng).addTo(map);
+        }
+
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lng;
+    });
+
+    // Adresi Haritada Bul
+    document.getElementById('find-location-btn').addEventListener('click', function() {
+        var city = document.getElementById('city').value;
+        var district = document.getElementById('district').value;
+        var address = document.getElementById('address-input').value;
+        
+        var fullAddress = "";
+        if (address) fullAddress += address + " ";
+        if (district) fullAddress += district + " ";
+        if (city) fullAddress += city;
+        
+        if (fullAddress.trim() === "") {
+            alert("Lütfen önce adres bilgilerini giriniz.");
+            return;
+        }
+
+        // Nominatim API ile geocoding
+        fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(fullAddress))
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    var lat = parseFloat(data[0].lat);
+                    var lon = parseFloat(data[0].lon);
+                    var latLng = [lat, lon];
+                    
+                    map.setView(latLng, 16);
+                    
+                    if (marker) {
+                        marker.setLatLng(latLng);
+                    } else {
+                        marker = L.marker(latLng).addTo(map);
+                    }
+                    
+                    document.getElementById('latitude').value = lat;
+                    document.getElementById('longitude').value = lon;
+                } else {
+                    alert("Adres konumu bulunamadı. Lütfen harita üzerinden işaretleyiniz.");
+                }
+            })
+            .catch(error => {
+                console.error('Geocoding error:', error);
+                alert("Konum aranırken bir hata oluştu.");
+            });
+    });
+
+    // Şehir değiştiğinde haritayı güncelle (Basit bir yaklaşım)
+    // Gerçek bir projede geocoding servisi kullanılabilir
+    const citySelect = document.getElementById('city'); // Eğer select ise
+    // Input olduğu için manuel giriş yapılıyor, bu yüzden otomatik merkezleme zor olabilir.
+    // Ancak kullanıcıya kolaylık olması için mevcut konumu isteyebiliriz.
+    
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            map.setView([lat, lng], 13);
+        });
+    }
+});
+</script>
+{% endblock %}

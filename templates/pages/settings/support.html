@@ -1,0 +1,50 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Destek ve Geri Bildirim - {{ config.SITE_NAME or 'UTAP' }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">Destek ve Geri Bildirim</h1>
+                <p class="text-gray-600">
+                    Görüşleriniz bizim için değerli. Karşılaştığınız sorunları veya önerilerinizi bizimle paylaşın.
+                </p>
+            </div>
+
+            <form action="{{ url_for('settings.support') }}" method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                
+                <div>
+                    <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">Konu</label>
+                    <select id="subject" name="subject" required class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring-primary">
+                        <option value="">Seçiniz...</option>
+                        <option value="bug">Hata Bildirimi</option>
+                        <option value="feature">Özellik İsteği</option>
+                        <option value="account">Hesap İşlemleri</option>
+                        <option value="other">Diğer</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Mesajınız</label>
+                    <textarea id="message" name="message" rows="6" required class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring-primary" placeholder="Lütfen detaylı bilgi verin..."></textarea>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium">
+                        Gönder
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-8 pt-8 border-t border-gray-100 text-center">
+                <p class="text-sm text-gray-500">
+                    Acil durumlar için <a href="mailto:destek@utap.com" class="text-primary hover:underline">destek@utap.com</a> adresinden bize ulaşabilirsiniz.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

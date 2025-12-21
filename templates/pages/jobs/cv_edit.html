@@ -1,0 +1,217 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}CV Düzenle - {{ config.SITE_NAME or 'UTAP' }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <div class="max-w-3xl mx-auto">
+        <div class="page-header mb-6">
+            <h1 class="heading-lg">CV Bilgilerim</h1>
+            <p class="text-muted">İş başvurularında kullanılacak özgeçmiş bilgilerinizi düzenleyin.</p>
+        </div>
+
+        <form method="POST" class="space-y-8">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+            <!-- Kişisel Bilgiler -->
+            <div class="card p-6">
+                <h3 class="font-bold text-lg mb-4 flex items-center">
+                    <span class="mr-2">👤</span> Kişisel Bilgiler
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Doğum Tarihi</label>
+                        <input type="date" name="birth_date" value="{{ current_user.birth_date.strftime('%Y-%m-%d') if current_user.birth_date else '' }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Doğum Yeri</label>
+                        <input type="text" name="birth_place" value="{{ current_user.birth_place or '' }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: Ankara">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Ehliyet</label>
+                        <input type="text" name="drivers_license" value="{{ current_user.drivers_license or '' }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: B Sınıfı">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eğitim Bilgileri -->
+            <div class="card p-6">
+                <h3 class="font-bold text-lg mb-4 flex items-center">
+                    <span class="mr-2">🎓</span> Eğitim Bilgileri
+                </h3>
+                <div id="education-container" class="space-y-4">
+                    {% if current_user.education %}
+                        {% for edu in current_user.education %}
+                        <div class="education-item grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg relative">
+                            <button type="button" class="absolute top-2 right-2 text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">✕</button>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Okul/Üniversite</label>
+                                <input type="text" name="school[]" value="{{ edu.school }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: İstanbul Üniversitesi">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Bölüm/Derece</label>
+                                <input type="text" name="degree[]" value="{{ edu.degree }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: Hukuk Fakültesi">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Yıl</label>
+                                <input type="text" name="year[]" value="{{ edu.year }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: 2015-2019">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="button" onclick="addEducation()" class="mt-4 text-primary hover:text-primary-dark font-medium text-sm flex items-center">
+                    + Yeni Eğitim Ekle
+                </button>
+            </div>
+
+            <!-- İş Deneyimi -->
+            <div class="card p-6">
+                <h3 class="font-bold text-lg mb-4 flex items-center">
+                    <span class="mr-2">💼</span> İş Deneyimi
+                </h3>
+                <div id="work-container" class="space-y-4">
+                    {% if current_user.work_history %}
+                        {% for work in current_user.work_history %}
+                        <div class="work-item grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg relative">
+                            <button type="button" class="absolute top-2 right-2 text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">✕</button>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Kurum/Firma</label>
+                                <input type="text" name="company[]" value="{{ work.company }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: Yılmaz Hukuk Bürosu">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Pozisyon</label>
+                                <input type="text" name="position[]" value="{{ work.position }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: Stajyer Avukat">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Çalışma Yılları</label>
+                                <input type="text" name="work_year[]" value="{{ work.years }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: 2020-2022">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="button" onclick="addWork()" class="mt-4 text-primary hover:text-primary-dark font-medium text-sm flex items-center">
+                    + Yeni Deneyim Ekle
+                </button>
+            </div>
+
+            <!-- Yetenekler -->
+            <div class="card p-6">
+                <h3 class="font-bold text-lg mb-4 flex items-center">
+                    <span class="mr-2">⭐</span> Yetenekler & Diller
+                </h3>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Yetenekler (Virgülle ayırın)</label>
+                    <textarea name="skills" rows="3" class="form-input block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: İngilizce (C1), İcra Hukuku, UYAP, Microsoft Office">{{ current_user.skills|join(', ') if current_user.skills else '' }}</textarea>
+                    <p class="text-xs text-muted mt-1">Yabancı diller, sertifikalar veya teknik becerilerinizi yazabilirsiniz.</p>
+                </div>
+            </div>
+
+            <!-- Referanslar -->
+            <div class="card p-6">
+                <h3 class="font-bold text-lg mb-4 flex items-center">
+                    <span class="mr-2">👥</span> Referanslar
+                </h3>
+                <div id="references-container" class="space-y-4">
+                    {% if current_user.cv_references %}
+                        {% for ref in current_user.cv_references %}
+                        <div class="reference-item grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg relative">
+                            <button type="button" class="absolute top-2 right-2 text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">✕</button>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Ad Soyad</label>
+                                <input type="text" name="ref_name[]" value="{{ ref.name }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: Av. Ahmet Yılmaz">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Pozisyon/Kurum</label>
+                                <input type="text" name="ref_position[]" value="{{ ref.position }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: Ortak Avukat">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Telefon/İletişim</label>
+                                <input type="text" name="ref_phone[]" value="{{ ref.phone }}" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: 0532 123 45 67">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="button" onclick="addReference()" class="mt-4 text-primary hover:text-primary-dark font-medium text-sm flex items-center">
+                    + Yeni Referans Ekle
+                </button>
+            </div>
+
+            <div class="flex justify-end gap-4">
+                <a href="{{ url_for('jobs.index') }}" class="btn btn-secondary">İptal</a>
+                <button type="submit" class="btn btn-primary">Kaydet ve Güncelle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function addEducation() {
+    const container = document.getElementById('education-container');
+    const item = document.createElement('div');
+    item.className = 'education-item grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg relative';
+    item.innerHTML = `
+        <button type="button" class="absolute top-2 right-2 text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">✕</button>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Okul/Üniversite</label>
+            <input type="text" name="school[]" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: İstanbul Üniversitesi">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Bölüm/Derece</label>
+            <input type="text" name="degree[]" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: Hukuk Fakültesi">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Yıl</label>
+            <input type="text" name="year[]" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: 2015-2019">
+        </div>
+    `;
+    container.appendChild(item);
+}
+
+function addWork() {
+    const container = document.getElementById('work-container');
+    const item = document.createElement('div');
+    item.className = 'work-item grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg relative';
+    item.innerHTML = `
+        <button type="button" class="absolute top-2 right-2 text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">✕</button>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Kurum/Firma</label>
+            <input type="text" name="company[]" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: Yılmaz Hukuk Bürosu">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Pozisyon</label>
+            <input type="text" name="position[]" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: Stajyer Avukat">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Çalışma Yılları</label>
+            <input type="text" name="work_year[]" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: 2020-2022">
+        </div>
+    `;
+    container.appendChild(item);
+}
+
+function addReference() {
+    const container = document.getElementById('references-container');
+    const item = document.createElement('div');
+    item.className = 'reference-item grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg relative';
+    item.innerHTML = `
+        <button type="button" class="absolute top-2 right-2 text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">✕</button>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Ad Soyad</label>
+            <input type="text" name="ref_name[]" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: Av. Ahmet Yılmaz">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Pozisyon/Kurum</label>
+            <input type="text" name="ref_position[]" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: Ortak Avukat">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Telefon/İletişim</label>
+            <input type="text" name="ref_phone[]" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Örn: 0532 123 45 67">
+        </div>
+    `;
+    container.appendChild(item);
+}
+</script>
+{% endblock %}

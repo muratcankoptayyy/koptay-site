@@ -1,0 +1,219 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Platform Seçimi - {{ config.SITE_NAME or 'UTAP' }}{% endblock %}
+
+{% block content %}
+<div class="hub-container">
+    <div class="hub-header">
+        <h1>Hoş Geldiniz, {{ current_user.full_name.split()[0] }}</h1>
+        <p>Bugün hangi platformu kullanmak istersiniz?</p>
+    </div>
+
+    <div class="hub-grid">
+        <!-- Tevkil Platformu -->
+        <a href="{{ url_for('dashboard') }}" class="hub-card tevkil-card">
+            <div class="hub-icon">
+                ⚖️
+            </div>
+            <div class="hub-content">
+                <h2>Tevkil Ağı</h2>
+                <p>Meslektaşlarınızla yardımlaşın, duruşma ve dosya inceleme işlerinizi yönetin.</p>
+                <ul class="hub-features">
+                    <li>✓ Anlık Tevkil İlanları</li>
+                    <li>✓ Güvenli Ödeme (Yakında)</li>
+                    <li>✓ Avukat Puanlama Sistemi</li>
+                </ul>
+                <span class="hub-btn">Giriş Yap →</span>
+            </div>
+        </a>
+
+        <!-- Kariyer Platformu -->
+        <a href="{{ url_for('jobs.index') }}" class="hub-card career-card">
+            <div class="hub-icon">
+                💼
+            </div>
+            <div class="hub-content">
+                <h2>Kariyer & İş İlanları</h2>
+                <p>Hukuk büroları için personel arayışı ve kariyer fırsatları.</p>
+                <ul class="hub-features">
+                    <li>✓ Avukat & Stajyer İlanları</li>
+                    <li>✓ Ofis Personeli Arayışı</li>
+                    <li>✓ Detaylı CV Oluşturma</li>
+                </ul>
+                <span class="hub-btn">İlanlara Göz At →</span>
+            </div>
+        </a>
+
+        <!-- Ofis & Paylaşım Platformu -->
+        <a href="{{ url_for('office.index') }}" class="hub-card office-card">
+            <div class="hub-icon">
+                🏢
+            </div>
+            <div class="hub-content">
+                <h2>Ofis & Paylaşım</h2>
+                <p>Ofis maliyetlerini düşürün, paylaşın veya yeni bir ofis bulun.</p>
+                <ul class="hub-features">
+                    <li>✓ Kiralık Ofis & Oda</li>
+                    <li>✓ Paylaşımlı Ofisler</li>
+                    <li>✓ Ofis Mobilyaları</li>
+                </ul>
+                <span class="hub-btn">Ofis Bul →</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<style>
+    .hub-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .hub-header {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+
+    .hub-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--gray-900);
+        margin-bottom: 1rem;
+    }
+
+    .hub-header p {
+        font-size: 1.25rem;
+        color: var(--gray-600);
+    }
+
+    .hub-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .hub-card {
+        background: white;
+        border-radius: 24px;
+        padding: 3rem 2rem;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .hub-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .tevkil-card:hover {
+        border-color: var(--primary);
+    }
+
+    .career-card:hover {
+        border-color: var(--secondary);
+    }
+
+    .office-card:hover {
+        border-color: #8b5cf6; /* Mor renk */
+    }
+
+    .hub-icon {
+        font-size: 4rem;
+        margin-bottom: 2rem;
+        background: var(--gray-50);
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s;
+    }
+
+    .hub-card:hover .hub-icon {
+        transform: scale(1.1) rotate(5deg);
+        background: white;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+    }
+
+    .hub-content h2 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--gray-900);
+    }
+
+    .hub-content p {
+        color: var(--gray-600);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .hub-features {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 2rem 0;
+        text-align: left;
+        width: 100%;
+    }
+
+    .hub-features li {
+        margin-bottom: 0.75rem;
+        color: var(--gray-700);
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .hub-btn {
+        margin-top: auto;
+        display: inline-block;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s;
+        background: var(--gray-100);
+        color: var(--gray-900);
+    }
+
+    .tevkil-card:hover .hub-btn {
+        background: var(--primary);
+        color: white;
+    }
+
+    .career-card:hover .hub-btn {
+        background: var(--secondary);
+        color: white;
+    }
+
+    .office-card:hover .hub-btn {
+        background: #8b5cf6;
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .hub-container {
+            padding: 2rem 1rem;
+        }
+        
+        .hub-header h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}

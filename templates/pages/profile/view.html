@@ -2,174 +2,91 @@
 
 {% block title %}{{ user.masked_full_name }} - Profil - Tevkil{% endblock %}
 
-{% block head %}
-{{ super() }}
+{% block extra_head %}
 <style>
 .profile-page-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 1.5rem;
 }
-</style>
-{% endblock %}
 
-{% block content %}
-<div class="profile-page-container">
-    <!-- Profil Kartı -->
-    <div class="profile-card">
-            <!-- Profil Header -->
-            <div class="profile-header">
-                <div class="profile-avatar-large">
-                    {{ user.full_name[0] if user.full_name else 'U' }}
-                </div>
-                <div class="profile-header-info">
-                    <h1 class="profile-name">{{ user.masked_full_name }}</h1>
-                    <p class="profile-title">{{ user.bar_association if user.bar_association else 'Avukat' }}</p>
-                    {% if user.rating_average %}
-                    <div class="profile-rating">
-                        <span class="rating-stars">⭐ {{ user.rating_average }}</span>
-                        <span class="rating-count">({{ user.rating_count }} değerlendirme)</span>
-                    </div>
-                    {% endif %}
-                </div>
-                {% if current_user.is_authenticated and current_user.id == user.id %}
-                <a href="{{ url_for('profile.edit') }}" class="btn btn-secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                    Profili Düzenle
-                </a>
-                {% endif %}
-            </div>
+.profile-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
 
-            <!-- İstatistikler -->
-            <div class="profile-stats">
-                <div class="stat-item">
-                    <span class="stat-value">{{ user.total_posts_created }}</span>
-                    <span class="stat-label">Aktif İlan</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">{{ user.total_applications_received }}</span>
-                    <span class="stat-label">Alınan Başvuru</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">{{ user.total_applications_sent }}</span>
-                    <span class="stat-label">Gönderilen Başvuru</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">{{ user.created_at.year }}</span>
-                    <span class="stat-label">Kayıt Yılı</span>
-                </div>
-            </div>
+@media (max-width: 1024px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
-            <!-- Hakkında -->
-            {% if user.bio %}
-            <div class="profile-section">
-                <h3 class="section-title">Hakkında</h3>
-                <p class="profile-bio">{{ user.bio }}</p>
-            </div>
-            {% endif %}
-
-            <!-- Avukatlık Bilgileri -->
-            <div class="profile-section">
-                <h3 class="section-title">Avukatlık Bilgileri</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Baro</span>
-                        <span class="info-value">{{ user.bar_association }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Sicil No</span>
-                        <span class="info-value">{{ user.bar_registration_number }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Uzmanlık</span>
-                        <span class="info-value">{{ user.specializations[0] if user.specializations else '-' }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Konum -->
-            <div class="profile-section">
-                <h3 class="section-title">Konum</h3>
-                <div class="location-info">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-                    <span>{{ user.city }}{% if user.district %}, {{ user.district }}{% endif %}</span>
-                </div>
-            </div>
-
-            <!-- İletişim (Sadece kendi profilinde) -->
-            {% if current_user.is_authenticated and current_user.id == user.id %}
-            <div class="profile-section">
-                <h3 class="section-title">İletişim Bilgileri</h3>
-                <div class="contact-info">
-                    <div class="contact-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                            <polyline points="22,6 12,13 2,6"></polyline>
-                        </svg>
-                        <span>{{ user.email }}</span>
-                    </div>
-                    <div class="contact-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                        </svg>
-                        <span>{{ user.phone }}</span>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Son İlanlar -->
-        {% if posts %}
-        <div class="recent-posts">
-            <h3 class="section-title">Son İlanlar</h3>
-            <div class="posts-list">
-                {% for post in posts %}
-                <a href="{{ url_for('posts.detail', id=post.id) }}" class="post-item">
-                    <div class="post-item-header">
-                        <h4 class="post-item-title">{{ post.title }}</h4>
-                        <span class="post-item-date">{{ post.created_at.strftime('%d.%m.%Y') }}</span>
-                    </div>
-                    <p class="post-item-desc">{{ post.description[:100] }}{% if post.description|length > 100 %}...{% endif %}</p>
-                    <div class="post-item-meta">
-                        <span class="meta-badge">{{ post.category }}</span>
-                        <span class="meta-text">{{ post.applications_count }} başvuru</span>
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
-            {% if current_user.is_authenticated and current_user.id == user.id %}
-            <a href="{{ url_for('posts.my_posts') }}" class="btn btn-ghost btn-block">
-                Tüm İlanlarımı Görüntüle
-            </a>
-            {% endif %}
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<style>
-/* Profil Kartı */
-.profile-card {
+.content-card {
     background: white;
-    padding: 3rem;
     border-radius: 16px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid transparent;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
-.profile-card:hover {
-    box-shadow: 0 12px 32px rgba(48, 105, 108, 0.15);
-    border-color: var(--primary);
+.nav-card {
+    padding: 1rem;
+    position: sticky;
+    top: 2rem;
 }
 
+.profile-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    text-align: left;
+    text-decoration: none;
+}
+
+.nav-item:hover {
+    background: var(--bg-light);
+    color: var(--text-dark);
+}
+
+.nav-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0 0 0.5rem 0;
+}
+
+.page-subtitle {
+    font-size: 1rem;
+    color: var(--gray-600);
+}
+
+/* Profile Specific Styles */
 .profile-header {
     display: flex;
     gap: 1.5rem;
@@ -433,4 +350,224 @@
     }
 }
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page-container">
+    <!-- Sayfa Başlığı -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Profil</h1>
+            <p class="page-subtitle">Kullanıcı profili ve detayları</p>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+        <!-- Sidebar -->
+        <div class="profile-sidebar">
+            <div class="nav-card content-card">
+                <div class="profile-nav">
+                    <a href="{{ url_for('profile.view', user_id=user.id) }}" class="nav-item active">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Profil Görüntüle
+                    </a>
+                    {% if current_user.is_authenticated and current_user.id == user.id %}
+                    <a href="{{ url_for('profile.edit', platform=request.args.get('platform')) }}" class="nav-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Profili Düzenle
+                    </a>
+                    <a href="{{ url_for('jobs.cv_edit') }}" class="nav-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        CV Düzenle
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="profile-content">
+            <div class="content-card fade-in">
+                <!-- Profil Header -->
+                <div class="profile-header">
+                    <div class="profile-avatar-large relative group cursor-pointer overflow-hidden" {% if current_user.id == user.id %}onclick="document.getElementById('avatar-upload').click()"{% endif %}>
+                        {% if user.avatar_url %}
+                            <img src="{{ user.avatar_url }}" alt="Avatar" class="w-full h-full object-cover">
+                        {% else %}
+                            {{ user.full_name[0] if user.full_name else 'U' }}
+                        {% endif %}
+                        
+                        {% if current_user.id == user.id %}
+                        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                        </div>
+                        <input type="file" id="avatar-upload" class="hidden" accept="image/*" onchange="uploadAvatar(this)">
+                        {% endif %}
+                    </div>
+                    <div class="profile-header-info">
+                        <h1 class="profile-name">{{ user.masked_full_name }}</h1>
+                        <p class="profile-title">{{ user.bar_association if user.bar_association else 'Avukat' }}</p>
+                        {% if user.rating_average %}
+                        <div class="profile-rating">
+                            <span class="rating-stars">⭐ {{ user.rating_average }}</span>
+                            <span class="rating-count">({{ user.rating_count }} değerlendirme)</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- İstatistikler -->
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">{{ user.total_posts_created }}</span>
+                        <span class="stat-label">Aktif İlan</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ user.total_applications_received }}</span>
+                        <span class="stat-label">Alınan Başvuru</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ user.total_applications_sent }}</span>
+                        <span class="stat-label">Gönderilen Başvuru</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ user.created_at.year }}</span>
+                        <span class="stat-label">Kayıt Yılı</span>
+                    </div>
+                </div>
+
+                <!-- Hakkında -->
+                {% if user.bio %}
+                <div class="profile-section">
+                    <h3 class="section-title">Hakkında</h3>
+                    <p class="profile-bio">{{ user.bio }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Avukatlık Bilgileri -->
+                <div class="profile-section">
+                    <h3 class="section-title">Avukatlık Bilgileri</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Baro</span>
+                            <span class="info-value">{{ user.bar_association }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Sicil No</span>
+                            <span class="info-value">{{ user.bar_registration_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Uzmanlık</span>
+                            <span class="info-value">{{ user.specializations[0] if user.specializations else '-' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Konum -->
+                <div class="profile-section">
+                    <h3 class="section-title">Konum</h3>
+                    <div class="location-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span>{{ user.city }}{% if user.district %}, {{ user.district }}{% endif %}</span>
+                    </div>
+                </div>
+
+                <!-- İletişim (Sadece kendi profilinde) -->
+                {% if current_user.is_authenticated and current_user.id == user.id %}
+                <div class="profile-section">
+                    <h3 class="section-title">İletişim Bilgileri</h3>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <span>{{ user.email }}</span>
+                        </div>
+                        <div class="contact-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                            <span>{{ user.phone }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Son İlanlar -->
+            {% if posts %}
+            <div class="recent-posts" style="margin-top: 2rem;">
+                <h3 class="section-title">Son İlanlar</h3>
+                <div class="posts-list">
+                    {% for post in posts %}
+                    <a href="{{ url_for('posts.detail', id=post.id) }}" class="post-item">
+                        <div class="post-item-header">
+                            <h4 class="post-item-title">{{ post.title }}</h4>
+                            <span class="post-item-date">{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                        </div>
+                        <p class="post-item-desc">{{ post.description[:100] }}{% if post.description|length > 100 %}...{% endif %}</p>
+                        <div class="post-item-meta">
+                            <span class="meta-badge">{{ post.category }}</span>
+                            <span class="meta-text">{{ post.applications_count }} başvuru</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% if current_user.is_authenticated and current_user.id == user.id %}
+                <a href="{{ url_for('posts.my_posts') }}" class="btn btn-ghost btn-block">
+                    Tüm İlanlarımı Görüntüle
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function uploadAvatar(input) {
+    if (input.files && input.files[0]) {
+        const formData = new FormData();
+        formData.append('file', input.files[0]);
+        formData.append('csrf_token', "{{ csrf_token() if csrf_token else '' }}");
+
+        fetch("{{ url_for('profile.upload_avatar') }}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Sayfayı yenile
+                window.location.reload();
+            } else {
+                alert('Hata: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Bir hata oluştu.');
+        });
+    }
+}
+</script>
 {% endblock %}

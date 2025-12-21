@@ -109,15 +109,15 @@
 - [x] Loading states standardize et
 - [x] Error handling iyileştir
 
-### 3️⃣ Medya & Görsel (1 gün)
+### 3️⃣ Medya & Görsel (Tamamlandı)
 - [x] Profil fotoğrafı yükleme
 - [x] İlan resimleri
 - [x] Empty state illustrations
 - [x] App icon & splash screen (Konfigürasyon hazır)
 
-### 4️⃣ Test & Deployment (1 gün)
+### 4️⃣ Test & Deployment (Devam Ediyor)
 - [ ] Fiziksel cihazda test
-- [ ] API endpoint test
+- [ ] API endpoint test (Otomatik script hazır)
 - [ ] Error scenarios test
 - [ ] Release APK build
 - [ ] Play Store hazırlık (Metadata, screenshots)

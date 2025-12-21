@@ -23,6 +23,9 @@ dependencies:
   shared_preferences: ^2.2.2
   flutter_secure_storage: ^9.0.0
   
+  # Animations
+  shimmer: ^3.0.0
+  
   # Date & Time
   intl: ^0.18.1
   
@@ -31,6 +34,18 @@ dependencies:
   flutter_svg: ^2.0.9
   image_picker: ^1.0.7
   http_parser: ^4.0.2
+  file_picker: ^8.0.0
+  geolocator: ^10.1.0
+  url_launcher: ^6.2.1
+  permission_handler: ^11.0.1
+  # record: 5.1.0
+  audioplayers: ^5.2.1
+  path_provider: ^2.1.1
+  # flutter_local_notifications: ^19.0.0  # Temporarily disabled for Android build
+  
+  # Maps
+  flutter_map: ^6.0.0
+  latlong2: ^0.9.0
 
 dev_dependencies:
   flutter_test:
@@ -43,8 +58,8 @@ flutter:
   uses-material-design: true
 
   # Assets
-  # assets:
-  #   - images/
+  assets:
+    - assets/images/
   
   # Fonts
   # fonts:
@@ -53,14 +68,20 @@ flutter:
   #       - asset: fonts/Roboto-Regular.ttf
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
   image_path: "assets/images/icon.png"
   min_sdk_android: 21
+  remove_alpha_ios: true
+  adaptive_icon_background: "#30696C"
+  adaptive_icon_foreground: "assets/images/icon-foreground.png"
 
 flutter_native_splash:
-  color: "#ffffff"
+  color: "#30696C"
   image: "assets/images/splash.png"
   android_12:
     image: "assets/images/splash.png"
-    color: "#ffffff"
+    icon_background_color: "#30696C"
+    color: "#30696C"
+  ios: true
+  fullscreen: true

@@ -1,0 +1,86 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Ofis İlanları - UTAP{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Ofis & Paylaşım</h1>
+            <p class="text-gray-600 mt-2">Kiralık ofis, oda ve mobilya ilanları</p>
+        </div>
+        <a href="{{ url_for('office.create') }}" class="btn btn-primary">
+            <span>➕</span> İlan Oluştur
+        </a>
+    </div>
+
+    <!-- Kategoriler -->
+    <div class="flex gap-4 mb-8 overflow-x-auto pb-4">
+        <a href="{{ url_for('office.index') }}" class="px-4 py-2 rounded-full {{ 'bg-primary text-white' if not category else 'bg-white text-gray-600 hover:bg-gray-50' }}">
+            Tümü
+        </a>
+        <a href="{{ url_for('office.index', category='rent_office') }}" class="px-4 py-2 rounded-full {{ 'bg-primary text-white' if category == 'rent_office' else 'bg-white text-gray-600 hover:bg-gray-50' }}">
+            Kiralık Ofis
+        </a>
+        <a href="{{ url_for('office.index', category='rent_room') }}" class="px-4 py-2 rounded-full {{ 'bg-primary text-white' if category == 'rent_room' else 'bg-white text-gray-600 hover:bg-gray-50' }}">
+            Kiralık Oda
+        </a>
+        <a href="{{ url_for('office.index', category='share_office') }}" class="px-4 py-2 rounded-full {{ 'bg-primary text-white' if category == 'share_office' else 'bg-white text-gray-600 hover:bg-gray-50' }}">
+            Paylaşımlı Ofis
+        </a>
+        <a href="{{ url_for('office.index', category='sell_furniture') }}" class="px-4 py-2 rounded-full {{ 'bg-primary text-white' if category == 'sell_furniture' else 'bg-white text-gray-600 hover:bg-gray-50' }}">
+            Satılık Mobilya
+        </a>
+    </div>
+
+    <!-- İlan Listesi -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for post in posts %}
+        <a href="{{ url_for('office.detail', id=post.id) }}" class="block bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-gray-100">
+            <div class="aspect-w-16 aspect-h-9 bg-gray-200">
+                {% if post.images.first() %}
+                    <img src="{{ post.images.first().image_url }}" alt="{{ post.title }}" class="object-cover w-full h-48">
+                {% else %}
+                    <div class="flex items-center justify-center h-48 bg-gray-100 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-semibold px-2 py-1 rounded bg-blue-50 text-blue-600">
+                        {% if post.category == 'rent_office' %}Kiralık Ofis
+                        {% elif post.category == 'rent_room' %}Kiralık Oda
+                        {% elif post.category == 'share_office' %}Paylaşımlı
+                        {% elif post.category == 'sell_furniture' %}Mobilya
+                        {% endif %}
+                    </span>
+                    <span class="text-lg font-bold text-primary">{{ post.price }} {{ post.currency }}</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-1 truncate">{{ post.title }}</h3>
+                <p class="text-sm text-gray-500 mb-3 flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {{ post.city }}, {{ post.district }}
+                </p>
+                <div class="flex items-center justify-between text-sm text-gray-500 pt-3 border-t border-gray-100">
+                    <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                    <span>{{ post.user.masked_full_name }}</span>
+                </div>
+            </div>
+        </a>
+        {% else %}
+        <div class="col-span-full text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+            <div class="text-gray-400 mb-4 text-4xl">🏢</div>
+            <h3 class="text-lg font-medium text-gray-900">Henüz ilan bulunmuyor</h3>
+            <p class="text-gray-500 mb-6">Bu kategoride henüz ilan paylaşılmamış.</p>
+            <a href="{{ url_for('office.create') }}" class="btn btn-primary">İlk İlanı Sen Ver</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

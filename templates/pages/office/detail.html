@@ -1,0 +1,189 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ post.title }} - Ofis İlanı{% endblock %}
+
+{% block extra_head %}
+{% if post.latitude and post.longitude %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+    #map { height: 300px; width: 100%; border-radius: 0.75rem; z-index: 1; }
+</style>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{{ url_for('office.index') }}" class="text-gray-500 hover:text-gray-700 inline-flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            İlanlara Dön
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Sol Kolon: Resimler ve Detaylar -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Resim Galerisi -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                {% if post.images.count() > 0 %}
+                    <div class="relative">
+                        <!-- Ana Resim -->
+                        <div class="aspect-w-16 aspect-h-9 bg-gray-100">
+                            <img id="mainImage" src="{{ post.images.first().image_url }}" alt="{{ post.title }}" class="object-cover w-full h-full">
+                        </div>
+                        
+                        <!-- Küçük Resimler -->
+                        {% if post.images.count() > 1 %}
+                        <div class="p-4 border-t border-gray-100 overflow-x-auto">
+                            <div class="flex gap-2">
+                                {% for image in post.images %}
+                                <button onclick="document.getElementById('mainImage').src='{{ image.image_url }}'" 
+                                        class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 border-transparent hover:border-primary focus:outline-none focus:border-primary transition-all">
+                                    <img src="{{ image.image_url }}" class="w-full h-full object-cover">
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="aspect-w-16 aspect-h-9 bg-gray-100 flex items-center justify-center text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- İlan Başlığı ve Açıklama -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700 mb-2">
+                            {% if post.category == 'rent_office' %}Kiralık Ofis
+                            {% elif post.category == 'rent_room' %}Kiralık Oda
+                            {% elif post.category == 'share_office' %}Paylaşımlı Ofis
+                            {% elif post.category == 'sell_furniture' %}Satılık Mobilya
+                            {% endif %}
+                        </span>
+                        <h1 class="text-2xl font-bold text-gray-900">{{ post.title }}</h1>
+                        <p class="text-gray-500 flex items-center gap-1 mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {{ post.city }}, {{ post.district }}
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold text-primary">{{ post.price }} {{ post.currency }}</div>
+                        <div class="text-sm text-gray-500">{{ post.created_at.strftime('%d.%m.%Y') }}</div>
+                    </div>
+                </div>
+
+                <div class="prose max-w-none text-gray-700 mt-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Açıklama</h3>
+                    <p class="whitespace-pre-line">{{ post.description }}</p>
+                </div>
+            </div>
+
+            <!-- Harita -->
+            {% if post.latitude and post.longitude %}
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Konum</h3>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ post.latitude }},{{ post.longitude }}" target="_blank" class="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        Yol Tarifi Al
+                    </a>
+                </div>
+                <div id="map"></div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var map = L.map('map').setView([{{ post.latitude }}, {{ post.longitude }}], 15);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(map);
+                        L.marker([{{ post.latitude }}, {{ post.longitude }}]).addTo(map)
+                            .bindPopup("{{ post.title }}")
+                            .openPopup();
+                    });
+                </script>
+            </div>
+            {% endif %}
+
+            <!-- Özellikler -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Özellikler</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    {% if post.square_meters %}
+                    <div>
+                        <span class="block text-sm text-gray-500">Metrekare</span>
+                        <span class="block font-medium">{{ post.square_meters }} m²</span>
+                    </div>
+                    {% endif %}
+                    {% if post.room_count %}
+                    <div>
+                        <span class="block text-sm text-gray-500">Oda Sayısı</span>
+                        <span class="block font-medium">{{ post.room_count }}</span>
+                    </div>
+                    {% endif %}
+                    {% if post.floor %}
+                    <div>
+                        <span class="block text-sm text-gray-500">Bulunduğu Kat</span>
+                        <span class="block font-medium">{{ post.floor }}</span>
+                    </div>
+                    {% endif %}
+                    {% if post.heating_type %}
+                    <div>
+                        <span class="block text-sm text-gray-500">Isıtma</span>
+                        <span class="block font-medium">{{ post.heating_type }}</span>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <span class="block text-sm text-gray-500">Eşyalı</span>
+                        <span class="block font-medium">{{ 'Evet' if post.is_furnished else 'Hayır' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Kolon: İletişim -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">İlan Sahibi</h3>
+                
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center text-xl font-bold">
+                        {{ post.user.full_name[0] }}
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-900">{{ post.user.masked_full_name }}</div>
+                        <div class="text-sm text-gray-500">{{ post.user.bar_association }}</div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('messages.start_conversation', user_id=post.user.id, post_type='office', post_id=post.id) }}" class="block w-full py-3 px-4 bg-primary text-white text-center rounded-lg hover:bg-primary-dark transition-colors font-medium">
+                            Mesaj Gönder
+                        </a>
+                        <a href="{{ url_for('profile.view', user_id=post.user.id) }}" class="block w-full py-3 px-4 bg-gray-100 text-gray-700 text-center rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                            Profili Görüntüle
+                        </a>
+                    {% else %}
+                        <div class="text-center p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+                            İletişime geçmek için <a href="{{ url_for('auth.login') }}" class="text-primary font-medium">giriş yapın</a>.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

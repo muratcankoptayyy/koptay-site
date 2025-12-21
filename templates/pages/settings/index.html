@@ -2,194 +2,77 @@
 
 {% block title %}Ayarlar - Tevkil{% endblock %}
 
-{% block head %}
-{{ super() }}
+{% block extra_head %}
 <style>
 .settings-page-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 1.5rem;
 }
-</style>
-{% endblock %}
 
-{% block content %}
-<div class="settings-page-container" x-data="{ activeTab: 'profile' }">
-    <!-- Sayfa Başlığı -->
-    <div class="page-header">
-        <div>
-            <h1 class="page-title">Ayarlar</h1>
-            <p class="page-subtitle">Hesabınızı ve tercihlerinizi yönetin</p>
-        </div>
-    </div>
+.settings-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
 
-    <!-- Tabs -->
-    <div class="settings-tabs">
-        <button 
-            @click="activeTab = 'profile'" 
-            :class="{ 'active': activeTab === 'profile' }"
-            class="tab-button">
-            <span>👤</span>
-            <span>Profil Bilgileri</span>
-        </button>
-        <button 
-            @click="activeTab = 'security'" 
-            :class="{ 'active': activeTab === 'security' }"
-            class="tab-button">
-            <span>🔒</span>
-            <span>Güvenlik</span>
-        </button>
-        <button 
-            @click="activeTab = 'notifications'" 
-            :class="{ 'active': activeTab === 'notification' }"
-            class="tab-button">
-            <span>🔔</span>
-            <span>Bildirimler</span>
-        </button>
-    </div>
+@media (max-width: 1024px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
-    <!-- Profil Bilgileri Tab -->
-    <div x-show="activeTab === 'profile'" x-cloak class="tab-content">
-        <form method="POST" action="{{ url_for('settings.update_profile') }}" class="settings-form">
-            
-            <div class="form-section">
-                <h2 class="section-title">Kişisel Bilgiler</h2>
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Ad Soyad *</label>
-                        <input type="text" name="full_name" value="{{ current_user.full_name }}" required>
-                    </div>
+.content-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.05);
+}
 
-                    <div class="form-group">
-                        <label>E-posta</label>
-                        <input type="email" value="{{ current_user.email }}" disabled>
-                        <small>E-posta değiştirmek için destek ile iletişime geçin</small>
-                    </div>
+.nav-card {
+    padding: 1rem;
+    position: sticky;
+    top: 2rem;
+}
 
-                    <div class="form-group">
-                        <label>Telefon</label>
-                        <input type="tel" name="phone" value="{{ current_user.phone or '' }}">
-                    </div>
+.settings-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
 
-                    <div class="form-group">
-                        <label>WhatsApp</label>
-                        <input type="tel" name="whatsapp_number" value="{{ current_user.whatsapp_number or '' }}">
-                    </div>
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    text-align: left;
+}
 
-                    <div class="form-group">
-                        <label>İl</label>
-                        <input type="text" name="city" value="{{ current_user.city or '' }}">
-                    </div>
+.nav-item:hover {
+    background: var(--bg-light);
+    color: var(--text-dark);
+}
 
-                    <div class="form-group">
-                        <label>İlçe</label>
-                        <input type="text" name="district" value="{{ current_user.district or '' }}">
-                    </div>
-                </div>
-            </div>
+.nav-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+}
 
-            <div class="form-section">
-                <h2 class="section-title">Mesleki Bilgiler</h2>
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Baro</label>
-                        <input type="text" name="bar_association" value="{{ current_user.bar_association or '' }}">
-                    </div>
+.nav-icon {
+    font-size: 1.25rem;
+}
 
-                    <div class="form-group">
-                        <label>Sicil No</label>
-                        <input type="text" name="registration_number" value="{{ current_user.registration_number or '' }}">
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label>Uzmanlık Alanı</label>
-                        <input type="text" name="specialization" value="{{ current_user.specialization or '' }}" placeholder="Örn: Ceza Hukuku, Aile Hukuku">
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label>Hakkımda</label>
-                        <textarea name="about" rows="4">{{ current_user.about or '' }}</textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Kaydet</button>
-                <a href="{{ url_for('profile.my_profile') }}" class="btn btn-ghost">İptal</a>
-            </div>
-        </form>
-    </div>
-
-    <!-- Güvenlik Tab -->
-    <div x-show="activeTab === 'security'" x-cloak class="tab-content">
-        <form method="POST" action="{{ url_for('settings.update_password') }}" class="settings-form">
-            
-            <div class="form-section">
-                <h2 class="section-title">Şifre Değiştir</h2>
-                
-                <div class="form-grid single-column">
-                    <div class="form-group">
-                        <label>Mevcut Şifre *</label>
-                        <input type="password" name="current_password" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Yeni Şifre *</label>
-                        <input type="password" name="new_password" required minlength="6">
-                        <small>En az 6 karakter olmalıdır</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Yeni Şifre (Tekrar) *</label>
-                        <input type="password" name="confirm_password" required minlength="6">
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Şifreyi Güncelle</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Bildirimler Tab -->
-    <div x-show="activeTab === 'notifications'" x-cloak class="tab-content">
-        <div class="form-section">
-            <h2 class="section-title">Bildirim Tercihleri</h2>
-            <p class="section-description">Bildirim ayarları yakında eklenecektir.</p>
-            
-            <div class="notification-preview">
-                <div class="notification-item">
-                    <div class="notification-icon">📧</div>
-                    <div class="notification-info">
-                        <h4>E-posta Bildirimleri</h4>
-                        <p>Yeni başvuru ve mesajlar için e-posta bildirimleri alın</p>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" checked disabled>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <div class="notification-item">
-                    <div class="notification-icon">🔔</div>
-                    <div class="notification-info">
-                        <h4>Push Bildirimleri</h4>
-                        <p>Tarayıcı üzerinden anında bildirim alın</p>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" disabled>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
 .page-header {
     margin-bottom: 2rem;
 }
@@ -206,43 +89,6 @@
     color: var(--gray-600);
 }
 
-.settings-tabs {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 2rem;
-    border-bottom: 2px solid #e5e7eb;
-    overflow-x: auto;
-}
-
-.tab-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1rem 1.5rem;
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    color: var(--gray-600);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    white-space: nowrap;
-}
-
-.tab-button span:first-child {
-    font-size: 1.25rem;
-}
-
-.tab-button:hover {
-    color: rgb(48, 105, 108);
-}
-
-.tab-button.active {
-    color: rgb(48, 105, 108);
-    border-bottom-color: rgb(48, 105, 108);
-}
-
 .tab-content {
     animation: fadeIn 0.3s ease;
 }
@@ -253,11 +99,7 @@
 }
 
 .settings-form {
-    background: #f8f9fa;
-    border-radius: 16px;
-    padding: 2rem;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    /* Form styles inherited from content-card */
 }
 
 .form-section {
@@ -350,7 +192,7 @@
 }
 
 .notification-preview {
-    background: white;
+    background: #f8f9fa;
     border-radius: 12px;
     padding: 1.5rem;
     border: 1px solid #e5e7eb;
@@ -361,7 +203,7 @@
     align-items: center;
     gap: 1rem;
     padding: 1.5rem;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .notification-item:last-child {
@@ -375,8 +217,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f3f4f6;
+    background: white;
     border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .notification-info {
@@ -447,4 +290,205 @@ input:disabled + .slider {
     cursor: not-allowed;
 }
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-page-container" x-data="{ activeTab: 'profile' }">
+    <!-- Sayfa Başlığı -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Ayarlar</h1>
+            <p class="page-subtitle">Hesabınızı ve tercihlerinizi yönetin</p>
+        </div>
+    </div>
+
+    <div class="settings-grid">
+        <!-- Sidebar Navigation -->
+        <div class="settings-sidebar">
+            <div class="content-card nav-card">
+                <nav class="settings-nav">
+                    <button 
+                        @click="activeTab = 'profile'" 
+                        :class="{ 'active': activeTab === 'profile' }"
+                        class="nav-item">
+                        <span class="nav-icon">👤</span>
+                        <span class="nav-text">Profil Bilgileri</span>
+                    </button>
+                    <button 
+                        @click="activeTab = 'security'" 
+                        :class="{ 'active': activeTab === 'security' }"
+                        class="nav-item">
+                        <span class="nav-icon">🔒</span>
+                        <span class="nav-text">Güvenlik</span>
+                    </button>
+                    <button 
+                        @click="activeTab = 'notifications'" 
+                        :class="{ 'active': activeTab === 'notifications' }"
+                        class="nav-item">
+                        <span class="nav-icon">🔔</span>
+                        <span class="nav-text">Bildirimler</span>
+                    </button>
+                    <a href="{{ url_for('profile.verify') }}" class="nav-item">
+                        <span class="nav-icon">✓</span>
+                        <span class="nav-text">Hesap Doğrulama</span>
+                    </a>
+                    <a href="{{ url_for('settings.support') }}" class="nav-item">
+                        <span class="nav-icon">❓</span>
+                        <span class="nav-text">Destek</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="settings-content">
+            <!-- Profil Bilgileri Tab -->
+            <div x-show="activeTab === 'profile'" x-cloak class="tab-content">
+                <div class="content-card">
+                    <form method="POST" action="{{ url_for('settings.update_profile') }}" class="settings-form">
+                        
+                        <div class="form-section">
+                            <h2 class="section-title">Kişisel Bilgiler</h2>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Ad Soyad *</label>
+                                    <input type="text" name="full_name" value="{{ current_user.full_name }}" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>E-posta</label>
+                                    <input type="email" value="{{ current_user.email }}" disabled>
+                                    <small>E-posta değiştirmek için destek ile iletişime geçin</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Telefon</label>
+                                    <input type="tel" name="phone" value="{{ current_user.phone or '' }}">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>WhatsApp</label>
+                                    <input type="tel" name="whatsapp_number" value="{{ current_user.whatsapp_number or '' }}">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>İl</label>
+                                    <input type="text" name="city" value="{{ current_user.city or '' }}">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>İlçe</label>
+                                    <input type="text" name="district" value="{{ current_user.district or '' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h2 class="section-title">Mesleki Bilgiler</h2>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Baro</label>
+                                    <input type="text" name="bar_association" value="{{ current_user.bar_association or '' }}">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Sicil No</label>
+                                    <input type="text" name="registration_number" value="{{ current_user.registration_number or '' }}">
+                                </div>
+
+                                <div class="form-group full-width">
+                                    <label>Uzmanlık Alanı</label>
+                                    <input type="text" name="specialization" value="{{ current_user.specialization or '' }}" placeholder="Örn: Ceza Hukuku, Aile Hukuku">
+                                </div>
+
+                                <div class="form-group full-width">
+                                    <label>Hakkımda</label>
+                                    <textarea name="about" rows="4">{{ current_user.about or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Kaydet</button>
+                            <a href="{{ url_for('profile.my_profile') }}" class="btn btn-ghost">İptal</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Güvenlik Tab -->
+            <div x-show="activeTab === 'security'" x-cloak class="tab-content">
+                <div class="content-card">
+                    <form method="POST" action="{{ url_for('settings.update_password') }}" class="settings-form">
+                        
+                        <div class="form-section">
+                            <h2 class="section-title">Şifre Değiştir</h2>
+                            
+                            <div class="form-grid single-column">
+                                <div class="form-group">
+                                    <label>Mevcut Şifre *</label>
+                                    <input type="password" name="current_password" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Yeni Şifre *</label>
+                                    <input type="password" name="new_password" required minlength="6">
+                                    <small>En az 6 karakter olmalıdır</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Yeni Şifre (Tekrar) *</label>
+                                    <input type="password" name="confirm_password" required minlength="6">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Şifreyi Güncelle</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Bildirimler Tab -->
+            <div x-show="activeTab === 'notifications'" x-cloak class="tab-content">
+                <div class="content-card">
+                    <div class="form-section">
+                        <h2 class="section-title">Bildirim Tercihleri</h2>
+                        <p class="section-description">Bildirim ayarları yakında eklenecektir.</p>
+                        
+                        <div class="notification-preview">
+                            <div class="notification-item">
+                                <div class="notification-icon">📧</div>
+                                <div class="notification-info">
+                                    <h4>E-posta Bildirimleri</h4>
+                                    <p>Yeni başvuru ve mesajlar için e-posta bildirimleri alın</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked disabled>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="notification-item">
+                                <div class="notification-icon">🔔</div>
+                                <div class="notification-info">
+                                    <h4>Push Bildirimleri</h4>
+                                    <p>Tarayıcı üzerinden anında bildirim alın</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" disabled>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

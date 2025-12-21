@@ -60,7 +60,7 @@
                             <div class="recent-info">
                                 <h4><a href="{{ url_for('posts.detail', id=post.id) }}">{{ post.title }}</a></h4>
                                 <p class="recent-meta">
-                                    <span class="meta-badge">{{ post.get_category_display() }}</span>
+                                    <span class="meta-badge">{{ post.category }}</span>
                                     <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
                                     <span>{{ post.applications.count() }} başvuru</span>
                                 </p>
@@ -119,7 +119,11 @@
         <div class="dashboard-sidebar">
             <div class="profile-summary">
                 <div class="profile-avatar">
-                    {{ current_user.full_name[0] if current_user and current_user.full_name else 'U' }}
+                    {% if current_user and current_user.avatar_url %}
+                        <img src="{{ current_user.avatar_url }}" alt="{{ current_user.full_name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    {% else %}
+                        {{ current_user.full_name[0] if current_user and current_user.full_name else 'U' }}
+                    {% endif %}
                 </div>
                 <h3>{{ current_user.full_name if current_user else 'Kullanıcı' }}</h3>
                 <p>{{ current_user.bar_association if current_user and current_user.bar_association else 'Avukat' }}</p>

@@ -1,0 +1,69 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgb(38,90,93);stop-opacity:1" />
+      <stop offset="50%" style="stop-color:rgb(48,105,108);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgb(58,118,121);stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgb(58,118,121);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgb(38,90,93);stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="4" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.2"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <circle cx="100" cy="100" r="95" fill="url(#mainGradient)" filter="url(#shadow)"/>
+  
+  <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+  
+  <rect x="95" y="140" width="10" height="35" rx="2" fill="white" opacity="0.95"/>
+  <ellipse cx="100" cy="175" rx="25" ry="5" fill="white" opacity="0.9"/>
+  
+  <rect x="97" y="60" width="6" height="85" rx="3" fill="white" opacity="0.95"/>
+  
+  <rect x="50" y="58" width="100" height="6" rx="3" fill="white" opacity="0.95"/>
+  
+  <g opacity="0.95">
+    <line x1="65" y1="61" x2="65" y2="85" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <ellipse cx="65" cy="85" rx="18" ry="4" fill="white"/>
+    <path d="M 47 85 Q 47 95, 65 97 Q 83 95, 83 85" fill="rgba(255,255,255,0.8)" stroke="white" stroke-width="1.5"/>
+  </g>
+  
+  <g opacity="0.95">
+    <line x1="135" y1="61" x2="135" y2="85" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <ellipse cx="135" cy="85" rx="18" ry="4" fill="white"/>
+    <path d="M 117 85 Q 117 95, 135 97 Q 153 95, 153 85" fill="rgba(255,255,255,0.8)" stroke="white" stroke-width="1.5"/>
+  </g>
+  
+  <circle cx="100" cy="58" r="8" fill="white" opacity="0.9"/>
+  <circle cx="100" cy="58" r="5" fill="url(#accentGradient)"/>
+  
+  <g transform="translate(60, 105)">
+    <rect x="0" y="0" width="16" height="20" rx="2" fill="rgba(255,255,255,0.85)"/>
+    <line x1="3" y1="6" x2="13" y2="6" stroke="url(#accentGradient)" stroke-width="1.5"/>
+    <line x1="3" y1="10" x2="13" y2="10" stroke="url(#accentGradient)" stroke-width="1.5"/>
+    <line x1="3" y1="14" x2="10" y2="14" stroke="url(#accentGradient)" stroke-width="1.5"/>
+  </g>
+  
+  <g transform="translate(124, 105)">
+    <circle cx="9" cy="6" r="5" fill="rgba(255,255,255,0.85)"/>
+    <path d="M 2 22 C 2 15, 16 15, 16 22 L 16 24 L 2 24 Z" fill="rgba(255,255,255,0.85)"/>
+  </g>
+  
+  <g opacity="0.6">
+    <path d="M 40 50 L 42 52 L 40 54 L 38 52 Z" fill="white"/>
+    <path d="M 160 50 L 162 52 L 160 54 L 158 52 Z" fill="white"/>
+    <path d="M 45 120 L 47 122 L 45 124 L 43 122 Z" fill="white"/>
+    <path d="M 155 120 L 157 122 L 155 124 L 153 122 Z" fill="white"/>
+  </g>
+</svg>

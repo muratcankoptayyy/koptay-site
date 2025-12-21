@@ -1,0 +1,47 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}İlanlarım - {{ config.SITE_NAME or 'UTAP' }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <div class="page-header mb-6">
+        <h1 class="heading-lg">Yayınladığım İş İlanları</h1>
+    </div>
+
+    {% if jobs %}
+        <div class="job-list">
+            {% for job in jobs %}
+            <div class="card mb-4 p-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">
+                            <a href="{{ url_for('jobs.detail', id=job.id) }}" class="text-dark" style="text-decoration: none;">{{ job.title }}</a>
+                        </h3>
+                        <div class="text-sm text-muted">
+                            {{ job.created_at.strftime('%d.%m.%Y') }} • 
+                            <a href="{{ url_for('jobs.view_applications', id=job.id) }}" class="text-primary hover:underline font-medium">
+                                {{ job.applications_count }} Başvuru
+                            </a>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="badge {% if job.is_active %}badge-success{% else %}badge-secondary{% endif %}">
+                            {% if job.is_active %}Yayında{% else %}Pasif{% endif %}
+                        </span>
+                        <a href="{{ url_for('jobs.view_applications', id=job.id) }}" class="btn btn-sm btn-primary">Başvuruları Gör</a>
+                        <a href="{{ url_for('jobs.detail', id=job.id) }}" class="btn btn-sm btn-secondary">İlanı Gör</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📂</div>
+            <h3>Henüz İlanınız Yok</h3>
+            <p>İlk iş ilanınızı oluşturarak başlayın.</p>
+            <a href="{{ url_for('jobs.create') }}" class="btn btn-primary mt-4">İlan Oluştur</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

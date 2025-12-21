@@ -112,6 +112,7 @@
 - ✅ Başlık, açıklama, yazar bilgisi
 - ✅ Kategori, konum, son başvuru tarihi (varsa)
 - ✅ Görüntülenme ve başvuru istatistikleri
+- ✅ İlan resimleri (varsa) galeride görüntülenir
 - ✅ Başvuru formu (eğer süre dolmamışsa)
 
 #### Test 4.2: Başvuru Yapma
@@ -135,13 +136,14 @@
    - Açıklama: "Bu bir test ilanıdır. En az 50 karakter olmalı, bu yüzden biraz daha uzun yazıyorum..."
    - Konum (opsiyonel): "İstanbul/Kadıköy"
    - Son Başvuru: Gelecek bir tarih seçin
+   - Resim Ekle: Galeriden 1-2 resim seçin
 3. "İlanı Yayınla" tıklayın
 
 **Beklenen:**
 - ✅ Loading gösterilir
 - ✅ Success snackbar
 - ✅ İlan listesine dönülür
-- ✅ Yeni ilan listenin başında görünür
+- ✅ Yeni ilan listenin başında görünür (varsa thumbnail ile)
 
 #### Test 5.2: Validasyon
 1. Başlık 5 karakter → Hata: "En az 10 karakter"
@@ -156,14 +158,22 @@
 1. Bottom navigation → "Profil"
 
 **Beklenen:**
-- ✅ Avatar (baş harf)
+- ✅ Avatar (varsa resim, yoksa baş harf)
 - ✅ Ad soyad
 - ✅ Kullanıcı tipi (Avukat/Vekil Arayan)
 - ✅ Email, telefon (varsa), adres (varsa)
-- ✅ "Profili Düzenle" butonu (placeholder)
+- ✅ "Profili Düzenle" butonu
 - ✅ "Çıkış Yap" butonu
 
-#### Test 6.2: Çıkış Yapma
+#### Test 6.2: Profil Fotoğrafı Yükleme
+1. Profil resmine veya düzenle butonuna tıklayın
+2. Galeriden/Kameradan fotoğraf seçin
+
+**Beklenen:**
+- ✅ Fotoğraf yüklenir
+- ✅ Profil resmi güncellenir
+
+#### Test 6.3: Çıkış Yapma
 1. "Çıkış Yap" butonuna tıklayın
 
 **Beklenen:**
@@ -173,24 +183,57 @@
 
 ---
 
-### 7. Başvurular Testi (Placeholder)
+### 7. Başvurular Testi
 
-#### Test 7.1: Başvuru Ekranı
+#### Test 7.1: Başvuru Listesi
 1. Bottom navigation → "Başvurular"
+2. "Yaptığım Başvurular" ve "Gelen Başvurular" sekmelerini kontrol edin
 
 **Beklenen:**
-- ✅ 2 tab görünür: "Yaptığım Başvurular", "Gelen Başvurular"
-- ✅ Her tab'da placeholder mesaj
+- ✅ Başvurular listelenir
+- ✅ Başvuru yoksa "Empty State" (Boş durum) ekranı görünür
+- ✅ Başvuru durumları (Beklemede, Kabul, Red) doğru renklerle görünür
+
+#### Test 7.2: Başvuru Yönetimi (Gelen Başvurular)
+1. "Gelen Başvurular" sekmesine geçin (İlan sahibiyseniz)
+2. Bekleyen bir başvuruda "Kabul Et" veya "Reddet" butonuna tıklayın
+
+**Beklenen:**
+- ✅ Durum güncellenir (Kabul Edildi/Reddedildi)
+- ✅ Butonlar kaybolur
 
 ---
 
-### 8. Mesajlar Testi (Placeholder)
+### 8. Mesajlar Testi
 
-#### Test 8.1: Mesaj Ekranı
+#### Test 8.1: Mesaj Listesi
 1. Bottom navigation → "Mesajlar"
 
 **Beklenen:**
-- ✅ Placeholder mesaj: "Konuşmalarınız burada görünecek"
+- ✅ Konuşma listesi görünür
+- ✅ Mesaj yoksa "Empty State" ekranı görünür
+- ✅ Okunmamış mesaj sayısı (varsa) görünür
+
+#### Test 8.2: Sohbet Ekranı
+1. Bir konuşmaya tıklayın
+2. Mesaj yazıp gönderin
+
+**Beklenen:**
+- ✅ Mesaj balonu eklenir
+- ✅ Karşı tarafın mesajları görünür
+
+---
+
+### 9. Bildirimler Testi
+
+#### Test 9.1: Bildirim Listesi
+1. Dashboard → Sağ üstteki zil ikonuna tıklayın
+
+**Beklenen:**
+- ✅ Bildirimler listelenir
+- ✅ Bildirim yoksa "Empty State" ekranı görünür
+- ✅ Okunmamış bildirimler farklı renkte görünür
+- ✅ Tıklayınca ilgili ekrana yönlendirir (örn: başvuru detayı)
 
 ---
 

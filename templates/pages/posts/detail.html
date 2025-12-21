@@ -67,25 +67,20 @@
                 <h3 class="section-title">Dava Bilgileri</h3>
                 <div class="info-grid">
                     <div class="info-item">
-                        <span class="info-label">Dava Türü</span>
-                        <span class="info-value">{{ post.get_case_type_display() }}</span>
+                        <span class="info-label">Görev Türü</span>
+                        <span class="info-value">{{ post.get_job_type_display() }}</span>
                     </div>
-                    {% if post.court_name %}
+                    {% if post.courthouse %}
                     <div class="info-item">
-                        <span class="info-label">Mahkeme</span>
-                        <span class="info-value">{{ post.court_name }}</span>
-                    </div>
-                    {% endif %}
-                    {% if post.file_number %}
-                    <div class="info-item">
-                        <span class="info-label">Dosya No</span>
-                        <span class="info-value">{{ post.file_number }}</span>
+                        <span class="info-label">Adliye / Mahkeme</span>
+                        <span class="info-value">{{ post.courthouse }}</span>
                     </div>
                     {% endif %}
-                    {% if post.hearing_date %}
+                    <!-- Dosya No alanı modelde olmadığı için kaldırıldı -->
+                    {% if post.court_date %}
                     <div class="info-item">
-                        <span class="info-label">Duruşma Tarihi</span>
-                        <span class="info-value">{{ post.hearing_date.strftime('%d.%m.%Y') }}</span>
+                        <span class="info-label">Duruşma/İşlem Tarihi</span>
+                        <span class="info-value">{{ post.court_date.strftime('%d.%m.%Y %H:%M') }}</span>
                     </div>
                     {% endif %}
                 </div>
@@ -135,7 +130,11 @@
             <div class="owner-card">
                 <div class="owner-header">
                     <div class="owner-avatar-large">
-                        {{ post.user.first_name[0] }}{{ post.user.last_name[0] }}
+                        {% if post.user.avatar_url %}
+                            <img src="{{ post.user.avatar_url }}" alt="{{ post.user.full_name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        {% else %}
+                            {{ post.user.first_name[0] }}{{ post.user.last_name[0] }}
+                        {% endif %}
                     </div>
                     <div class="owner-info">
                         <h3 class="owner-name">{{ post.user.get_masked_name() }}</h3>
@@ -169,6 +168,11 @@
                 <a href="{{ url_for('profile.view', user_id=post.user.id) }}" class="btn btn-ghost btn-block">
                     Profili Görüntüle
                 </a>
+                {% if current_user.is_authenticated and current_user.id != post.user.id %}
+                    <a href="{{ url_for('messages.start_conversation', user_id=post.user.id, post_type='tevkil', post_id=post.id) }}" class="btn btn-primary btn-block" style="margin-top: 0.5rem;">
+                        Mesaj Gönder
+                    </a>
+                {% endif %}
             </div>
 
             <!-- Başvuru Kartı -->

@@ -20,13 +20,22 @@
             <div class="form-section">
                 <h3 class="section-title">Temel Bilgiler</h3>
 
-                <div class="form-group">
-                    <label for="title" class="required">{{ form.title.label }}</label>
-                    {{ form.title(class="form-input", placeholder="Örn: Ticari Alacak Davası için Deneyimli Avukat Aranıyor") }}
-                    {% if form.title.errors %}
-                        <div class="form-error">{{ form.title.errors[0] }}</div>
-                    {% endif %}
-                    <small class="form-hint">En az 10 karakter, net ve açıklayıcı bir başlık yazın.</small>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="job_type" class="required">{{ form.job_type.label }}</label>
+                        {{ form.job_type(class="form-select") }}
+                        {% if form.job_type.errors %}
+                            <div class="form-error">{{ form.job_type.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="law_category" class="required">{{ form.law_category.label }}</label>
+                        {{ form.law_category(class="form-select") }}
+                        {% if form.law_category.errors %}
+                            <div class="form-error">{{ form.law_category.errors[0] }}</div>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -35,80 +44,39 @@
                     {% if form.description.errors %}
                         <div class="form-error">{{ form.description.errors[0] }}</div>
                     {% endif %}
-                    <small class="form-hint">Davanın detaylarını net bir şekilde açıklayın (min 50 karakter).</small>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="law_category" class="required">{{ form.law_category.label }}</label>
-                        {{ form.law_category(class="form-select") }}
-                        {% if form.law_category.errors %}
-                            <div class="form-error">{{ form.law_category.errors[0] }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="form-group">
-                        <label for="case_type" class="required">{{ form.case_type.label }}</label>
-                        {{ form.case_type(class="form-select") }}
-                        {% if form.case_type.errors %}
-                            <div class="form-error">{{ form.case_type.errors[0] }}</div>
-                        {% endif %}
-                    </div>
+                    <small class="form-hint">Davanın detaylarını net bir şekilde açıklayın (min 10 karakter).</small>
                 </div>
             </div>
 
-            <!-- Lokasyon Bilgileri -->
+            <!-- Lokasyon ve Tarih -->
             <div class="form-section">
-                <h3 class="section-title">Lokasyon Bilgileri</h3>
+                <h3 class="section-title">Lokasyon ve Tarih</h3>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="city" class="required">{{ form.city.label }}</label>
-                        {{ form.city(class="form-input", placeholder="Örn: İstanbul") }}
+                        {{ form.city(class="form-select", id="city") }}
                         {% if form.city.errors %}
                             <div class="form-error">{{ form.city.errors[0] }}</div>
                         {% endif %}
                     </div>
 
                     <div class="form-group">
-                        <label for="district">{{ form.district.label }}</label>
-                        {{ form.district(class="form-input", placeholder="Örn: Kadıköy") }}
-                        {% if form.district.errors %}
-                            <div class="form-error">{{ form.district.errors[0] }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dava Detayları (Opsiyonel) -->
-            <div class="form-section">
-                <h3 class="section-title">Dava Detayları <span class="optional">(Opsiyonel)</span></h3>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="court_name">{{ form.court_name.label }}</label>
-                        {{ form.court_name(class="form-input", placeholder="Örn: İstanbul Anadolu 5. Asliye Ticaret Mahkemesi") }}
-                        {% if form.court_name.errors %}
-                            <div class="form-error">{{ form.court_name.errors[0] }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="form-group">
-                        <label for="file_number">{{ form.file_number.label }}</label>
-                        {{ form.file_number(class="form-input", placeholder="Örn: 2024/123") }}
-                        {% if form.file_number.errors %}
-                            <div class="form-error">{{ form.file_number.errors[0] }}</div>
+                        <label for="courthouse" class="required">{{ form.courthouse.label }}</label>
+                        {{ form.courthouse(class="form-select", id="courthouse", **{'data-selected': form.courthouse.data}) }}
+                        {% if form.courthouse.errors %}
+                            <div class="form-error">{{ form.courthouse.errors[0] }}</div>
                         {% endif %}
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="hearing_date">{{ form.hearing_date.label }}</label>
+                    <label for="hearing_date" class="required">{{ form.hearing_date.label }}</label>
                     {{ form.hearing_date(class="form-input", type="date") }}
                     {% if form.hearing_date.errors %}
                         <div class="form-error">{{ form.hearing_date.errors[0] }}</div>
                     {% endif %}
-                    <small class="form-hint">İlk duruşma tarihini belirtebilirsiniz.</small>
+                    <small class="form-hint">İşin yapılması gereken tarih.</small>
                 </div>
             </div>
 
@@ -118,35 +86,23 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="budget_min">{{ form.budget_min.label }}</label>
+                        <label for="price" class="required">{{ form.price.label }}</label>
                         <div class="input-group">
-                            {{ form.budget_min(class="form-input", type="number", min="0", step="100", placeholder="0") }}
+                            {{ form.price(class="form-input", type="number", min="0", step="100", placeholder="0") }}
                             <span class="input-suffix">₺</span>
                         </div>
-                        {% if form.budget_min.errors %}
-                            <div class="form-error">{{ form.budget_min.errors[0] }}</div>
+                        {% if form.price.errors %}
+                            <div class="form-error">{{ form.price.errors[0] }}</div>
                         {% endif %}
                     </div>
 
                     <div class="form-group">
-                        <label for="budget_max">{{ form.budget_max.label }}</label>
-                        <div class="input-group">
-                            {{ form.budget_max(class="form-input", type="number", min="0", step="100", placeholder="0") }}
-                            <span class="input-suffix">₺</span>
-                        </div>
-                        {% if form.budget_max.errors %}
-                            <div class="form-error">{{ form.budget_max.errors[0] }}</div>
+                        <label for="urgency_level" class="required">{{ form.urgency_level.label }}</label>
+                        {{ form.urgency_level(class="form-select") }}
+                        {% if form.urgency_level.errors %}
+                            <div class="form-error">{{ form.urgency_level.errors[0] }}</div>
                         {% endif %}
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="urgency_level" class="required">{{ form.urgency_level.label }}</label>
-                    {{ form.urgency_level(class="form-select") }}
-                    {% if form.urgency_level.errors %}
-                        <div class="form-error">{{ form.urgency_level.errors[0] }}</div>
-                    {% endif %}
-                    <small class="form-hint">Davanızın aciliyetini belirtin.</small>
                 </div>
             </div>
 
@@ -497,4 +453,58 @@
     }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const citySelect = document.getElementById('city');
+    const courtSelect = document.getElementById('courthouse');
+
+    // Adliye listesini güncelleme fonksiyonu
+    function updateCourthouses(city, selectedCourt = null) {
+        courtSelect.innerHTML = '<option value="">Yükleniyor...</option>';
+        courtSelect.disabled = true;
+
+        if (!city) {
+            courtSelect.innerHTML = '<option value="">Önce İl Seçiniz</option>';
+            return;
+        }
+
+        fetch(`/api/courthouses/${encodeURIComponent(city)}`)
+            .then(response => response.json())
+            .then(data => {
+                courtSelect.innerHTML = '<option value="">Adliye Seçiniz</option>';
+                
+                if (data.length === 0) {
+                    courtSelect.innerHTML = '<option value="">Bu ilde kayıtlı adliye bulunamadı</option>';
+                } else {
+                    data.forEach(courthouse => {
+                        const option = document.createElement('option');
+                        option.value = courthouse;
+                        option.textContent = courthouse;
+                        if (selectedCourt && courthouse === selectedCourt) {
+                            option.selected = true;
+                        }
+                        courtSelect.appendChild(option);
+                    });
+                    courtSelect.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                courtSelect.innerHTML = '<option value="">Hata oluştu</option>';
+            });
+    }
+
+    // İl değiştiğinde
+    citySelect.addEventListener('change', function() {
+        updateCourthouses(this.value);
+    });
+
+    // Sayfa yüklendiğinde seçili il varsa adliyeleri getir (Edit modu için)
+    if (citySelect.value) {
+        const selectedCourt = courtSelect.getAttribute('data-selected');
+        updateCourthouses(citySelect.value, selectedCourt);
+    }
+});
+</script>
 {% endblock %}

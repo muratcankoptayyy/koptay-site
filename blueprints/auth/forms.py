@@ -3,9 +3,10 @@ Authentication Forms
 Flask-WTF forms for login and registration
 """
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SelectField, TextAreaField
+from wtforms import StringField, PasswordField, BooleanField, SelectField, TextAreaField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
 from models import User
+from constants import BAR_ASSOCIATIONS
 
 class LoginForm(FlaskForm):
     """Login form"""
@@ -39,8 +40,8 @@ class RegisterForm(FlaskForm):
     ])
     
     # Avukatlık Bilgileri
-    bar_association = StringField('Baro', validators=[
-        DataRequired(message='Baro bilgisi gereklidir')
+    bar_association = SelectField('Baro', choices=[('', 'Baro Seçiniz...')] + [(b, b) for b in BAR_ASSOCIATIONS], validators=[
+        DataRequired(message='Baro seçimi gereklidir')
     ])
     bar_number = StringField('Sicil No', validators=[
         DataRequired(message='Sicil numarası gereklidir')
@@ -107,3 +108,8 @@ class RegisterForm(FlaskForm):
         """Check if bar number already exists"""
         if User.query.filter_by(bar_registration_number=field.data).first():
             raise ValidationError('Bu sicil numarası zaten kayıtlı')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('Yeni Şifre', validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField('Şifreyi Onayla', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Şifreyi Sıfırla')

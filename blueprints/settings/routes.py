@@ -63,3 +63,18 @@ def update_password():
         flash('Bir hata oluştu. Lütfen tekrar deneyin.', 'error')
     
     return redirect(url_for('settings.index'))
+
+@settings_bp.route('/support', methods=['GET', 'POST'])
+@login_required
+def support():
+    """Destek ve Geri Bildirim"""
+    if request.method == 'POST':
+        subject = request.form.get('subject')
+        message = request.form.get('message')
+        
+        # TODO: Save to database or send email
+        # For now, just flash
+        flash('Geri bildiriminiz alındı. Teşekkür ederiz!', 'success')
+        return redirect(url_for('settings.support'))
+        
+    return render_template('pages/settings/support.html')

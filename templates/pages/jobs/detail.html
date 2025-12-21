@@ -1,0 +1,125 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ job.title }} - {{ config.SITE_NAME or 'UTAP' }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <div class="mb-6">
+        <a href="{{ url_for('jobs.index') }}" class="text-muted" style="text-decoration: none;">← İlanlara Dön</a>
+    </div>
+
+    <div class="grid grid-cols-3" style="gap: 2rem;">
+        <!-- Sol Taraf: İlan Detayı -->
+        <div class="col-span-2" style="grid-column: span 2;">
+            <div class="card mb-6">
+                <div class="job-header mb-6">
+                    <h1 class="heading-md mb-2">{{ job.title }}</h1>
+                    <div class="job-meta">
+                        <span class="text-primary font-bold">{{ job.office_name }}</span>
+                        <span class="separator">•</span>
+                        <span>{{ job.city }}{% if job.district %}, {{ job.district }}{% endif %}</span>
+                        <span class="separator">•</span>
+                        <span class="text-muted">{{ job.created_at.strftime('%d.%m.%Y') }} tarihinde yayınlandı</span>
+                    </div>
+                </div>
+
+                <div class="job-tags mb-6">
+                    <span class="badge badge-secondary">{{ job.position_type | title }}</span>
+                    <span class="badge badge-info">{{ job.employment_type | replace('_', ' ') | title }}</span>
+                    {% if job.experience_years %}
+                    <span class="badge badge-warning">{{ job.experience_years }}+ Yıl Tecrübe</span>
+                    {% endif %}
+                </div>
+
+                <div class="job-description">
+                    <h3 class="heading-sm mb-4">İş Tanımı</h3>
+                    <div class="prose">
+                        {{ job.description | nl2br }}
+                    </div>
+                </div>
+
+                {% if job.salary_min %}
+                <div class="salary-box mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-bold mb-1">Maaş Aralığı</h4>
+                    <p class="text-lg text-success font-bold">
+                        {{ "%.0f"|format(job.salary_min) }} - {{ "%.0f"|format(job.salary_max) }} {{ job.currency }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sağ Taraf: Başvuru -->
+        <div class="col-span-1">
+            <div class="card sticky-top" style="position: sticky; top: 2rem;">
+                <h3 class="heading-sm mb-4">Başvuru Yap</h3>
+                
+                {% if current_user.id == job.user_id %}
+                    <div class="alert alert-info">
+                        Bu ilanı siz yayınladınız.
+                    </div>
+                    <div class="mt-4">
+                        <div class="stat-box text-center p-4 bg-gray-50 rounded-lg mb-4">
+                            <div class="text-2xl font-bold text-primary">{{ job.applications_count }}</div>
+                            <div class="text-sm text-muted">Başvuru</div>
+                        </div>
+                        <a href="{{ url_for('jobs.view_applications', id=job.id) }}" class="btn btn-secondary w-full">Başvuruları Gör</a>
+                    </div>
+                {% elif has_applied %}
+                    <div class="alert alert-success">
+                        ✅ Bu ilana başvurdunuz.
+                    </div>
+                    <p class="text-sm text-muted mt-4">Başvurunuz işverene iletildi. Değerlendirme sonucu size bildirilecektir.</p>
+                {% else %}
+                    {% if not current_user.education and not current_user.work_history %}
+                    <div class="alert alert-warning mb-4">
+                        <p class="text-sm mb-2">Profilinizde eğitim veya iş deneyimi bilgisi bulunmuyor.</p>
+                        <a href="{{ url_for('jobs.cv_edit') }}" class="text-primary font-bold hover:underline">CV Bilgilerini Düzenle →</a>
+                    </div>
+                    {% endif %}
+
+                    <form action="{{ url_for('jobs.apply', id=job.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                        <div class="form-group">
+                            <label class="form-label">Ön Yazı (Opsiyonel)</label>
+                            <textarea name="cover_letter" class="form-textarea" rows="4" placeholder="Kendinizi kısaca tanıtın..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-full">Başvuruyu Gönder</button>
+                    </form>
+                    <p class="text-xs text-muted mt-4 text-center">
+                        Başvurunuzla birlikte profil bilgileriniz işveren ile paylaşılacaktır.
+                    </p>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="text-sm text-gray-600 mb-2 text-center">veya</p>
+                        <a href="{{ url_for('messages.start_conversation', user_id=job.user_id, post_type='job', post_id=job.id) }}" class="btn btn-secondary w-full">
+                            Mesaj Gönder
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .separator {
+        color: var(--gray-300);
+        margin: 0 0.5rem;
+    }
+    
+    .prose {
+        line-height: 1.8;
+        color: var(--gray-700);
+    }
+
+    @media (max-width: 768px) {
+        .grid-cols-3 {
+            grid-template-columns: 1fr !important;
+        }
+        .col-span-2 {
+            grid-column: span 1 !important;
+        }
+    }
+</style>
+{% endblock %}

@@ -78,7 +78,7 @@
                     {{ form.remember(class="checkbox") }}
                     <span>Beni Hatırla</span>
                 </label>
-                <a href="#" class="link">Şifremi Unuttum</a>
+                <a href="{{ url_for('auth.forgot_password') }}" class="link">Şifremi Unuttum</a>
             </div>
 
             <!-- Giriş Butonu -->
@@ -416,4 +416,13 @@
     line-height: 1.6;
 }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+    {% if request.args.get('registered') == 'true' %}
+    <!-- Event snippet for Kaydolma işlemi conversion page -->
+    <script>
+      gtag('event', 'conversion', {'send_to': 'AW-17795125803/lCeOCJmQys8bEKuksKVC'});
+    </script>
+    {% endif %}
 {% endblock %}

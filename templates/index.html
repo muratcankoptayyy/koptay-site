@@ -3,6 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17795125803"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'AW-17795125803');
+    </script>
+
     <title>UTAP - Ulusal Tevkil Ağı Projesi</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -273,7 +284,7 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <h1>Türkiye'nin En Büyük<br>Tevkil Ağı</h1>
+        <h1>Türkiye'nin En Kapsamlı<br>Avukat Yardımlaşma Platformu</h1>
         <p>Avukatlar için tevkil ilanları paylaşma ve başvuru yapma platformu. Hızlı, güvenli ve profesyonel.</p>
         <div class="hero-buttons">
             <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-large">

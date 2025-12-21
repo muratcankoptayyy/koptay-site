@@ -88,7 +88,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="bar_association" class="required">{{ form.bar_association.label }}</label>
-                        {{ form.bar_association(class="form-input", placeholder="Örn: İstanbul Barosu") }}
+                        {{ form.bar_association(class="form-select") }}
                         {% if form.bar_association.errors %}
                             <div class="form-error">{{ form.bar_association.errors[0] }}</div>
                         {% endif %}

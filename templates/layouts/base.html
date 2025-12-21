@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    {# Google Analytics & Ads #}
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QRCQ663WPD"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-QRCQ663WPD');
+      gtag('config', 'AW-17795125803');
+    </script>
+
+    {# Microsoft Clarity #}
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "uh8jio49wi");
+    </script>
     
     {# SEO Meta Tags #}
     <title>{% block title %}{{ config.SITE_NAME or 'UTAP - Ulusal Tevkil Ağı Projesi' }}{% endblock %}</title>
@@ -11,13 +31,30 @@
     <meta name="keywords" content="{% block keywords %}avukat, tevkil, hukuk, dava, vekalet{% endblock %}">
     
     {# Favicon #}
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo-icon.svg') }}">
     
     {# Fonts #}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
     
+    {# Tailwind CSS CDN #}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'rgb(48, 105, 108)',
+                        'primary-dark': 'rgb(35, 85, 88)',
+                        'primary-light': 'rgb(58, 118, 121)',
+                        secondary: '#F59E0B',
+                    }
+                }
+            }
+        }
+    </script>
+
     {# CSS #}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/design-system.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
@@ -221,7 +258,7 @@
     
     {% block extra_head %}{% endblock %}
 </head>
-<body x-data="{ sidebarOpen: false }">
+<body x-data="{ sidebarOpen: false }" data-user-logged-in="{{ 'true' if current_user.is_authenticated else 'false' }}">
     {# Alpine.js - Body sonunda yüklenecek #}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
@@ -302,13 +339,15 @@
     </div>
 
     {# Sidebar Navigation #}
-    {% include 'components/navbar.html' %}
+    {% if request.endpoint != 'hub' %}
+        {% include 'components/navbar.html' %}
+    {% endif %}
 
     {# Flash Messages #}
     {% include 'components/alert.html' %}
 
     {# Main Content #}
-    <div class="content-wrapper">
+    <div class="content-wrapper" {% if request.endpoint == 'hub' %}style="margin-left: 0;"{% endif %}>
         <main class="main-content">
             {% block content %}{% endblock %}
         </main>
@@ -319,6 +358,10 @@
 
     {# Scripts #}
     <script src="{{ url_for('static', filename='js/components.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
     {% block extra_js %}{% endblock %}
+
+    {# Cookie Banner #}
+    {% include 'components/cookie_banner.html' %}
 </body>
 </html>

@@ -1,0 +1,46 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Başvurularım - {{ config.SITE_NAME or 'UTAP' }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <div class="page-header mb-6">
+        <h1 class="heading-lg">Yaptığım Başvurular</h1>
+    </div>
+
+    {% if applications %}
+        <div class="job-list">
+            {% for app in applications %}
+            <div class="card mb-4 p-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">
+                            <a href="{{ url_for('jobs.detail', id=app.job_post.id) }}" class="text-dark" style="text-decoration: none;">{{ app.job_post.title }}</a>
+                        </h3>
+                        <div class="text-sm text-muted">
+                            {{ app.job_post.office_name }} • {{ app.job_post.city }}
+                        </div>
+                        <div class="text-xs text-muted mt-1">
+                            Başvuru Tarihi: {{ app.created_at.strftime('%d.%m.%Y') }}
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="badge badge-info">
+                            {{ app.status|default('Beklemede') }}
+                        </span>
+                        <a href="{{ url_for('jobs.detail', id=app.job_post.id) }}" class="btn btn-sm btn-secondary">İlanı Gör</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📨</div>
+            <h3>Henüz Başvurunuz Yok</h3>
+            <p>İş ilanlarını inceleyerek kariyerinize uygun fırsatlara başvurabilirsiniz.</p>
+            <a href="{{ url_for('jobs.index') }}" class="btn btn-primary mt-4">İlanları İncele</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

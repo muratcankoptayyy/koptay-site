@@ -1,0 +1,350 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}İlanı Düzenle - Tevkil{% endblock %}
+
+{% block content %}
+<div class="post-create-page-container">
+    <!-- Sayfa Başlığı -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">İlanı Düzenle</h1>
+            <p class="page-subtitle">İlan detaylarını güncelleyin</p>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <form method="POST" class="post-form">
+            {{ form.hidden_tag() }}
+
+            <!-- Temel Bilgiler -->
+            <div class="form-section">
+                <h3 class="section-title">Temel Bilgiler</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="job_type" class="required">{{ form.job_type.label }}</label>
+                        {{ form.job_type(class="form-select") }}
+                        {% if form.job_type.errors %}
+                            <div class="form-error">{{ form.job_type.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="law_category" class="required">{{ form.law_category.label }}</label>
+                        {{ form.law_category(class="form-select") }}
+                        {% if form.law_category.errors %}
+                            <div class="form-error">{{ form.law_category.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="required">{{ form.description.label }}</label>
+                    {{ form.description(class="form-textarea", rows="8", placeholder="Davanın detaylarını, beklentilerinizi ve özel notlarınızı buraya yazın...") }}
+                    {% if form.description.errors %}
+                        <div class="form-error">{{ form.description.errors[0] }}</div>
+                    {% endif %}
+                    <small class="form-hint">Davanın detaylarını net bir şekilde açıklayın (min 10 karakter).</small>
+                </div>
+            </div>
+
+            <!-- Lokasyon ve Tarih -->
+            <div class="form-section">
+                <h3 class="section-title">Lokasyon ve Tarih</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="city" class="required">{{ form.city.label }}</label>
+                        {{ form.city(class="form-select", id="city") }}
+                        {% if form.city.errors %}
+                            <div class="form-error">{{ form.city.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="courthouse" class="required">{{ form.courthouse.label }}</label>
+                        {{ form.courthouse(class="form-select", id="courthouse", **{'data-selected': form.courthouse.data}) }}
+                        {% if form.courthouse.errors %}
+                            <div class="form-error">{{ form.courthouse.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="hearing_date" class="required">{{ form.hearing_date.label }}</label>
+                    {{ form.hearing_date(class="form-input", type="date") }}
+                    {% if form.hearing_date.errors %}
+                        <div class="form-error">{{ form.hearing_date.errors[0] }}</div>
+                    {% endif %}
+                    <small class="form-hint">İşin yapılması gereken tarih.</small>
+                </div>
+            </div>
+
+            <!-- Bütçe ve Aciliyet -->
+            <div class="form-section">
+                <h3 class="section-title">Bütçe ve Aciliyet</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="price" class="required">{{ form.price.label }}</label>
+                        <div class="input-group">
+                            {{ form.price(class="form-input", type="number", min="0", step="100", placeholder="0") }}
+                            <span class="input-suffix">₺</span>
+                        </div>
+                        {% if form.price.errors %}
+                            <div class="form-error">{{ form.price.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="urgency_level" class="required">{{ form.urgency_level.label }}</label>
+                        {{ form.urgency_level(class="form-select") }}
+                        {% if form.urgency_level.errors %}
+                            <div class="form-error">{{ form.urgency_level.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Aksiyonları -->
+            <div class="form-actions">
+                <a href="{{ url_for('posts.detail', id=post.id) }}" class="btn btn-ghost">İptal</a>
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Değişiklikleri Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.post-create-page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+/* Form Container */
+.form-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Form */
+.post-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+@media (max-width: 768px) {
+    .form-container {
+        margin: 1rem;
+        gap: 1rem;
+    }
+    
+    .post-form {
+        padding: 1.5rem;
+    }
+}
+
+.form-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0 0 1.5rem 0;
+}
+
+.optional {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.required::after {
+    content: " *";
+    color: #e53e3e;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    background: white;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(69,124,125,0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.form-hint {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+.form-error {
+    display: block;
+    color: #e53e3e;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+/* Form Row */
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Input Group */
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-group .form-input {
+    padding-right: 3rem;
+}
+
+.input-suffix {
+    position: absolute;
+    right: 1rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    pointer-events: none;
+}
+
+/* Form Aksiyonları */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 640px) {
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const citySelect = document.getElementById('city');
+    const courtSelect = document.getElementById('courthouse');
+
+    // Adliye listesini güncelleme fonksiyonu
+    function updateCourthouses(city, selectedCourt = null) {
+        courtSelect.innerHTML = '<option value="">Yükleniyor...</option>';
+        courtSelect.disabled = true;
+
+        if (!city) {
+            courtSelect.innerHTML = '<option value="">Önce İl Seçiniz</option>';
+            return;
+        }
+
+        fetch(`/api/courthouses/${encodeURIComponent(city)}`)
+            .then(response => response.json())
+            .then(data => {
+                courtSelect.innerHTML = '<option value="">Adliye Seçiniz</option>';
+                
+                if (data.length === 0) {
+                    courtSelect.innerHTML = '<option value="">Bu ilde kayıtlı adliye bulunamadı</option>';
+                } else {
+                    data.forEach(courthouse => {
+                        const option = document.createElement('option');
+                        option.value = courthouse;
+                        option.textContent = courthouse;
+                        if (selectedCourt && courthouse === selectedCourt) {
+                            option.selected = true;
+                        }
+                        courtSelect.appendChild(option);
+                    });
+                    courtSelect.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                courtSelect.innerHTML = '<option value="">Hata oluştu</option>';
+            });
+    }
+
+    // İl değiştiğinde
+    citySelect.addEventListener('change', function() {
+        updateCourthouses(this.value);
+    });
+
+    // Sayfa yüklendiğinde seçili il varsa adliyeleri getir (Edit modu için)
+    if (citySelect.value) {
+        const selectedCourt = courtSelect.getAttribute('data-selected');
+        updateCourthouses(citySelect.value, selectedCourt);
+    }
+});
+</script>
+{% endblock %}

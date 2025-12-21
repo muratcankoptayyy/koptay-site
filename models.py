@@ -19,6 +19,7 @@ class User(UserMixin, db.Model):
     
     # Profil Bilgileri
     full_name = db.Column(db.String(100), nullable=False)
+    tc_number = db.Column(db.String(11))  # T.C. Kimlik No
     phone = db.Column(db.String(20))
     whatsapp_number = db.Column(db.String(20))
     
@@ -36,6 +37,17 @@ class User(UserMixin, db.Model):
     specializations = db.Column(db.JSON)  # ["Boşanma", "Miras", "Ticaret"]
     bio = db.Column(db.Text)
     avatar_url = db.Column(db.String(255))
+    
+    # CV Bilgileri
+    education = db.Column(db.JSON) # [{'school': '...', 'degree': '...', 'year': '...'}]
+    work_history = db.Column(db.JSON) # [{'company': '...', 'position': '...', 'years': '...'}]
+    skills = db.Column(db.JSON) # ['Python', 'Java', ...]
+    
+    # Detaylı CV Bilgileri
+    birth_date = db.Column(db.Date)
+    birth_place = db.Column(db.String(100))
+    drivers_license = db.Column(db.String(50))
+    cv_references = db.Column(db.JSON) # [{'name': '...', 'position': '...', 'phone': '...'}]
     
     # İstatistikler
     rating_average = db.Column(db.Float, default=0.0)
@@ -75,6 +87,59 @@ class User(UserMixin, db.Model):
         """Okunmamış bildirim sayısı"""
         return self.notifications.filter_by(read_at=None).count()
     
+    @property
+    def first_name(self):
+        """Ad (full_name'den ayrıştırılmış)"""
+        if not self.full_name:
+            return ""
+        return self.full_name.split()[0]
+
+    @property
+    def last_name(self):
+        """Soyad (full_name'den ayrıştırılmış)"""
+        if not self.full_name:
+            return ""
+        parts = self.full_name.split()
+        if len(parts) > 1:
+            return parts[-1]
+        return ""
+
+    def get_reset_token(self, expires_sec=1800):
+        """Şifre sıfırlama tokeni oluştur"""
+        from flask import current_app
+        from itsdangerous import URLSafeTimedSerializer
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.id}, salt='password-reset-salt')
+
+    @staticmethod
+    def verify_reset_token(token):
+        """Şifre sıfırlama tokenini doğrula"""
+        from flask import current_app
+        from itsdangerous import URLSafeTimedSerializer
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token, salt='password-reset-salt', max_age=1800)['user_id']
+        except:
+            return None
+        return User.query.get(user_id)
+
+    def get_masked_name(self):
+        """Geriye dönük uyumluluk için"""
+        return self.masked_full_name
+
+    def law_specialization_display(self):
+        """Uzmanlık alanlarını göster"""
+        if not self.specializations:
+            return "Genel Hukuk"
+        if isinstance(self.specializations, list):
+            return ", ".join(self.specializations[:2])
+        return str(self.specializations)
+
+    @property
+    def experience_years(self):
+        """Tecrübe yılı (Şimdilik placeholder)"""
+        return "5+ Yıl"
+
     @property
     def masked_full_name(self):
         """KVKK uyumlu maskelenmiş ad"""
@@ -126,9 +191,10 @@ class TevkilPost(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
     # İçerik
-    title = db.Column(db.String(200), nullable=False)
+    title = db.Column(db.String(200), nullable=True)  # Artık otomatik oluşturuluyor
     description = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(50), nullable=False)  # "boşanma", "miras", "ticaret"
+    job_type = db.Column(db.String(50))  # "durusma", "kesif", "dosya_inceleme"
     
     # Detaylar
     urgency_level = db.Column(db.String(20), default='normal')  # normal, urgent, very_urgent
@@ -142,8 +208,9 @@ class TevkilPost(db.Model):
     longitude = db.Column(db.Float)
     
     # Fiyat
-    price_min = db.Column(db.Float)
-    price_max = db.Column(db.Float)
+    price = db.Column(db.Float)  # Tek fiyat
+    price_min = db.Column(db.Float)  # Eski uyumluluk için
+    price_max = db.Column(db.Float)  # Eski uyumluluk için
     
     # Tarihler
     deadline = db.Column(db.DateTime)
@@ -170,13 +237,30 @@ class TevkilPost(db.Model):
         """İlan süresi dolmuş mu?"""
         if not self.expires_at:
             return False
-        return datetime.now(timezone.utc) > self.expires_at
+        
+        # Ensure expires_at is timezone-aware for comparison
+        expires_at_aware = self.expires_at
+        if expires_at_aware.tzinfo is None:
+            expires_at_aware = expires_at_aware.replace(tzinfo=timezone.utc)
+            
+        return datetime.now(timezone.utc) > expires_at_aware
     
     @property
     def is_active(self):
         """İlan aktif mi?"""
         return self.status == 'active' and not self.is_expired
     
+    def get_category_display(self):
+        """Kategori adını döndür"""
+        return self.category.title() if self.category else ""
+
+    def get_job_type_display(self):
+        """Görev türü adını döndür"""
+        from constants import TASK_CATEGORY_DEFINITIONS
+        if self.job_type and self.job_type in TASK_CATEGORY_DEFINITIONS:
+            return TASK_CATEGORY_DEFINITIONS[self.job_type]['label']
+        return self.job_type or ""
+
     def __repr__(self):
         return f'<TevkilPost {self.title}>'
 
@@ -233,6 +317,8 @@ class Conversation(db.Model):
     
     # İlan bağlantısı
     post_id = db.Column(db.Integer, db.ForeignKey('tevkil_posts.id'))
+    job_post_id = db.Column(db.Integer, db.ForeignKey('job_posts.id'))
+    office_post_id = db.Column(db.Integer, db.ForeignKey('office_posts.id'))
     
     # Son mesaj bilgisi
     last_message_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -251,10 +337,12 @@ class Conversation(db.Model):
     user1 = db.relationship('User', foreign_keys=[user1_id], backref='conversations_as_user1')
     user2 = db.relationship('User', foreign_keys=[user2_id], backref='conversations_as_user2')
     post = db.relationship('TevkilPost', foreign_keys=[post_id])
+    job_post = db.relationship('JobPost', foreign_keys=[job_post_id])
+    office_post = db.relationship('OfficePost', foreign_keys=[office_post_id])
     messages = db.relationship('Message', backref='conversation', lazy='dynamic', cascade='all, delete-orphan')
     
     __table_args__ = (
-        db.UniqueConstraint('user1_id', 'user2_id', 'post_id', name='unique_conversation'),
+        db.UniqueConstraint('user1_id', 'user2_id', 'post_id', 'job_post_id', 'office_post_id', name='unique_conversation_context'),
     )
     
     def get_other_user(self, current_user_id):
@@ -270,7 +358,7 @@ class Conversation(db.Model):
         return self.get_unread_count(user_id) > 0
     
     @staticmethod
-    def get_or_create(user1_id, user2_id, post_id=None):
+    def get_or_create(user1_id, user2_id, post_id=None, job_post_id=None, office_post_id=None):
         """Conversation bul veya oluştur"""
         if user1_id > user2_id:
             user1_id, user2_id = user2_id, user1_id
@@ -278,14 +366,18 @@ class Conversation(db.Model):
         conversation = Conversation.query.filter_by(
             user1_id=user1_id,
             user2_id=user2_id,
-            post_id=post_id
+            post_id=post_id,
+            job_post_id=job_post_id,
+            office_post_id=office_post_id
         ).first()
         
         if not conversation:
             conversation = Conversation(
                 user1_id=user1_id,
                 user2_id=user2_id,
-                post_id=post_id
+                post_id=post_id,
+                job_post_id=job_post_id,
+                office_post_id=office_post_id
             )
             db.session.add(conversation)
             db.session.flush()
@@ -306,12 +398,17 @@ class Message(db.Model):
     
     # İçerik
     message = db.Column(db.Text, nullable=False)
-    message_type = db.Column(db.String(20), default='text')  # text, file, image
+    message_type = db.Column(db.String(20), default='text')  # text, file, image, audio, location
     
     # Dosya bilgisi
     file_name = db.Column(db.String(255))
     file_url = db.Column(db.String(500))
     file_type = db.Column(db.String(100))
+    
+    # Konum ve Ses
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    duration = db.Column(db.Integer) # Saniye cinsinden ses kaydı süresi
     
     # Durum
     read_at = db.Column(db.DateTime)
@@ -345,6 +442,7 @@ class Notification(db.Model):
     
     # İlişkili Objeler
     related_post_id = db.Column(db.Integer, db.ForeignKey('tevkil_posts.id'))
+    related_job_post_id = db.Column(db.Integer, db.ForeignKey('job_posts.id'))
     related_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Durum
@@ -356,6 +454,7 @@ class Notification(db.Model):
     
     # İlişkiler
     related_post = db.relationship('TevkilPost', foreign_keys=[related_post_id])
+    related_job_post = db.relationship('JobPost', foreign_keys=[related_job_post_id])
     related_user = db.relationship('User', foreign_keys=[related_user_id])
     
     @property
@@ -364,3 +463,137 @@ class Notification(db.Model):
     
     def __repr__(self):
         return f'<Notification {self.id}: {self.type}>'
+
+
+class JobPost(db.Model):
+    """İş İlanı Modeli (Kariyer)"""
+    __tablename__ = 'job_posts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # İlan Başlığı ve Açıklama
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    
+    # Pozisyon Detayları
+    position_type = db.Column(db.String(50), nullable=False)  # avukat, stajyer, katip, sekreter
+    employment_type = db.Column(db.String(50), default='full_time')  # full_time, part_time, freelance
+    
+    # Konum
+    city = db.Column(db.String(50))
+    district = db.Column(db.String(50))
+    office_name = db.Column(db.String(100))  # Ofis adı (Opsiyonel, kullanıcı adından farklı olabilir)
+    
+    # Maaş ve Yan Haklar
+    salary_min = db.Column(db.Float)
+    salary_max = db.Column(db.Float)
+    currency = db.Column(db.String(10), default='TRY')
+    
+    # Gereksinimler
+    experience_years = db.Column(db.Integer)  # Tecrübe yılı
+    requirements = db.Column(db.JSON)  # ["İngilizce", "Sürücü Belgesi"]
+    
+    # Durum
+    is_active = db.Column(db.Boolean, default=True)
+    views = db.Column(db.Integer, default=0)
+    applications_count = db.Column(db.Integer, default=0)
+    
+    # Zaman Damgaları
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    expires_at = db.Column(db.DateTime)
+    
+    # İlişkiler
+    applications = db.relationship('JobApplication', backref='job_post', lazy='dynamic', cascade='all, delete-orphan')
+    user = db.relationship('User', backref='job_posts')
+    
+    def __repr__(self):
+        return f'<JobPost {self.title}>'
+
+
+class OfficePost(db.Model):
+    """Ofis/Mobilya İlanı Modeli"""
+    __tablename__ = 'office_posts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    # İlan Detayları
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(50), nullable=False)  # rent_office, rent_room, share_office, sell_furniture
+
+    # Fiyat
+    price = db.Column(db.Float, nullable=False)
+    currency = db.Column(db.String(10), default='TRY')
+
+    # Konum
+    city = db.Column(db.String(50))
+    district = db.Column(db.String(50))
+    address = db.Column(db.Text)
+    
+    # Konum (Harita)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+
+    # Özellikler
+    square_meters = db.Column(db.Integer) # m2
+    room_count = db.Column(db.String(20)) # 1+1, 2+1 etc or just number
+    floor = db.Column(db.String(20))
+    heating_type = db.Column(db.String(50))
+    is_furnished = db.Column(db.Boolean, default=False)
+
+    # Durum
+    is_active = db.Column(db.Boolean, default=True)
+    views = db.Column(db.Integer, default=0)
+
+    # Zaman
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # İlişkiler
+    user = db.relationship('User', backref='office_posts')
+    images = db.relationship('OfficePostImage', backref='post', lazy='dynamic', cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f'<OfficePost {self.title}>'
+
+
+class OfficePostImage(db.Model):
+    """Ofis İlanı Resimleri"""
+    __tablename__ = 'office_post_images'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('office_posts.id'), nullable=False)
+    image_url = db.Column(db.String(500), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f'<OfficePostImage {self.id} for Post {self.post_id}>'
+
+
+class JobApplication(db.Model):
+    """İş Başvurusu Modeli"""
+    __tablename__ = 'job_applications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('job_posts.id'), nullable=False)
+    applicant_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Başvuru Detayları
+    message = db.Column(db.Text)
+    cv_url = db.Column(db.String(500))  # CV dosyası linki
+    
+    # Durum
+    status = db.Column(db.String(20), default='pending')  # pending, viewed, accepted, rejected
+    
+    # Zaman Damgaları
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # İlişkiler
+    applicant = db.relationship('User', backref='job_applications')
+    
+    def __repr__(self):
+        return f'<JobApplication {self.id} for Job {self.post_id}>'

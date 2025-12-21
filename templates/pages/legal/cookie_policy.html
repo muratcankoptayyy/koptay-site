@@ -1,0 +1,59 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Çerez Politikası - {{ config.APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h1 class="text-3xl font-bold text-gray-900">Çerez Politikası</h1>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">Son güncelleme: {{ now.strftime('%d.%m.%Y') }}</p>
+        </div>
+        <div class="border-t border-gray-200 px-4 py-5 sm:p-6 prose prose-indigo max-w-none">
+            <h3>1. Çerez Nedir?</h3>
+            <p>Çerezler (cookies), ziyaret ettiğiniz web siteleri tarafından tarayıcınız aracılığıyla cihazınıza veya ağ sunucusuna depolanan küçük metin dosyalarıdır.</p>
+
+            <h3>2. Çerezleri Neden Kullanıyoruz?</h3>
+            <p>Platformumuzda çerezleri aşağıdaki amaçlarla kullanmaktayız:</p>
+            <ul>
+                <li><strong>Zorunlu Çerezler:</strong> Sitenin düzgün çalışması için gereklidir (örn. oturum açma, güvenlik).</li>
+                <li><strong>İşlevsel Çerezler:</strong> Tercihlerinizi hatırlamak için kullanılır (örn. dil seçimi, beni hatırla).</li>
+                <li><strong>Analitik Çerezler:</strong> Sitemizi nasıl kullandığınızı analiz ederek hizmetlerimizi geliştirmemize yardımcı olur (örn. Google Analytics).</li>
+            </ul>
+
+            <h3>3. Hangi Çerezleri Kullanıyoruz?</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Çerez Adı</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tip</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Açıklama</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">session</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Zorunlu</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">Oturum durumunuzu korumak için kullanılır.</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">remember_token</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">İşlevsel</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">"Beni Hatırla" özelliğini seçtiğinizde kullanılır.</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">_ga, _gid</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Analitik</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">Google Analytics tarafından ziyaretçi istatistikleri için kullanılır.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>4. Çerezleri Nasıl Yönetebilirsiniz?</h3>
+            <p>Tarayıcınızın ayarlarını değiştirerek çerezlere ilişkin tercihlerinizi kişiselleştirme imkanına sahipsiniz. Ancak, çerezleri devre dışı bırakmanız durumunda sitemizin bazı özelliklerinin işlevselliğini yitirebileceğini unutmayınız.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

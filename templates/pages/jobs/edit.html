@@ -1,0 +1,102 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}İlanı Düzenle - Kariyer{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <a href="{{ url_for('jobs.detail', id=job.id) }}" class="text-gray-500 hover:text-gray-700 mb-4 inline-block">← İlana Dön</a>
+        <h1 class="text-3xl font-bold text-gray-900">İlanı Düzenle</h1>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form method="POST">
+            <!-- Temel Bilgiler -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">İlan Detayları</h3>
+                
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">İlan Başlığı *</label>
+                        <input type="text" name="title" value="{{ job.title }}" required class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Pozisyon *</label>
+                            <select name="position_type" required class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                                <option value="avukat" {% if job.position_type == 'avukat' %}selected{% endif %}>Avukat</option>
+                                <option value="stajyer" {% if job.position_type == 'stajyer' %}selected{% endif %}>Yasal Stajyer</option>
+                                <option value="yaz_stajyeri" {% if job.position_type == 'yaz_stajyeri' %}selected{% endif %}>Yaz Stajyeri</option>
+                                <option value="katip" {% if job.position_type == 'katip' %}selected{% endif %}>Katip / Sekreter</option>
+                                <option value="diger" {% if job.position_type == 'diger' %}selected{% endif %}>Diğer</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Çalışma Şekli</label>
+                            <select name="employment_type" class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                                <option value="full_time" {% if job.employment_type == 'full_time' %}selected{% endif %}>Tam Zamanlı</option>
+                                <option value="part_time" {% if job.employment_type == 'part_time' %}selected{% endif %}>Yarı Zamanlı</option>
+                                <option value="freelance" {% if job.employment_type == 'freelance' %}selected{% endif %}>Serbest (Freelance)</option>
+                                <option value="remote" {% if job.employment_type == 'remote' %}selected{% endif %}>Uzaktan</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">İş Tanımı *</label>
+                        <textarea name="description" rows="6" required class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">{{ job.description }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Konum ve Ofis -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">Konum ve Ofis</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Şehir *</label>
+                        <input type="text" name="city" value="{{ job.city }}" required class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                    </div>
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">İlçe</label>
+                        <input type="text" name="district" value="{{ job.district or '' }}" class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ofis / Firma Adı</label>
+                    <input type="text" name="office_name" value="{{ job.office_name or '' }}" class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                </div>
+            </div>
+
+            <!-- Maaş ve Deneyim -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">Maaş ve Deneyim</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Min. Maaş (TL)</label>
+                        <input type="number" name="salary_min" value="{{ job.salary_min or '' }}" class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                    </div>
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Maks. Maaş (TL)</label>
+                        <input type="number" name="salary_max" value="{{ job.salary_max or '' }}" class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                    </div>
+                    <div class="form-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tecrübe (Yıl)</label>
+                        <input type="number" name="experience_years" value="{{ job.experience_years or '' }}" class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-4 pt-4 border-t">
+                <a href="{{ url_for('jobs.detail', id=job.id) }}" class="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">İptal</a>
+                <button type="submit" class="px-6 py-2 rounded-lg bg-primary text-white hover:bg-primary-dark">Değişiklikleri Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

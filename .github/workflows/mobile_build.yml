@@ -1,0 +1,58 @@
+name: Mobile App Build
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mobile_app/**'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: ./mobile_app
+
+jobs:
+  # Android Build Job
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+          cache: true
+      
+      - name: Install Dependencies
+        run: flutter pub get
+        
+      - name: Build APK (Debug)
+        run: flutter build apk --debug
+        
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-debug-apk
+          path: mobile_app/build/app/outputs/flutter-apk/app-debug.apk
+
+  # iOS Build Job (Compilation Check)
+  build-ios:
+    name: Build iOS (No Codesign)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+          cache: true
+      
+      - name: Install Dependencies
+        run: flutter pub get
+        
+      # Codesign olmadan build alarak kodun iOS uyumluluğunu test ediyoruz
+      - name: Build iOS App (No Codesign)
+        run: flutter build ios --release --no-codesign

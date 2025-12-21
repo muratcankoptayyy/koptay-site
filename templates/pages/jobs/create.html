@@ -1,0 +1,86 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}İlan Ver - {{ config.SITE_NAME or 'UTAP' }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem; padding-bottom: 4rem; max-width: 800px;">
+    <div class="mb-6">
+        <a href="{{ url_for('jobs.index') }}" class="text-muted" style="text-decoration: none;">← İlanlara Dön</a>
+        <h1 class="heading-lg mt-2">Yeni İş İlanı Oluştur</h1>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="{{ url_for('jobs.create') }}">
+            <!-- Temel Bilgiler -->
+            <div class="form-group">
+                <label class="form-label">İlan Başlığı *</label>
+                <input type="text" name="title" class="form-input" placeholder="Örn: Deneyimli İcra Avukatı Arıyoruz" required>
+            </div>
+
+            <div class="grid grid-cols-2" style="gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Pozisyon *</label>
+                    <select name="position_type" class="form-select" required>
+                        <option value="avukat">Avukat</option>
+                        <option value="stajyer">Stajyer Avukat</option>
+                        <option value="katip">Katip / Sekreter</option>
+                        <option value="diger">Diğer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Çalışma Şekli *</label>
+                    <select name="employment_type" class="form-select" required>
+                        <option value="full_time">Tam Zamanlı</option>
+                        <option value="part_time">Yarı Zamanlı</option>
+                        <option value="freelance">Serbest / Proje Bazlı</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Ofis / Kurum Adı</label>
+                <input type="text" name="office_name" class="form-input" placeholder="Örn: Koptay Hukuk Bürosu" value="{{ current_user.full_name }}">
+                <small class="form-help">İlanda görünecek isim.</small>
+            </div>
+
+            <!-- Konum -->
+            <div class="grid grid-cols-2" style="gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Şehir *</label>
+                    <input type="text" name="city" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">İlçe</label>
+                    <input type="text" name="district" class="form-input">
+                </div>
+            </div>
+
+            <!-- Detaylar -->
+            <div class="form-group">
+                <label class="form-label">İş Tanımı ve Nitelikler *</label>
+                <textarea name="description" class="form-textarea" rows="8" placeholder="Aradığınız özellikleri ve iş tanımını detaylıca yazın..." required></textarea>
+            </div>
+
+            <div class="grid grid-cols-3" style="gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Min. Maaş (TL)</label>
+                    <input type="number" name="salary_min" class="form-input" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Maks. Maaş (TL)</label>
+                    <input type="number" name="salary_max" class="form-input" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tecrübe (Yıl)</label>
+                    <input type="number" name="experience_years" class="form-input" placeholder="0">
+                </div>
+            </div>
+
+            <div class="mt-6" style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <a href="{{ url_for('jobs.index') }}" class="btn btn-secondary">İptal</a>
+                <button type="submit" class="btn btn-primary">İlanı Yayınla</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

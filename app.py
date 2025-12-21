@@ -3,10 +3,11 @@ Tevkil Platform - Main Application
 """
 import os
 from flask import Flask, render_template, redirect, url_for
-from flask_login import LoginManager, current_user
+from flask_login import LoginManager, current_user, login_required
 from dotenv import load_dotenv
 from config import config
 from models import db, User
+from extensions import mail
 
 # Load environment variables
 load_dotenv()
@@ -14,12 +15,31 @@ load_dotenv()
 # Initialize Flask app
 app = Flask(__name__)
 
+@app.before_request
+def log_request_info():
+    from flask import request
+    try:
+        print(f"REQUEST: {request.method} {request.url}")
+        # print(f"   Headers: {request.headers}") # Disable header logging to prevent encoding errors
+    except Exception:
+        pass
+
+@app.errorhandler(500)
+def internal_error(error):
+    import traceback
+    print("!!! INTERNAL SERVER ERROR (500) !!!")
+    print(traceback.format_exc())
+    return "Sunucu hatası oluştu. Lütfen sayfayı yenileyin.", 500
+
 # Load configuration
 env = os.environ.get('FLASK_ENV', 'development')
 app.config.from_object(config[env])
 
 # Initialize database
 db.init_app(app)
+
+# Initialize Mail
+mail.init_app(app)
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -36,6 +56,9 @@ from blueprints.messages import messages_bp
 from blueprints.profile import profile_bp
 from blueprints.settings import settings_bp
 from blueprints.api import api_bp
+from blueprints.jobs import jobs_bp
+from blueprints.office import office_bp
+from blueprints.main import main_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(posts_bp)
@@ -44,6 +67,9 @@ app.register_blueprint(messages_bp)
 app.register_blueprint(profile_bp)
 app.register_blueprint(settings_bp)
 app.register_blueprint(api_bp)
+app.register_blueprint(jobs_bp)
+app.register_blueprint(office_bp)
+app.register_blueprint(main_bp)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -51,8 +77,11 @@ def load_user(user_id):
 
 # Create database tables
 with app.app_context():
-    db.create_all()
-    print("✅ Database tables created!")
+    try:
+        db.create_all()
+        print("Database tables created!")
+    except Exception as e:
+        print(f"Error creating database tables: {e}")
 
 # CSP Header - Allow Alpine.js to work
 @app.after_request
@@ -77,11 +106,13 @@ def set_csp_header(response):
         # Production: Stricter CSP
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://www.googletagmanager.com https://*.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://c.bing.com https://*.bing.com https://www.googleadservices.com https://googleads.g.doubleclick.net; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
             "font-src 'self' https://fonts.gstatic.com; "
-            "img-src 'self' data: https:; "
-            "connect-src 'self';"
+            "img-src 'self' data: https: https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://*.googletagmanager.com https://www.google.com https://*.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net; "
+            "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://*.googletagmanager.com https://www.clarity.ms https://*.clarity.ms https://c.bing.com https://*.bing.com https://www.google.com https://*.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net; "
+            "frame-src 'self' https://googleads.g.doubleclick.net https://www.google.com; "
+            "worker-src 'self' blob:;"
         )
     return response
 
@@ -120,8 +151,14 @@ def inject_globals():
 def index():
     """Ana sayfa - Landing page"""
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('hub'))
     return render_template('index.html')
+
+@app.route('/hub')
+@login_required
+def hub():
+    """Platform Seçim Ekranı"""
+    return render_template('pages/hub.html')
 
 @app.route('/dashboard')
 def dashboard():
@@ -132,7 +169,7 @@ def dashboard():
         if first_user:
             from flask_login import login_user
             login_user(first_user, remember=True)
-            print(f"🔓 DEV MODE: Auto-logged in as {first_user.email}")
+            print(f"DEV MODE: Auto-logged in as {first_user.email}")
     
     # Login kontrolü
     if not current_user.is_authenticated:
@@ -143,7 +180,7 @@ def dashboard():
     # Gerçek istatistikleri hesapla
     active_posts_count = TevkilPost.query.filter_by(
         user_id=current_user.id, 
-        is_active=True
+        status='active'
     ).count()
     
     # Gelen başvuru sayısı
@@ -191,6 +228,23 @@ def dashboard():
                          stats=stats,
                          recent_posts=recent_posts,
                          recent_applications=recent_applications)
+
+# Custom template filters
+@app.template_filter('nl2br')
+def nl2br(value):
+    """Converts newlines to <br> tags."""
+    if not value:
+        return ""
+    from markupsafe import Markup, escape
+    return Markup(str(escape(value)).replace('\n', '<br>\n'))
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('errors/404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('errors/500.html'), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

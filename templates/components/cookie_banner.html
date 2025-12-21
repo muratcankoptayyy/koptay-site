@@ -1,0 +1,47 @@
+<div id="cookie-banner" class="fixed bottom-0 inset-x-0 pb-2 sm:pb-5 z-50 hidden">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div class="p-2 rounded-lg bg-gray-900 shadow-lg sm:p-3">
+            <div class="flex items-center justify-between flex-wrap">
+                <div class="w-0 flex-1 flex items-center">
+                    <span class="flex p-2 rounded-lg bg-gray-800">
+                        <!-- Heroicon name: outline/speakerphone -->
+                        <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </span>
+                    <p class="ml-3 font-medium text-white truncate">
+                        <span class="md:hidden">
+                            Çerezleri kullanıyoruz.
+                        </span>
+                        <span class="hidden md:inline">
+                            Size daha iyi bir deneyim sunmak için çerezleri kullanıyoruz.
+                        </span>
+                    </p>
+                </div>
+                <div class="order-3 mt-2 flex-shrink-0 w-full sm:order-2 sm:mt-0 sm:w-auto">
+                    <a href="{{ url_for('main.cookie_policy') }}" class="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-gray-900 bg-white hover:bg-gray-50">
+                        Daha Fazla Bilgi
+                    </a>
+                </div>
+                <div class="order-2 flex-shrink-0 sm:order-3 sm:ml-2">
+                    <button type="button" onclick="acceptCookies()" class="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                        Kabul Et
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function acceptCookies() {
+        localStorage.setItem('cookieConsent', 'true');
+        document.getElementById('cookie-banner').classList.add('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!localStorage.getItem('cookieConsent')) {
+            document.getElementById('cookie-banner').classList.remove('hidden');
+        }
+    });
+</script>

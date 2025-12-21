@@ -2,11 +2,71 @@
 Profile Routes
 Handles profile viewing and editing
 """
-from flask import render_template, redirect, url_for, flash, abort
+from flask import render_template, redirect, url_for, flash, abort, request, jsonify, current_app
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
+import os
 from . import profile_bp
 from .forms import ProfileForm
-from models import db, User, TevkilPost
+from models import db, User, TevkilPost, Notification
+from datetime import datetime, timezone
+
+@profile_bp.route('/upload-avatar', methods=['POST'])
+@login_required
+def upload_avatar():
+    """Upload profile picture"""
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'error': 'Dosya bulunamadı'})
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'Dosya seçilmedi'})
+        
+    if file:
+        filename = secure_filename(file.filename)
+        # Benzersiz isim oluştur
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        unique_filename = f"avatar_{current_user.id}_{timestamp}_{filename}"
+        
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'avatars')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        file_path = os.path.join(upload_dir, unique_filename)
+        file.save(file_path)
+        
+        # Eski avatarı sil (opsiyonel, şimdilik kalsın)
+        
+        # DB güncelle
+        current_user.avatar_url = f"/static/uploads/avatars/{unique_filename}"
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'avatar_url': current_user.avatar_url,
+            'message': 'Profil fotoğrafı güncellendi'
+        })
+        
+    return jsonify({'success': False, 'error': 'Yükleme başarısız'})
+
+@profile_bp.route('/notifications')
+@login_required
+def notifications():
+    """View user notifications"""
+    notifications = Notification.query.filter_by(user_id=current_user.id)\
+        .order_by(Notification.created_at.desc())\
+        .all()
+    
+    # Mark all as read
+    unread_exists = False
+    for notification in notifications:
+        if not notification.read_at:
+            notification.read_at = datetime.now(timezone.utc)
+            unread_exists = True
+            
+    if unread_exists:
+        db.session.commit()
+    
+    return render_template('pages/notifications.html', notifications=notifications)
 
 @profile_bp.route('/<int:user_id>')
 def view(user_id):
@@ -58,6 +118,11 @@ def edit():
         db.session.commit()
         
         flash('Profiliniz güncellendi!', 'success')
+        
+        # Platform bilgisini koru
+        platform = request.args.get('platform')
+        if platform:
+            return redirect(url_for('profile.view', user_id=current_user.id, platform=platform))
         return redirect(url_for('profile.view', user_id=current_user.id))
     
     return render_template('pages/profile/edit.html', form=form)
@@ -66,4 +131,19 @@ def edit():
 @login_required
 def my_profile():
     """View current user's own profile"""
+    platform = request.args.get('platform')
+    if platform:
+        return redirect(url_for('profile.view', user_id=current_user.id, platform=platform))
     return redirect(url_for('profile.view', user_id=current_user.id))
+
+@profile_bp.route('/verify', methods=['GET', 'POST'])
+@login_required
+def verify():
+    """Account verification"""
+    if request.method == 'POST':
+        # TODO: Handle file upload
+        # For now, just simulate
+        flash('Doğrulama isteğiniz alındı. En kısa sürede incelenecektir.', 'success')
+        return redirect(url_for('profile.view', user_id=current_user.id))
+        
+    return render_template('pages/profile/verify.html')

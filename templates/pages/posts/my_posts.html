@@ -74,6 +74,11 @@
                             {% if post.is_active %}Pasifleştir{% else %}Aktifleştir{% endif %}
                         </button>
                     </form>
+                    <form method="POST" action="{{ url_for('posts.delete', id=post.id) }}" style="display: inline;" onsubmit="return confirm('Bu ilanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.');">
+                        <button type="submit" class="btn btn-sm btn-danger" style="color: #dc3545;">
+                            Sil
+                        </button>
+                    </form>
                 </div>
             </div>
             {% endfor %}

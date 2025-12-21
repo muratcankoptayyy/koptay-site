@@ -3,13 +3,14 @@ API Routes - Mobile Application REST API
 """
 from flask import request, jsonify
 from flask_login import login_required, current_user
-from datetime import datetime, timezone
-from models import db, User, TevkilPost, Application, Conversation, Message, Notification, PostImage
+from datetime import datetime, timezone, timedelta
+from models import db, User, TevkilPost, Application, Conversation, Message, Notification, PostImage, JobPost, OfficePost, OfficePostImage
 from . import api_bp
 from functools import wraps
 import os
 from werkzeug.utils import secure_filename
 from flask import current_app
+from constants import COURTHOUSES
 
 
 def token_required(f):
@@ -33,10 +34,10 @@ def token_required(f):
                 'error': 'Geçersiz token'
             }), 401
         
-        # Token son kullanım zamanını güncelle
-        user.api_token_last_used = datetime.now(timezone.utc)
-        user.last_active = datetime.now(timezone.utc)
-        db.session.commit()
+        # Token son kullanım zamanını güncelle (Opsiyonel - Performans için kapalı tutulabilir)
+        # user.api_token_last_used = datetime.now(timezone.utc)
+        # user.last_active = datetime.now(timezone.utc)
+        # db.session.commit()
         
         # current_user benzeri bir nesne ekle
         request.current_user = user
@@ -49,6 +50,13 @@ def allowed_file(filename):
     """Dosya uzantısı kontrolü"""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+
+
+@api_bp.route('/courthouses/<city>', methods=['GET'])
+def get_courthouses(city):
+    """Şehre göre adliyeleri getir"""
+    courthouses = COURTHOUSES.get(city, [])
+    return jsonify(courthouses)
 
 
 # =============================================================================
@@ -91,7 +99,7 @@ def mobile_login():
             return jsonify({
                 'success': False,
                 'error': 'Hatalı email veya şifre'
-            }, 401)
+            }), 401
         
         # Hesap aktif mi kontrol et
         if not user.is_active:
@@ -131,7 +139,7 @@ def mobile_login():
         }), 200
         
     except Exception as e:
-        print(f"❌ Mobile login error: {e}")
+        print(f"Mobile login error: {e}")
         return jsonify({
             'success': False,
             'error': 'Giriş işlemi başarısız'
@@ -205,7 +213,7 @@ def mobile_register():
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Mobile register error: {e}")
+        print(f"Mobile register error: {e}")
         return jsonify({
             'success': False,
             'error': 'Kayıt işlemi başarısız'
@@ -244,7 +252,7 @@ def mobile_forgot_password():
             
         # TODO: Gerçek email gönderme işlemi
         # Şimdilik sadece logluyoruz
-        print(f"🔑 Password reset requested for: {email}")
+        print(f"Password reset requested for: {email}")
         
         return jsonify({
             'success': True,
@@ -252,7 +260,7 @@ def mobile_forgot_password():
         }), 200
         
     except Exception as e:
-        print(f"❌ Forgot password error: {e}")
+        print(f"Forgot password error: {e}")
         return jsonify({
             'success': False,
             'error': 'İşlem başarısız'
@@ -279,7 +287,7 @@ def mobile_logout():
         }), 200
         
     except Exception as e:
-        print(f"❌ Mobile logout error: {e}")
+        print(f"Mobile logout error: {e}")
         return jsonify({
             'success': False,
             'error': 'Çıkış işlemi başarısız'
@@ -331,6 +339,10 @@ def get_posts():
         page = int(request.args.get('page', 1))
         per_page = int(request.args.get('per_page', 20))
         
+        # Default to user's city if not specified
+        if city is None and request.current_user.city:
+            city = request.current_user.city
+        
         # Query oluştur
         query = TevkilPost.query
         
@@ -350,8 +362,10 @@ def get_posts():
         for post in pagination.items:
             # İlk resmi al (thumbnail olarak)
             thumbnail = None
-            if post.images:
-                thumbnail = post.images[0].image_url
+            # lazy='dynamic' olduğu için query object döner
+            first_image = post.images.first()
+            if first_image:
+                thumbnail = first_image.image_url
 
             posts.append({
                 'id': post.id,
@@ -394,10 +408,10 @@ def get_posts():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get posts error: {e}")
+        print(f"Get posts error: {e}")
         return jsonify({
             'success': False,
-            'error': 'İlanlar yüklenemedi'
+            'error': f'İlanlar yüklenemedi: {str(e)}'
         }), 500
 
 
@@ -454,7 +468,7 @@ def get_post_detail(post_id):
         }), 200
         
     except Exception as e:
-        print(f"❌ Get post detail error: {e}")
+        print(f"Get post detail error: {e}")
         return jsonify({
             'success': False,
             'error': 'İlan detayı yüklenemedi'
@@ -507,7 +521,7 @@ def create_post():
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Create post error: {e}")
+        print(f"Create post error: {e}")
         return jsonify({
             'success': False,
             'error': 'İlan oluşturulamadı'
@@ -572,7 +586,7 @@ def get_my_applications():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get applications error: {e}")
+        print(f"Get applications error: {e}")
         return jsonify({
             'success': False,
             'error': 'Başvurular yüklenemedi'
@@ -642,7 +656,7 @@ def apply_to_post(post_id):
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Apply error: {e}")
+        print(f"Apply error: {e}")
         return jsonify({
             'success': False,
             'error': 'Başvuru gönderilemedi'
@@ -671,9 +685,25 @@ def accept_application(app_id):
                 'error': 'Bu başvuru zaten sonuçlandırılmış'
             }), 400
         
+        # Check if any other application for this post is already accepted
+        accepted_application = Application.query.filter_by(
+            post_id=application.post_id,
+            status='accepted'
+        ).first()
+
+        if accepted_application:
+            return jsonify({
+                'success': False,
+                'error': 'Bu ilan için zaten bir başvuru kabul edilmiş. Yeni bir görevlendirme yapmadan önce mevcut görevlendirmeyi iptal etmelisiniz.'
+            }), 400
+        
         # Durumu güncelle
         application.status = 'accepted'
         application.responded_at = datetime.now(timezone.utc)
+        
+        # Update post status to assigned (hides it from active lists)
+        application.post.status = 'assigned'
+        application.post.assigned_to = application.applicant_id
         
         # Konuşma başlat/bul
         conversation = Conversation.query.filter(
@@ -713,7 +743,7 @@ def accept_application(app_id):
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Accept application error: {e}")
+        print(f"Accept application error: {e}")
         return jsonify({
             'success': False,
             'error': 'İşlem başarısız'
@@ -766,7 +796,7 @@ def reject_application(app_id):
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Reject application error: {e}")
+        print(f"Reject application error: {e}")
         return jsonify({
             'success': False,
             'error': 'İşlem başarısız'
@@ -813,7 +843,7 @@ def get_conversations():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get conversations error: {e}")
+        print(f"Get conversations error: {e}")
         return jsonify({
             'success': False,
             'error': 'Konuşmalar yüklenemedi'
@@ -845,6 +875,11 @@ def get_messages(conv_id):
                 'sender_id': msg.sender_id,
                 'message': msg.message,
                 'message_type': msg.message_type,
+                'file_url': msg.file_url,
+                'file_name': msg.file_name,
+                'latitude': msg.latitude,
+                'longitude': msg.longitude,
+                'duration': msg.duration,
                 'created_at': msg.created_at.isoformat(),
                 'read_at': msg.read_at.isoformat() if msg.read_at else None,
                 'is_mine': msg.sender_id == user.id
@@ -863,7 +898,7 @@ def get_messages(conv_id):
         }), 200
         
     except Exception as e:
-        print(f"❌ Get messages error: {e}")
+        print(f"Get messages error: {e}")
         return jsonify({
             'success': False,
             'error': 'Mesajlar yüklenemedi'
@@ -876,7 +911,23 @@ def send_message(conv_id):
     """Mesaj gönder"""
     try:
         user = request.current_user
-        data = request.get_json()
+        
+        # Handle both JSON and Multipart
+        file = None
+        if request.is_json:
+            data = request.get_json()
+            message_text = data.get('message', '').strip()
+            message_type = data.get('message_type', 'text')
+            latitude = data.get('latitude')
+            longitude = data.get('longitude')
+            duration = data.get('duration')
+        else:
+            message_text = request.form.get('message', '').strip()
+            message_type = request.form.get('message_type', 'text')
+            latitude = request.form.get('latitude', type=float)
+            longitude = request.form.get('longitude', type=float)
+            duration = request.form.get('duration', type=int)
+            file = request.files.get('file')
         
         conv = Conversation.query.get_or_404(conv_id)
         
@@ -886,9 +937,38 @@ def send_message(conv_id):
                 'success': False,
                 'error': 'Bu konuşmaya erişim yetkiniz yok'
             }), 403
+            
+        # Dosya İşlemleri
+        file_url = None
+        file_name = None
+        file_mime_type = None
+
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+            # Create directory if not exists
+            upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'messages')
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            # Save file with timestamp
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+            unique_filename = f"{timestamp}_{filename}"
+            file_path = os.path.join(upload_dir, unique_filename)
+            file.save(file_path)
+            
+            file_url = f"/static/uploads/messages/{unique_filename}"
+            file_name = filename
+            file_mime_type = file.content_type
+
+            # Auto-detect type if generic
+            if message_type == 'text':
+                if file.content_type.startswith('image/'):
+                    message_type = 'image'
+                elif file.content_type.startswith('audio/'):
+                    message_type = 'audio'
+                else:
+                    message_type = 'file'
         
-        message_text = data.get('message', '').strip()
-        if not message_text:
+        if not message_text and message_type == 'text' and not file:
             return jsonify({
                 'success': False,
                 'error': 'Mesaj boş olamaz'
@@ -898,13 +978,20 @@ def send_message(conv_id):
         message = Message(
             conversation_id=conv_id,
             sender_id=user.id,
-            message=message_text
+            message=message_text,
+            message_type=message_type,
+            latitude=latitude,
+            longitude=longitude,
+            duration=duration,
+            file_url=file_url,
+            file_name=file_name,
+            file_type=file_mime_type
         )
         db.session.add(message)
         
         # Konuşmayı güncelle
         conv.last_message_at = datetime.now(timezone.utc)
-        conv.last_message_text = message_text[:100]
+        conv.last_message_text = message_text[:100] if message_text else (f"[{message_type}]" if message_type != 'text' else "Dosya")
         conv.last_message_sender_id = user.id
         
         # Karşı tarafın okunmamış sayacını artır
@@ -918,11 +1005,12 @@ def send_message(conv_id):
         db.session.commit()
         
         # Bildirim oluştur
+        notification_text = message_text[:50] if message_text else (f"Bir {message_type} gönderdi" if message_type != 'text' else "Bir dosya gönderdi")
         notification = Notification(
             user_id=other_user_id,
             type='new_message',
             title='Yeni Mesaj',
-            message=f'{user.masked_full_name}: {message_text[:50]}',
+            message=f'{user.masked_full_name}: {notification_text}',
             related_user_id=user.id,
             action_url=f'/messages/{conv_id}'
         )
@@ -931,12 +1019,14 @@ def send_message(conv_id):
         
         return jsonify({
             'success': True,
-            'message_id': message.id
+            'message_id': message.id,
+            'file_url': file_url,
+            'type': message_type
         }), 201
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Send message error: {e}")
+        print(f"Send message error: {e}")
         return jsonify({
             'success': False,
             'error': 'Mesaj gönderilemedi'
@@ -1007,7 +1097,7 @@ def update_profile():
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Update profile error: {e}")
+        print(f"Update profile error: {e}")
         return jsonify({
             'success': False,
             'error': 'Profil güncellenemedi'
@@ -1064,10 +1154,96 @@ def upload_avatar():
             }), 400
             
     except Exception as e:
-        print(f"❌ Upload avatar error: {e}")
+        print(f"Upload avatar error: {e}")
         return jsonify({
             'success': False,
             'error': 'Yükleme başarısız'
+        }), 500
+
+
+# =============================================================================
+# SYNC - Real-time Updates
+# =============================================================================
+
+@api_bp.route('/mobile/sync', methods=['GET'])
+@token_required
+def mobile_sync():
+    """
+    Yeni bildirimleri ve mesajları kontrol et
+    Query Params: last_check (ISO format timestamp)
+    """
+    try:
+        user = request.current_user
+        last_check_str = request.args.get('last_check')
+        
+        if last_check_str and last_check_str != 'null' and last_check_str != '':
+            try:
+                last_check = datetime.fromisoformat(last_check_str.replace('Z', '+00:00'))
+                # Safety cap: 5 minutes
+                five_mins_ago = datetime.now(timezone.utc) - timedelta(minutes=5)
+                if last_check < five_mins_ago:
+                    last_check = five_mins_ago
+            except ValueError:
+                last_check = datetime.now(timezone.utc) - timedelta(seconds=60)
+        else:
+            last_check = datetime.now(timezone.utc) - timedelta(seconds=60)
+            
+        # New Notifications
+        new_notifications = Notification.query.filter(
+            Notification.user_id == user.id,
+            Notification.created_at > last_check,
+            Notification.read_at.is_(None)
+        ).all()
+        
+        # New Messages (from others)
+        new_messages = Message.query.filter(
+            Message.created_at > last_check,
+            Message.sender_id != user.id,
+            Message.read_at.is_(None)
+        ).join(User, Message.sender_id == User.id).add_columns(User.full_name, User.avatar_url).all()
+        
+        sync_data = []
+        
+        # Process notifications
+        for n in new_notifications:
+            sync_data.append({
+                'id': f'notif-{n.id}',
+                'type': n.type,
+                'title': n.title,
+                'message': n.message,
+                'url': n.action_url,
+                'created_at': n.created_at.isoformat(),
+                'is_message': False
+            })
+            
+        # Process messages
+        for msg, sender_name, sender_avatar in new_messages:
+            # Verify conversation participation
+            conversation = msg.conversation
+            if conversation and (conversation.user1_id == user.id or conversation.user2_id == user.id):
+                sync_data.append({
+                    'id': f'msg-{msg.id}',
+                    'type': 'message',
+                    'title': sender_name,
+                    'message': msg.message if msg.message_type == 'text' else f'[{msg.message_type}]',
+                    'url': f'/messages/{msg.conversation_id}',
+                    'conversation_id': msg.conversation_id,
+                    'created_at': msg.created_at.isoformat(),
+                    'avatar': sender_avatar,
+                    'is_message': True
+                })
+                
+        return jsonify({
+            'success': True,
+            'items': sync_data,
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        })
+        
+    except Exception as e:
+        print(f"Mobile sync error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
         }), 500
 
 
@@ -1105,7 +1281,7 @@ def get_notifications():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get notifications error: {e}")
+        print(f"Get notifications error: {e}")
         return jsonify({
             'success': False,
             'error': 'Bildirimler yüklenemedi'
@@ -1136,7 +1312,7 @@ def mark_notification_read(notif_id):
         }), 200
         
     except Exception as e:
-        print(f"❌ Mark notification read error: {e}")
+        print(f"Mark notification read error: {e}")
         return jsonify({
             'success': False,
             'error': 'İşlem başarısız'
@@ -1207,7 +1383,7 @@ def upload_post_image(post_id):
             }), 400
             
     except Exception as e:
-        print(f"❌ Upload post image error: {e}")
+        print(f"Upload post image error: {e}")
         return jsonify({
             'success': False,
             'error': 'Yükleme başarısız'
@@ -1239,7 +1415,7 @@ def delete_post_image(image_id):
             if os.path.exists(full_path):
                 os.remove(full_path)
         except Exception as e:
-            print(f"⚠️ File delete error: {e}")
+            print(f"File delete error: {e}")
             
         # Veritabanından sil
         db.session.delete(image)
@@ -1252,8 +1428,303 @@ def delete_post_image(image_id):
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Delete post image error: {e}")
+        print(f"Delete post image error: {e}")
         return jsonify({
             'success': False,
             'error': 'Silme işlemi başarısız'
         }), 500
+
+
+# =============================================================================
+# JOBS - İş İlanları
+# =============================================================================
+
+@api_bp.route('/jobs', methods=['GET'])
+@token_required
+def get_jobs():
+    """
+    İş ilanlarını listele
+    """
+    try:
+        # Filtreler
+        city = request.args.get('city')
+        position_type = request.args.get('position_type')
+        search = request.args.get('search')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 20))
+        
+        query = JobPost.query.filter_by(is_active=True)
+        
+        if city:
+            query = query.filter_by(city=city)
+        if position_type:
+            query = query.filter_by(position_type=position_type)
+        if search:
+            query = query.filter(JobPost.title.ilike(f'%{search}%') | JobPost.description.ilike(f'%{search}%'))
+            
+        pagination = query.order_by(JobPost.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        posts = []
+        for post in pagination.items:
+            posts.append({
+                'id': post.id,
+                'title': post.title,
+                'description': post.description,
+                'position_type': post.position_type,
+                'employment_type': post.employment_type,
+                'city': post.city,
+                'district': post.district,
+                'office_name': post.office_name,
+                'salary_min': post.salary_min,
+                'salary_max': post.salary_max,
+                'currency': post.currency,
+                'experience_years': post.experience_years,
+                'requirements': post.requirements,
+                'views': post.views,
+                'applications_count': post.applications_count,
+                'created_at': post.created_at.isoformat(),
+                'user': {
+                    'id': post.user.id,
+                    'full_name': post.user.masked_full_name,
+                    'avatar_url': post.user.avatar_url
+                }
+            })
+            
+        return jsonify({
+            'success': True,
+            'posts': posts,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': pagination.total,
+                'pages': pagination.pages,
+                'has_next': pagination.has_next
+            }
+        }), 200
+    except Exception as e:
+        print(f"Get jobs error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@api_bp.route('/jobs/<int:post_id>', methods=['GET'])
+@token_required
+def get_job_detail(post_id):
+    try:
+        post = JobPost.query.get_or_404(post_id)
+        post.views += 1
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'post': {
+                'id': post.id,
+                'title': post.title,
+                'description': post.description,
+                'position_type': post.position_type,
+                'employment_type': post.employment_type,
+                'city': post.city,
+                'district': post.district,
+                'office_name': post.office_name,
+                'salary_min': post.salary_min,
+                'salary_max': post.salary_max,
+                'currency': post.currency,
+                'experience_years': post.experience_years,
+                'requirements': post.requirements,
+                'views': post.views,
+                'applications_count': post.applications_count,
+                'created_at': post.created_at.isoformat(),
+                'user': {
+                    'id': post.user.id,
+                    'full_name': post.user.masked_full_name,
+                    'avatar_url': post.user.avatar_url,
+                    'city': post.user.city
+                }
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@api_bp.route('/jobs', methods=['POST'])
+@token_required
+def create_job():
+    try:
+        user = request.current_user
+        data = request.get_json()
+        
+        post = JobPost(
+            user_id=user.id,
+            title=data['title'],
+            description=data['description'],
+            position_type=data['position_type'],
+            employment_type=data.get('employment_type', 'full_time'),
+            city=data['city'],
+            district=data.get('district'),
+            office_name=data.get('office_name'),
+            salary_min=data.get('salary_min'),
+            salary_max=data.get('salary_max'),
+            currency=data.get('currency', 'TRY'),
+            experience_years=data.get('experience_years'),
+            requirements=data.get('requirements', [])
+        )
+        
+        db.session.add(post)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'İş ilanı oluşturuldu',
+            'post_id': post.id
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# =============================================================================
+# OFFICE - Ofis İlanları
+# =============================================================================
+
+@api_bp.route('/office', methods=['GET'])
+@token_required
+def get_office_posts():
+    """
+    Ofis ilanlarını listele
+    """
+    try:
+        # Filtreler
+        city = request.args.get('city')
+        office_type = request.args.get('office_type') # category field in model
+        search = request.args.get('search')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 20))
+        
+        query = OfficePost.query.filter_by(is_active=True)
+        
+        if city:
+            query = query.filter_by(city=city)
+        if office_type:
+            query = query.filter_by(category=office_type)
+        if search:
+            query = query.filter(OfficePost.title.ilike(f'%{search}%') | OfficePost.description.ilike(f'%{search}%'))
+            
+        pagination = query.order_by(OfficePost.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        posts = []
+        for post in pagination.items:
+            image_urls = [img.image_url for img in post.images]
+            
+            posts.append({
+                'id': post.id,
+                'title': post.title,
+                'description': post.description,
+                'office_type': post.category,
+                'price': post.price,
+                'currency': post.currency,
+                'city': post.city,
+                'district': post.district,
+                'm2': post.square_meters,
+                'room_count': post.room_count,
+                'image_urls': image_urls,
+                'views': post.views,
+                'created_at': post.created_at.isoformat(),
+                'user': {
+                    'id': post.user.id,
+                    'full_name': post.user.masked_full_name,
+                    'avatar_url': post.user.avatar_url
+                }
+            })
+            
+        return jsonify({
+            'success': True,
+            'posts': posts,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': pagination.total,
+                'pages': pagination.pages,
+                'has_next': pagination.has_next
+            }
+        }), 200
+    except Exception as e:
+        print(f"Get office posts error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@api_bp.route('/office/<int:post_id>', methods=['GET'])
+@token_required
+def get_office_post_detail(post_id):
+    try:
+        post = OfficePost.query.get_or_404(post_id)
+        post.views += 1
+        db.session.commit()
+        
+        image_urls = [img.image_url for img in post.images]
+        
+        return jsonify({
+            'success': True,
+            'post': {
+                'id': post.id,
+                'title': post.title,
+                'description': post.description,
+                'office_type': post.category,
+                'price': post.price,
+                'currency': post.currency,
+                'city': post.city,
+                'district': post.district,
+                'address': post.address,
+                'm2': post.square_meters,
+                'room_count': post.room_count,
+                'floor': post.floor,
+                'heating_type': post.heating_type,
+                'is_furnished': post.is_furnished,
+                'image_urls': image_urls,
+                'views': post.views,
+                'created_at': post.created_at.isoformat(),
+                'user': {
+                    'id': post.user.id,
+                    'full_name': post.user.masked_full_name,
+                    'avatar_url': post.user.avatar_url,
+                    'city': post.user.city
+                }
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@api_bp.route('/office', methods=['POST'])
+@token_required
+def create_office_post():
+    try:
+        user = request.current_user
+        data = request.get_json()
+        
+        post = OfficePost(
+            user_id=user.id,
+            title=data['title'],
+            description=data['description'],
+            category=data['office_type'],
+            price=data['price'],
+            currency=data.get('currency', 'TRY'),
+            city=data['city'],
+            district=data.get('district'),
+            address=data.get('address'),
+            square_meters=data.get('m2'),
+            room_count=data.get('room_count'),
+            floor=data.get('floor'),
+            heating_type=data.get('heating_type'),
+            is_furnished=data.get('is_furnished', False)
+        )
+        
+        db.session.add(post)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Ofis ilanı oluşturuldu',
+            'post_id': post.id
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500

@@ -43,7 +43,7 @@
 
             <div class="filter-group">
                 <label for="city">Şehir</label>
-                <input type="text" name="city" id="city" class="form-input" placeholder="Şehir ara..." value="{{ request.args.get('city', '') }}">
+                <input type="text" name="city" id="city" class="form-input" placeholder="Şehir ara..." value="{{ current_city or '' }}">
             </div>
 
             <div class="filter-group">
