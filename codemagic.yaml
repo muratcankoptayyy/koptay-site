@@ -2,7 +2,6 @@ workflows:
   ios-workflow:
     name: iOS Build
     max_build_duration: 60
-    working_directory: mobile_app
     environment:
       flutter: stable
       xcode: latest
@@ -10,12 +9,15 @@ workflows:
     scripts:
       - name: Get Flutter packages
         script: |
-          flutter packages pub get
+          cd $CM_BUILD_DIR/mobile_app
+          flutter pub get
       - name: Install CocoaPods dependencies
         script: |
-          cd ios && pod install
+          cd $CM_BUILD_DIR/mobile_app/ios
+          pod install
       - name: Build iOS
         script: |
+          cd $CM_BUILD_DIR/mobile_app
           flutter build ios --release --no-codesign
     artifacts:
       - mobile_app/build/ios/ipa/*.ipa
@@ -25,7 +27,6 @@ workflows:
   ios-release:
     name: iOS Release (App Store)
     max_build_duration: 90
-    working_directory: mobile_app
     environment:
       flutter: stable
       xcode: latest
@@ -35,10 +36,12 @@ workflows:
     scripts:
       - name: Get Flutter packages
         script: |
-          flutter packages pub get
+          cd $CM_BUILD_DIR/mobile_app
+          flutter pub get
       - name: Install CocoaPods dependencies
         script: |
-          cd ios && pod install
+          cd $CM_BUILD_DIR/mobile_app/ios
+          pod install
       - name: Set up code signing
         script: |
           keychain initialize
@@ -47,6 +50,7 @@ workflows:
           xcode-project use-profiles
       - name: Build iOS IPA
         script: |
+          cd $CM_BUILD_DIR/mobile_app
           flutter build ipa --release \
             --export-options-plist=/Users/builder/export_options.plist
     artifacts:
@@ -60,19 +64,21 @@ workflows:
   android-workflow:
     name: Android Build
     max_build_duration: 60
-    working_directory: mobile_app
     environment:
       flutter: stable
       java: 17
     scripts:
       - name: Get Flutter packages
         script: |
-          flutter packages pub get
+          cd $CM_BUILD_DIR/mobile_app
+          flutter pub get
       - name: Build APK
         script: |
+          cd $CM_BUILD_DIR/mobile_app
           flutter build apk --release
       - name: Build App Bundle
         script: |
+          cd $CM_BUILD_DIR/mobile_app
           flutter build appbundle --release
     artifacts:
       - mobile_app/build/app/outputs/**/*.apk
